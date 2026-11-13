@@ -32,6 +32,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -42,9 +43,9 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -166,9 +167,17 @@ public final class WorkspaceServiceImpl implements WorkspaceService, LanguageCli
     private static final RequestProcessor WORKER = new RequestProcessor(WorkspaceServiceImpl.class.getName(), 1, false, false);
     private static final RequestProcessor PROJECT_WORKER = new RequestProcessor(WorkspaceServiceImpl.class.getName(), 5, false, false);
     private static final String NETBEANS_JAVA_HINTS = "hints";
+    private static final String MAVEN_PREFERENCES_NODE = "org/netbeans/modules/maven"; // NOI18N
+    private static final String MAVEN_USER_SETTINGS_XML = "userSettingsXml"; // NOI18N
 
     private final Gson gson = new Gson();
     private final LspServerState server;
+    private final Workspace workspace = new Workspace() {
+        @Override
+        public List<FileObject> getClientWorkspaceFolders() {
+            return WorkspaceServiceImpl.this.getClientWorkspaceFolders();
+        }
+    };
     private NbCodeLanguageClient client;
 
     /**
@@ -394,11 +403,15 @@ public final class WorkspaceServiceImpl implements WorkspaceService, LanguageCli
                     LOG.log(Level.INFO, "Project {2}: {0} test roots opened in {1}ms", new Object[] { testRoots.size(), (System.currentTimeMillis() - t), file});
                     BiFunction<FileObject, Collection<TestMethodController.TestMethod>, Collection<TestSuiteInfo>> f = (fo, methods) -> {
                         String url = Utils.toUri(fo);
+                        Project owner = FileOwnerQuery.getOwner(fo);
+                        String moduleName = owner != null ? ProjectUtils.getInformation(owner).getDisplayName(): null;
+                        List<String> paths = getModuleTestPaths(owner);
+                        String modulePath = firstModulePath(paths, moduleName);
                         Map<String, TestSuiteInfo> suite2infos = new LinkedHashMap<>();
                         for (TestMethodController.TestMethod testMethod : methods) {
                             TestSuiteInfo suite = suite2infos.computeIfAbsent(testMethod.getTestClassName(), name -> {
                                 Position pos = testMethod.getTestClassPosition() != null ? Utils.createPosition(fo, testMethod.getTestClassPosition().getOffset()) : null;
-                                return new TestSuiteInfo(name, url, pos != null ? new Range(pos, pos) : null, TestSuiteInfo.State.Loaded, new ArrayList<>());
+                                return new TestSuiteInfo(name, moduleName, modulePath, url, pos != null ? new Range(pos, pos) : null, TestSuiteInfo.State.Loaded, new ArrayList<>());
                             });
                             String id = testMethod.getTestClassName() + ':' + testMethod.method().getMethodName();
                             Position startPos = testMethod.start() != null ? Utils.createPosition(fo, testMethod.start().getOffset()) : null;
@@ -798,6 +811,33 @@ public final class WorkspaceServiceImpl implements WorkspaceService, LanguageCli
         throw new UnsupportedOperationException("Command not supported: " + params.getCommand());
     }
     
+    private String firstModulePath(List<String> paths, String moduleName) {
+        if (paths == null || paths.isEmpty()) {
+            return null;
+        } else if (paths.size() > 1) {
+            LOG.log(Level.WARNING, "Mutliple test roots are not yet supported for module {0}", moduleName);
+        }
+        return paths.iterator().next();
+    }
+    
+    private static List<String> getModuleTestPaths(Project project) {        
+        if (project == null) {
+            return null;
+        }
+        SourceGroup[] sourceGroups = ProjectUtils.getSources(project).getSourceGroups(JavaProjectConstants.SOURCES_TYPE_JAVA);
+        Set<String> paths = new LinkedHashSet<>();
+        for (SourceGroup sourceGroup : sourceGroups) {
+            URL[] urls = UnitTestForSourceQuery.findUnitTests(sourceGroup.getRootFolder());
+            for (URL u : urls) {
+                FileObject f = URLMapper.findFileObject(u);
+                if (f != null) {
+                    paths.add(f.getPath());
+                }
+            }
+        }
+        return paths.isEmpty() ? null : new ArrayList<>(paths);
+    }
+    
     private class ProjectInfoWorker {
         final URL[] locations;
         final boolean projectStructure;
@@ -1051,7 +1091,7 @@ public final class WorkspaceServiceImpl implements WorkspaceService, LanguageCli
                         js.runWhenScanFinished(cc -> {
                             WORKER.post(() -> {
                                 try {
-                                    List<WorkspaceSymbol> symbols = new ArrayList<>();
+                                    Set<WorkspaceSymbol> symbols = new HashSet<>();
                                     SearchType searchType = getSearchType(queryFin, exactFin, false, null, null);
 
                                     // CSL Part
@@ -1063,15 +1103,21 @@ public final class WorkspaceServiceImpl implements WorkspaceService, LanguageCli
                                                 descriptors = provider.getSymbols(project, queryFin, Utils.searchType2QueryKind(searchType), null);
                                                 for (IndexSearcher.Descriptor desc : descriptors) {
                                                     FileObject fo = desc.getFileObject();
-                                                    org.netbeans.modules.csl.api.ElementHandle element = desc.getElement();
                                                     if (fo != null) {
-                                                        Position pos = Utils.createPosition(fo, desc.getOffset());
-                                                        WorkspaceSymbol symbol = new WorkspaceSymbol(
+                                                        org.netbeans.modules.csl.api.ElementHandle element = desc.getElement();
+                                                        Position pos = desc.getOffset() > 0 ? Utils.createPosition(fo, desc.getOffset()) : new Position(0, 0);
+                                                        String uri = null;
+                                                        if (element instanceof org.netbeans.modules.csl.api.ElementHandle.UrlHandle) {
+                                                            uri = ((org.netbeans.modules.csl.api.ElementHandle.UrlHandle) element).getUrl();
+                                                        }
+                                                        if (uri == null) {
+                                                            uri = Utils.toUri(fo);
+                                                        }
+                                                        symbols.add(new WorkspaceSymbol(
                                                                 desc.getSimpleName(),
                                                                 Utils.cslElementKind2SymbolKind(element.getKind()),
-                                                                Either.forLeft(new Location(Utils.toUri(fo), new Range(pos, pos))),
-                                                                desc.getContextName());
-                                                        symbols.add(symbol);
+                                                                Either.forLeft(new Location(uri, new Range(pos, pos))),
+                                                                desc.getContextName()));
                                                     }
                                                 }
                                             }
@@ -1205,7 +1251,7 @@ public final class WorkspaceServiceImpl implements WorkspaceService, LanguageCli
                                             symbols.add(symbol);
                                         }
                                     }
-                                    result.complete(Either.forRight(symbols));
+                                    result.complete(Either.forRight(new ArrayList<>(symbols)));
                                 } catch (Throwable t) {
                                     result.completeExceptionally(t);
                                 }
@@ -1238,8 +1284,9 @@ public final class WorkspaceServiceImpl implements WorkspaceService, LanguageCli
                 if (root == null) {
                     throw new IllegalStateException("Unable to find root: " + rootUri);
                 }
-                ElementHandle typeHandle = ElementHandleAccessor.getInstance().create(ElementKind.valueOf(sourceUri.substring(qIdx + 1, hIdx)), sourceUri.substring(hIdx + 1));
-                CompletableFuture<ElementOpen.Location> location = ElementOpen.getLocation(ClasspathInfo.create(root), typeHandle, typeHandle.getQualifiedName().replace('.', '/') + ".class");
+                String[] signatures = URLDecoder.decode(sourceUri.substring(hIdx + 1)).split(":");
+                ElementHandle<?> handle = ElementHandleAccessor.getInstance().create(ElementKind.valueOf(sourceUri.substring(qIdx + 1, hIdx)), signatures);
+                CompletableFuture<ElementOpen.Location> location = ElementOpen.getLocation(ClasspathInfo.create(root), handle, signatures[0].replace('.', '/') + ".class");
                 location.exceptionally(ex -> {
                     result.completeExceptionally(ex);
                     return null;
@@ -1248,15 +1295,16 @@ public final class WorkspaceServiceImpl implements WorkspaceService, LanguageCli
                         ShowDocumentParams sdp = new ShowDocumentParams(Utils.toUri(loc.getFileObject()));
                         Position position = Utils.createPosition(loc.getFileObject(), loc.getStartOffset());
                         sdp.setSelection(new Range(position, position));
+                        sdp.setTakeFocus(true);
                         client.showDocument(sdp).thenAccept(res -> {
                             if (res.isSuccess()) {
                                 result.complete(null);
                             } else {
-                                result.completeExceptionally(new IllegalStateException("Cannot open source for: " + typeHandle.getQualifiedName()));
+                                result.completeExceptionally(new IllegalStateException("Cannot open source for: " + workspaceSymbol.getName()));
                             }
                         });
                     } else if (!result.isCompletedExceptionally()) {
-                        result.completeExceptionally(new IllegalStateException("Cannot find source for: " + typeHandle.getQualifiedName()));
+                        result.completeExceptionally(new IllegalStateException("Cannot find source for: " + workspaceSymbol.getName()));
                     }
                 });
             }
@@ -1329,62 +1377,99 @@ public final class WorkspaceServiceImpl implements WorkspaceService, LanguageCli
 
     @Override
     public void didChangeConfiguration(DidChangeConfigurationParams params) {
-        String fullConfigPrefix = client.getNbCodeCapabilities().getConfigurationPrefix();
-        String configPrefix = fullConfigPrefix.substring(0, fullConfigPrefix.length() - 1);
-        server.openedProjects().thenAccept(projects -> {
-            ((TextDocumentServiceImpl)server.getTextDocumentService()).updateJavaHintPreferences(((JsonObject) params.getSettings()).getAsJsonObject(configPrefix).getAsJsonObject(NETBEANS_JAVA_HINTS));
-            if (projects != null && projects.length > 0) {
-                updateJavaFormatPreferences(projects[0].getProjectDirectory(), ((JsonObject) params.getSettings()).getAsJsonObject(configPrefix).getAsJsonObject("format"));
-                updateJavaImportPreferences(projects[0].getProjectDirectory(), ((JsonObject) params.getSettings()).getAsJsonObject(configPrefix).getAsJsonObject("java").getAsJsonObject("imports"));
-            }
-        });
-        String fullAltConfigPrefix = client.getNbCodeCapabilities().getAltConfigurationPrefix();
-        String altConfigPrefix = fullAltConfigPrefix.substring(0, fullAltConfigPrefix.length() - 1);
-        boolean modified = false;
-        String newVMOptions = "";
-        JsonObject javaPlus = ((JsonObject) params.getSettings()).getAsJsonObject(altConfigPrefix);
-        if (javaPlus != null) {
-            JsonObject runConfig = javaPlus.getAsJsonObject("runConfig");
+        client.getClientConfigurationManager().handleConfigurationChange((JsonObject)params.getSettings());
+    }
+
+    private BiConsumer<String, JsonElement> getRunConfigChangeListener() {
+        return (config, newValue) -> {
+            boolean modified = false;
+            String newVMOptions = "";
+            String newWorkingDirectory = null;
+            JsonObject runConfig = newValue.isJsonObject() ? newValue.getAsJsonObject() : null;
             if (runConfig != null) {
-                newVMOptions = runConfig.getAsJsonPrimitive("vmOptions").getAsString();
+                JsonElement el;
+                el = runConfig.get("vmOptions");
+                if (el != null && el.isJsonPrimitive()) newVMOptions = el.getAsJsonPrimitive().getAsString();
+                el = runConfig.get("cwd");
+                if (el != null && el.isJsonPrimitive()) newWorkingDirectory = el.getAsJsonPrimitive().getAsString();
             }
-        }
-        for (SingleFileOptionsQueryImpl query : Lookup.getDefault().lookupAll(SingleFileOptionsQueryImpl.class)) {
-            modified |= query.setConfiguration(client, newVMOptions);
-        }
-        if (modified) {
-            ((TextDocumentServiceImpl)server.getTextDocumentService()).reRunDiagnostics();
+            for (SingleFileOptionsQueryImpl query : Lookup.getDefault().lookupAll(SingleFileOptionsQueryImpl.class)) {
+                modified |= query.setConfiguration(workspace, newVMOptions, newWorkingDirectory);
+            }
+            if (modified) {
+                ((TextDocumentServiceImpl) server.getTextDocumentService()).reRunDiagnostics();
+            }
+        };
+    }
+    
+    void registerConfigChangeListeners() {
+        String fullConfigPrefix = client.getNbCodeCapabilities().getConfigurationPrefix();
+        String fullAltConfigPrefix = client.getNbCodeCapabilities().getAltConfigurationPrefix();
+        ClientConfigurationManager confManager = client.getClientConfigurationManager();
+
+        BiConsumer<String, JsonElement> formatPrefsListener = (config, newValue)
+                -> server.openedProjects().thenAccept(projects -> {
+                    if (projects != null && projects.length > 0) {
+                        updateJavaFormatPreferences(projects[0].getProjectDirectory(), newValue != null && newValue.isJsonObject() ? newValue.getAsJsonObject() : null);
+                    }
+                });
+
+        BiConsumer<String, JsonElement> importPrefsListener = (config, newValue)
+                -> server.openedProjects().thenAccept(projects -> {
+                    if (projects != null && projects.length > 0) {
+                        updateJavaImportPreferences(projects[0].getProjectDirectory(), newValue != null && newValue.isJsonObject() ? newValue.getAsJsonObject() : null);
+                    }
+                });
+
+        // PENDING: The typecast to serviceImpl is ugly
+        BiConsumer<String, JsonElement> hintPrefsListener = (config, newValue)
+                -> ((TextDocumentServiceImpl) server.getTextDocumentService()).updateJavaHintPreferences(newValue != null && newValue.isJsonObject() ? newValue.getAsJsonObject() : null);
+
+        BiConsumer<String, JsonElement> projectJdkHomeListener = (config, newValue)
+                -> ((TextDocumentServiceImpl) server.getTextDocumentService()).updateProjectJDKHome(newValue != null && newValue.isJsonPrimitive() ? newValue.getAsJsonPrimitive() : null);
+        
+        
+        BiConsumer<String, JsonElement> mavenUserSettingsListener = (config, newValue)
+                -> updateMavenUserSettingsPreferences(newValue != null && newValue.isJsonPrimitive() ? newValue.getAsJsonPrimitive() : null);
+
+        confManager.registerConfigChangeListener(fullConfigPrefix + "hints", hintPrefsListener);
+        confManager.registerConfigChangeListener(fullConfigPrefix + "project.jdkhome", projectJdkHomeListener);
+        confManager.registerConfigChangeListener(fullConfigPrefix + "format", formatPrefsListener);
+        confManager.registerConfigChangeListener(fullConfigPrefix + "java.imports", importPrefsListener);
+        confManager.registerConfigChangeListener(fullConfigPrefix + "maven.userSettings", mavenUserSettingsListener);
+        confManager.registerConfigChangeListener(fullAltConfigPrefix + "runConfig", getRunConfigChangeListener());
+    }
+
+    void updateMavenUserSettingsPreferences(JsonPrimitive configuration) {
+        String userSettingsPath = configuration != null ? configuration.getAsString().trim() : "";
+        Preferences mavenPrefs = NbPreferences.root().node(MAVEN_PREFERENCES_NODE);
+        String current = mavenPrefs.get(MAVEN_USER_SETTINGS_XML, null);
+        if (userSettingsPath.isEmpty()) {
+            if (current != null) {
+                mavenPrefs.remove(MAVEN_USER_SETTINGS_XML);
+            }
+        } else {
+            String normalized = FileUtil.normalizeFile(new File(userSettingsPath)).getAbsolutePath();
+            if (!normalized.equals(current)) {
+                mavenPrefs.put(MAVEN_USER_SETTINGS_XML, normalized);
+            }
         }
     }
 
     void updateJavaFormatPreferences(FileObject fo, JsonObject configuration) {
         if (configuration != null && client.getNbCodeCapabilities().wantsJavaSupport()) {
-            NbPreferences.Provider provider = Lookup.getDefault().lookup(NbPreferences.Provider.class);
-            Preferences prefs = provider != null ? provider.preferencesRoot().node("de/funfried/netbeans/plugins/externalcodeformatter") : null;
-            JsonPrimitive formatterPrimitive = configuration.getAsJsonPrimitive("codeFormatter");
-            String formatter = formatterPrimitive != null ? formatterPrimitive.getAsString() : null;
-            JsonPrimitive pathPrimitive = configuration.getAsJsonPrimitive("settingsPath");
-            String path = pathPrimitive != null ? pathPrimitive.getAsString() : null;
-            if (formatter == null || "NetBeans".equals(formatter)) {
-                if (prefs != null) {
-                    prefs.put("enabledFormatter.JAVA", "netbeans-formatter");
+            JsonElement pathElement = configuration.get("settingsPath");
+            String path = pathElement != null && pathElement.isJsonPrimitive() ? pathElement.getAsString() : null;
+            Path p = path != null ? Paths.get(path) : null;
+            File file = p != null ? p.toFile() : null;
+            try {
+                if (file != null && file.exists() && file.canRead() && file.getName().endsWith(".zip")) {
+                    OptionsExportModel.get().doImport(file);
+                } else {
+                    OptionsExportModel.get().clean();
                 }
-                Path p = path != null ? Paths.get(path) : null;
-                File file = p != null ? p.toFile() : null;
-                try {
-                    if (file != null && file.exists() && file.canRead() && file.getName().endsWith(".zip")) {
-                        OptionsExportModel.get().doImport(file);
-                    } else {
-                        OptionsExportModel.get().clean();
-                    }
-                } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
-                }
-            } else if (prefs != null) {
-                prefs.put("enabledFormatter.JAVA", formatter.toLowerCase(Locale.ENGLISH).concat("-java-formatter"));
-                if (path != null) {
-                    prefs.put(formatter.toLowerCase(Locale.ENGLISH).concat("FormatterLocation"), path);
-                }
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
             }
         }
     }
@@ -1482,6 +1567,10 @@ public final class WorkspaceServiceImpl implements WorkspaceService, LanguageCli
     @Override
     public void connect(LanguageClient client) {
         this.client = (NbCodeLanguageClient)client;
+    }
+
+    public Workspace getWorkspace() {
+        return workspace;
     }
 
     private static final class CommandProgress extends ActionProgress {

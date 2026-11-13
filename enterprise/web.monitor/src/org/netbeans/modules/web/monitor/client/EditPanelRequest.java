@@ -17,7 +17,7 @@
  * under the License.
  */
 
-/**
+/*
  * EditPanelRequest.java
  *
  *
@@ -28,20 +28,18 @@
  * @version
  */
 
-/**
- * Contains the Request sub-panel for the EditPanel
- */
-
 package org.netbeans.modules.web.monitor.client;
 
-import java.awt.event.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
-import java.util.ResourceBundle;
-import java.util.Hashtable;
+import java.util.Map;
 import org.openide.util.NbBundle;
 import org.netbeans.modules.web.monitor.data.*;
 
+
+/**
+ * Contains the Request sub-panel for the EditPanel
+ */
 class EditPanelRequest extends DataDisplay {
 
     private static final boolean debug = false;
@@ -166,8 +164,7 @@ class EditPanelRequest extends DataDisplay {
 			    try {
 				String queryString =
 				    rd.getAttributeValue("queryString"); //NOI18N 
-				Hashtable ht =
-				    javax.servlet.http.HttpUtils.parseQueryString(queryString); 
+                                Map<String, String[]> ht = RequestData.parseQueryString(queryString); 
 				rd.setAttributeValue("queryString", ""); //NOI18N 
 			    }
 			    catch(Exception ex) { }

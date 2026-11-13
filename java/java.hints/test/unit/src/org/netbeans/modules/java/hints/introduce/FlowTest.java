@@ -1155,14 +1155,12 @@ public class FlowTest extends NbTestCase {
                     .add((int) info
                     .getTrees()
                     .getSourcePositions()
-                    .getStartPosition(info
-                    .getCompilationUnit(), dead));
+                    .getStartPosition(dead));
             actual
                     .add((int) info
                     .getTrees()
                     .getSourcePositions()
-                    .getEndPosition(info
-                    .getCompilationUnit(), dead));
+                    .getEndPosition(dead));
         }
 
         assertEquals(goldenSpans, actual);
@@ -1202,8 +1200,8 @@ public class FlowTest extends NbTestCase {
         TreePath tp = info.getTreeUtilities().pathFor((span[0] + span[1]) / 2);
         
         while (tp != null) {
-            long s = info.getTrees().getSourcePositions().getStartPosition(tp.getCompilationUnit(), tp.getLeaf());
-            long e = info.getTrees().getSourcePositions().getEndPosition(tp.getCompilationUnit(), tp.getLeaf());
+            long s = info.getTrees().getSourcePositions().getStartPosition(tp.getLeaf());
+            long e = info.getTrees().getSourcePositions().getEndPosition(tp.getLeaf());
             
             if (span[0] == s && span[1] == e) break;
             
@@ -1595,6 +1593,61 @@ public class FlowTest extends NbTestCase {
                     "1",
                     "3",
                     "4");
+    }
+
+    public void testParameters() throws Exception {
+        performTest("""
+                    package test;
+                    public class Test {
+                        static void t(int ii) {
+                            System.err.println(i`i);
+                        }
+                    }
+                    """,
+                    "int ii");
+    }
+
+    public void testLambdaParameters() throws Exception {
+        performTest("""
+                    package test;
+                    public class Test {
+                        static void t() {
+                            I i = ii -> System.err.println(i`i);
+                        }
+                        interface I {
+                            public void consume(int ii);
+                        }
+                    }
+                    """,
+                    "/*missing*/ ii");
+    }
+
+    public void testCatchParameters() throws Exception {
+        performTest("""
+                    package test;
+                    public class Test {
+                        static void t() {
+                            try {
+                            } catch (Throwable tt) {
+                                System.err.println(t`t);
+                            }
+                        }
+                    }
+                    """,
+                    "Throwable tt");
+    }
+
+    public void testBindingVariables() throws Exception {
+        sourceLevel = "21";
+        performTest("""
+                    package test;
+                    public class Test {
+                        static void t(Object o) {
+                            boolean b = o instanceof Integer ii && i`i == 0;
+                        }
+                    }
+                    """,
+                    "Integer ii");
     }
 
     private void performFinalCandidatesTest(String code, boolean allowErrors, String... finalCandidates) throws Exception {

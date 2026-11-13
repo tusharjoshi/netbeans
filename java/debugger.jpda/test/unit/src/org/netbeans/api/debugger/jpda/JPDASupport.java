@@ -209,48 +209,8 @@ public final class JPDASupport implements DebuggerManagerListener {
         return new JPDASupport (jpdaDebugger, pio);
     }
 
-    public static JPDASupport attachScript(String launcher, String path) throws IOException, DebuggerStartException {
-        String [] cmdArray = new String [] {
-            launcherPath(launcher),
-            "--jvm",
-            "--vm.agentlib:jdwp=transport=dt_socket,suspend=y,server=y",
-            path
-        };
-        Process process = Runtime.getRuntime ().exec (cmdArray);
-        String line = readLine (process.getInputStream ());
-        int port = Integer.parseInt (line.substring (line.lastIndexOf (':') + 1).trim ());
-        ProcessIO pio = new ProcessIO (process);
-        pio.go();
-
-        VirtualMachineManager vmm = Bootstrap.virtualMachineManager();
-        List aconnectors = vmm.attachingConnectors();
-        AttachingConnector connector = null;
-        for (Iterator i = aconnectors.iterator(); i.hasNext();) {
-            AttachingConnector ac = (AttachingConnector) i.next();
-            Transport t = ac.transport ();
-            if (t != null && t.name().equals("dt_socket")) {
-                connector = ac;
-                break;
-            }
-        }
-        if (connector == null) {
-            throw new RuntimeException("No attaching socket connector available");
-        }
-
-        JPDADebugger jpdaDebugger = JPDADebugger.attach (
-            "localhost",
-            port,
-            new Object[]{}
-        );
-        return new JPDASupport(jpdaDebugger, pio);
-    }
-
     private static String launcherPath(String launcher) {
         return System.getProperty("java.home") + File.separatorChar + "bin" + File.separatorChar + launcher;
-    }
-
-    public static boolean isLauncherAvailable(String launcher) {
-        return Files.exists(Paths.get(launcherPath(launcher)));
     }
 
     // public interface ........................................................
@@ -300,12 +260,16 @@ public final class JPDASupport implements DebuggerManagerListener {
     }
 
     public void doFinish () {
+        doFinish(0);
+    }
+
+    public void doFinish (int exitCode) {
         if (jpdaDebugger == null) return;
         debuggerEngine.getActionsManager ().
             doAction (ActionsManager.ACTION_KILL);
         waitState (JPDADebugger.STATE_DISCONNECTED);
         try {
-            processIO.join();
+            processIO.join(exitCode);
         } catch (InterruptedException ex) {
             // Interrupted
         }
@@ -367,7 +331,7 @@ public final class JPDASupport implements DebuggerManagerListener {
     
     private static Object[] createServices (String sourceRoot) {
         try {
-            Map map = new HashMap ();
+            var map = new HashMap<String, Object>();
             URL sourceUrl = new File(sourceRoot).toURI().toURL();
             String sourceUrlStr = sourceUrl.toString() + "/";
             sourceUrl = new URL(sourceUrlStr);
@@ -559,10 +523,10 @@ public final class JPDASupport implements DebuggerManagerListener {
             (threadErr = new SimplePipe(System.out, err)).start();
         }
 
-        private void join() throws InterruptedException {
+        private void join(int exitCode) throws InterruptedException {
             threadOut.join();
             threadErr.join();
-            assertEquals(0, p.waitFor());
+            assertEquals("Proper exit code", exitCode, p.waitFor());
         }
     }
 

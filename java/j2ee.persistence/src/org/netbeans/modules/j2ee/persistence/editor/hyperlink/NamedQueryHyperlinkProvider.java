@@ -42,7 +42,7 @@ import org.netbeans.api.lexer.Token;
 import org.netbeans.api.lexer.TokenHierarchy;
 import org.netbeans.api.lexer.TokenSequence;
 import org.netbeans.api.lexer.TokenUtilities;
-import org.netbeans.api.progress.ProgressUtils;
+import org.netbeans.api.progress.BaseProgressUtils;
 import org.netbeans.api.project.FileOwnerQuery;
 import org.netbeans.api.project.Project;
 import org.netbeans.lib.editor.hyperlink.spi.HyperlinkProviderExt;
@@ -83,7 +83,7 @@ public class NamedQueryHyperlinkProvider implements HyperlinkProviderExt {
     @Override
     public void performClickAction(final Document doc, final int offset, HyperlinkType type) {
         final AtomicBoolean cancel = new AtomicBoolean();
-        ProgressUtils.runOffEventDispatchThread( 
+        BaseProgressUtils.runOffEventDispatchThread( 
                 () -> goToNQ(doc, offset), 
                 NbBundle.getMessage(NamedQueryHyperlinkProvider.class, "LBL_GoToNamedQuery"), 
                 cancel, 
@@ -213,7 +213,7 @@ public class NamedQueryHyperlinkProvider implements HyperlinkProviderExt {
                     }
                     if(foundAm != null) {
                         TreePath tree = trees.getPath(entityElement, foundAm, get);
-                        int startOffset = (int) trees.getSourcePositions().getStartPosition(parameter.getCompilationUnit(), tree.getLeaf());
+                        int startOffset = (int) trees.getSourcePositions().getStartPosition(tree.getLeaf());
                         UiUtils.open(ent, startOffset );
                     }
                 }, true);

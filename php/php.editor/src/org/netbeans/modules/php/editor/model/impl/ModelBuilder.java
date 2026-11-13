@@ -42,6 +42,7 @@ import org.netbeans.modules.php.editor.model.nodes.InterfaceDeclarationInfo;
 import org.netbeans.modules.php.editor.model.nodes.MagicMethodDeclarationInfo;
 import org.netbeans.modules.php.editor.model.nodes.MethodDeclarationInfo;
 import org.netbeans.modules.php.editor.model.nodes.NamespaceDeclarationInfo;
+import org.netbeans.modules.php.editor.model.nodes.PropertyHookDeclarationInfo;
 import org.netbeans.modules.php.editor.model.nodes.SingleFieldDeclarationInfo;
 import org.netbeans.modules.php.editor.model.nodes.TraitDeclarationInfo;
 import org.netbeans.modules.php.editor.parser.astnodes.CaseDeclaration;
@@ -56,6 +57,7 @@ import org.netbeans.modules.php.editor.parser.astnodes.MethodDeclaration;
 import org.netbeans.modules.php.editor.parser.astnodes.NamespaceDeclaration;
 import org.netbeans.modules.php.editor.parser.astnodes.PHPDocMethodTag;
 import org.netbeans.modules.php.editor.parser.astnodes.Program;
+import org.netbeans.modules.php.editor.parser.astnodes.PropertyHookDeclaration;
 import org.netbeans.modules.php.editor.parser.astnodes.TraitDeclaration;
 
 /**
@@ -129,10 +131,20 @@ class ModelBuilder {
 
     void build(FieldsDeclaration node, OccurenceBuilder occurencesBuilder) {
         List<? extends SingleFieldDeclarationInfo> infos = SingleFieldDeclarationInfo.create(node);
-        for (SingleFieldDeclarationInfo sfdi : infos) {
-            FieldElementImpl fei = ModelElementFactory.create(sfdi, this);
-            occurencesBuilder.prepare(sfdi, fei);
+        for (SingleFieldDeclarationInfo info : infos) {
+            FieldElementImpl field = ModelElementFactory.create(info, this);
+            if (field.isHooked()) {
+                setCurrentScope(field);
+            }
+            occurencesBuilder.prepare(info, field);
         }
+    }
+
+    void build(PropertyHookDeclaration node, OccurenceBuilder occurencesBuilder) {
+        PropertyHookDeclarationInfo info = PropertyHookDeclarationInfo.create(node);
+        PropertyHookScopeImpl propertyHookScope = ModelElementFactory.create(info, this);
+        setCurrentScope(propertyHookScope);
+        occurencesBuilder.prepare(info, propertyHookScope);
     }
 
     void build(ConstantDeclaration node, OccurenceBuilder occurencesBuilder) {
@@ -316,7 +328,7 @@ class ModelBuilder {
 
         static MethodScopeImpl create(MethodDeclarationInfo nodeInfo, ModelBuilder context, ModelVisitor visitor) {
             String returnType = VariousUtils.getReturnType(context.getProgram(), nodeInfo.getOriginalNode().getFunction());
-            boolean isDeprecated = VariousUtils.isDeprecatedFromPHPDoc(context.getProgram(), nodeInfo.getOriginalNode().getFunction());
+            boolean isDeprecated = VariousUtils.isDeprecated(context.getFileScope(), context.getProgram(), nodeInfo.getOriginalNode());
             String qualifiedReturnType = VariousUtils.qualifyTypeNames(returnType, nodeInfo.getOriginalNode().getStartOffset(), context.getCurrentScope());
             MethodScopeImpl method = new MethodScopeImpl(context.getCurrentScope(), qualifiedReturnType, nodeInfo, visitor, isDeprecated);
             return method;
@@ -340,13 +352,17 @@ class ModelBuilder {
             return fei;
         }
 
+        static PropertyHookScopeImpl create(PropertyHookDeclarationInfo nodeInfo, ModelBuilder context) {
+            return new PropertyHookScopeImpl(context.getCurrentScope(), nodeInfo);
+        }
+
         static ClassConstantElementImpl create(ClassConstantDeclarationInfo clsConst, ModelBuilder context) {
-            boolean isDeprecated = VariousUtils.isDeprecatedFromPHPDoc(context.getProgram(), clsConst.getOriginalNode());
+            boolean isDeprecated = VariousUtils.isDeprecated(context.getFileScope(), context.getProgram(), clsConst.getConstantDeclaration());
             return new ClassConstantElementImpl(context.getCurrentScope(), clsConst, isDeprecated);
         }
 
         static CaseElementImpl create(CaseDeclarationInfo enumCase, ModelBuilder context) {
-            boolean isDeprecated = VariousUtils.isDeprecatedFromPHPDoc(context.getProgram(), enumCase.getOriginalNode());
+            boolean isDeprecated = VariousUtils.isDeprecated(context.getFileScope(), context.getProgram(), enumCase.getCaseDeclaration());
             return new CaseElementImpl(context.getCurrentScope(), enumCase, isDeprecated);
         }
     }

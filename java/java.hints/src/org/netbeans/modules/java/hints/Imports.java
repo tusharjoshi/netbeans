@@ -100,7 +100,7 @@ public class Imports {
             for (TreePathHandle h : violatingImports) {
                 TreePath currentPath = h.resolve(ctx.getInfo());
                 assert currentPath != null;
-                long currentPos = ctx.getInfo().getTrees().getSourcePositions().getStartPosition(currentPath.getCompilationUnit(), currentPath.getLeaf());
+                long currentPos = ctx.getInfo().getTrees().getSourcePositions().getStartPosition(currentPath.getLeaf());
                 
                 if (currentPos < pos) {
                     tp = currentPath;
@@ -161,14 +161,8 @@ public class Imports {
             if (it.getQualifiedIdentifier() instanceof MemberSelectTree) {
                 MemberSelectTree ms = (MemberSelectTree) it.getQualifiedIdentifier();
                 if (kind == ImportHintKind.DEFAULT_PACKAGE) {
-                    if (it.isStatic()) {
-                        if (ms.getExpression().toString().equals("java.lang.StringTemplate") && ms.getIdentifier().toString().equals("STR")) {
-                            result.add(TreePathHandle.create(new TreePath(topLevel, it), ci));
-                        }
-                    } else {
-                        if ((ms.getExpression().toString().equals(DEFAULT_PACKAGE))) {
-                            result.add(TreePathHandle.create(new TreePath(topLevel, it), ci));
-                        }
+                    if (!it.isStatic() && ms.getExpression().toString().equals(DEFAULT_PACKAGE)) {
+                        result.add(TreePathHandle.create(new TreePath(topLevel, it), ci));
                     }
                 }
                 if (it.isStatic()) {

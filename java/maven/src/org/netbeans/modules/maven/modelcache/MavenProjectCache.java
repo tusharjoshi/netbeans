@@ -73,9 +73,14 @@ public final class MavenProjectCache {
     private static final String CONTEXT_EXECUTION_RESULT = "NB_Execution_Result";
     
     /**
-     * The value contains the set of artifacts, that have been faked during the reading operation.
+     * The value contains the set of placeholder artifacts, that have been injected during the reading operation.
      */
-    private static final String CONTEXT_FAKED_ARTIFACTS = "NB_FakedArtifacts";
+    private static final String CONTEXT_PLACEHOLDER_ARTIFACTS = "NB_PlaceholderArtifacts";
+    
+    /**
+     * Timestamp of the project model load.
+     */
+    private static final String CONTEXT_LOAD_TIMESTAMP = "org.netbeans.modules.maven.loadTimestamp"; // NOI18N
     
     /**
      * Marks a project that observed unknown build participants.
@@ -104,17 +109,14 @@ public final class MavenProjectCache {
     private static final String ATTR_IGNORE_ON_LOAD = "ignoreOnModelLoad"; // NOI18N
     
     //File is referenced during lifetime of the Project. FileObject cannot be used as with rename it changes value@!!!
-    private static final Map<File, WeakReference<MavenProject>> file2Project = new WeakHashMap<File, WeakReference<MavenProject>>();
-    private static final Map<File, Mutex> file2Mutex = new WeakHashMap<File, Mutex>();
+    private static final Map<File, WeakReference<MavenProject>> file2Project = new WeakHashMap<>();
+    private static final Map<File, Mutex> file2Mutex = new WeakHashMap<>();
     
     public static void clearMavenProject(final File pomFile) {
         Mutex mutex = getMutex(pomFile);
-        mutex.writeAccess(new Action<MavenProject>() {
-            @Override
-            public MavenProject run() {
-                file2Project.remove(pomFile);
-                return null;
-            }
+        mutex.writeAccess(() -> {
+            file2Project.remove(pomFile);
+            return null;
         });
     }
     
@@ -147,7 +149,7 @@ public final class MavenProjectCache {
                     }
                 }
                 MavenProject mp = loadOriginalMavenProject(pomFile);
-                file2Project.put(pomFile, new WeakReference<MavenProject>(mp));
+                file2Project.put(pomFile, new WeakReference<>(mp));
                 return mp;
             }
         });
@@ -172,10 +174,37 @@ public final class MavenProjectCache {
     }
     
     /**
+     * Extracts a timestamp from the MavenProject. Timestamps are placed
+     * as context values in {@link #loadOriginalMavenProjectInternal}.
+     * @param p project
+     * @return timestamp, -1 if p is null, -2 if unknown
+     */
+    public static long getLoadTimestamp(MavenProject p) {
+        if (p == null) {
+            return -1;
+        }
+        Object o = p.getContextValue(CONTEXT_LOAD_TIMESTAMP);
+        return o instanceof Long l ? l : -2;
+    }
+    
+    /**
+     * Extracts the set of artifacts not present in the local repository and 'injected' during the
+     * project load by NbArtifactFixer.
+     * @param p project
+     * @return set of placeholder artifacts.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static Collection<Artifact> getPlaceholderArtifacts(MavenProject p) {
+        Object o = p.getContextValue(CONTEXT_PLACEHOLDER_ARTIFACTS);
+        return o instanceof Collection c ? c : Collections.emptySet();
+    }
+    
+    /**
      * list of class names of build participants in the project, null when none are present.
      * @param project
      * @return 
      */
+    @SuppressWarnings("unchecked")
     public static Collection<String> getUnknownBuildParticipantsClassNames(MavenProject project) {
         return (Collection<String>) project.getContextValue(CONTEXT_PARTICIPANTS);
     }
@@ -201,15 +230,20 @@ public final class MavenProjectCache {
         File pomFile = req.getPom();
         
         MavenExecutionResult res = null;
-        Set<Artifact> fakes = new HashSet<>();
+        Set<Artifact> placeholders = new HashSet<>();
         long startLoading = System.currentTimeMillis();
         
         try {
-            res = NbArtifactFixer.collectFallbackArtifacts(() -> projectEmbedder.readProjectWithDependencies(req, true), (c) -> 
-                c.forEach(a -> {
-                    // artifact fixer only fakes POMs.
-                    fakes.add(projectEmbedder.createArtifactWithClassifier(a.getGroupId(), a.getArtifactId(), a.getVersion(), a.getExtension(), a.getClassifier())); // NOI18N
-                }
+            res = NbArtifactFixer.collectPlaceholderArtifacts(
+                    () -> projectEmbedder.readProjectWithDependencies(req, true),
+                    set -> set.forEach(a -> {
+                        // artifact fixer only injects POMs.
+                        placeholders.add(
+                                projectEmbedder.createArtifactWithClassifier(
+                                        a.getGroupId(), a.getArtifactId(), a.getVersion(), a.getExtension(), a.getClassifier()
+                                )
+                        );
+                    }
             ));
             newproject = res.getProject();
             
@@ -287,13 +321,16 @@ public final class MavenProjectCache {
                     LOG.log(Level.FINE, "Maven reported:", t);
                 }
             }
-            LOG.log(Level.FINE, "Loaded project flags - incomplete {0}, fake count {1}", new Object[] { isIncompleteProject(newproject), fakes.size() });
-            if (!fakes.isEmpty() && !isIncompleteProject(newproject)) {
-                LOG.log(Level.FINE, "Incomplete artifact encountered during loading the project: {0}", fakes);
-                newproject.setContextValue(CONTEXT_PARTIAL_PROJECT, Boolean.TRUE);
-                newproject.setContextValue(CONTEXT_FAKED_ARTIFACTS, fakes);
+            LOG.log(Level.FINE, "Loaded project flags - incomplete {0}, placeholder count {1}", new Object[] { isIncompleteProject(newproject), placeholders.size() });
+            if (!placeholders.isEmpty()) {
+                LOG.log(Level.FINE, "Incomplete artifact encountered during loading the project: {0}", placeholders);
+                if (!isIncompleteProject(newproject)) {
+                    newproject.setContextValue(CONTEXT_PARTIAL_PROJECT, Boolean.TRUE);
+                }
+                newproject.setContextValue(CONTEXT_PLACEHOLDER_ARTIFACTS, placeholders);
             }
         }
+        newproject.setContextValue(CONTEXT_LOAD_TIMESTAMP, startLoading);
         return newproject;
     }
     
@@ -313,8 +350,8 @@ public final class MavenProjectCache {
         active = config.getActiveConfiguration();
         if (ctx != null && ctx.getConfiguration() != null) {
             ProjectConfiguration cfg = ctx.getConfiguration();
-            if (cfg instanceof M2Configuration) {
-                active = (M2Configuration)cfg;
+            if (cfg instanceof M2Configuration m2c) {
+                active = m2c;
             }
         }
         
@@ -431,14 +468,11 @@ public final class MavenProjectCache {
         MavenProject partial = null;
         
         for (Throwable t : result.getExceptions()) {
-            if (t instanceof ProjectBuildingException) {
-                ProjectBuildingException pbe = (ProjectBuildingException)t;
-                if (pbe.getResults() != null) {
-                    for (ProjectBuildingResult res : pbe.getResults()) {
-                        if (projectFile.equals(res.getPomFile())) {
-                            partial = res.getProject();
-                            break;
-                        }
+            if (t instanceof ProjectBuildingException pbe && pbe.getResults() != null) {
+                for (ProjectBuildingResult res : pbe.getResults()) {
+                    if (projectFile.equals(res.getPomFile())) {
+                        partial = res.getProject();
+                        break;
                     }
                 }
             }
@@ -482,8 +516,8 @@ public final class MavenProjectCache {
     
     public static MavenProject getPartialProject(MavenProject prj) {
         Object o = prj.getContextValue(CONTEXT_PARTIAL_PROJECT);
-        if (o instanceof MavenProject) {
-            return (MavenProject)o;
+        if (o instanceof MavenProject mavenProject) {
+            return mavenProject;
         } else {
             return null;
         }

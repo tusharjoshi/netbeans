@@ -102,6 +102,7 @@ public class MicronautDataCompletionTask {
     private int anchorOffset;
 
     public static interface ItemFactory<T> extends MicronautExpressionLanguageCompletion.ItemFactory<T> {
+        T createControllerMethodItem(CompilationInfo info, String annName, String controllerId, int offset);
         T createControllerMethodItem(CompilationInfo info, VariableElement delegateRepository, ExecutableElement delegateMethod, String controllerId, String id, int offset);
         T createFinderMethodItem(String name, String returnType, int offset);
         T createFinderMethodNameItem(String prefix, String name, int offset);
@@ -150,9 +151,9 @@ public class MicronautDataCompletionTask {
                         switch (path.getLeaf().getKind()) {
                             case CLASS:
                             case INTERFACE:
-                                int startPos = (int) sp.getEndPosition(cc.getCompilationUnit(), ((ClassTree) path.getLeaf()).getModifiers());
+                                int startPos = (int) sp.getEndPosition(((ClassTree) path.getLeaf()).getModifiers());
                                 if (startPos <= 0) {
-                                    startPos = (int) sp.getStartPosition(cc.getCompilationUnit(), path.getLeaf());
+                                    startPos = (int) sp.getStartPosition(path.getLeaf());
                                 }
                                 String headerText = cc.getText().substring(startPos, anchorOffset);
                                 int idx = headerText.indexOf('{'); //NOI18N
@@ -164,7 +165,7 @@ public class MicronautDataCompletionTask {
                             case METHOD:
                                 Tree returnType = ((MethodTree) path.getLeaf()).getReturnType();
                                 if (returnType != null) {
-                                    TokenSequence<JavaTokenId> last = findLastNonWhitespaceToken(ts, (int) sp.getEndPosition(path.getCompilationUnit(), returnType), anchorOffset);
+                                    TokenSequence<JavaTokenId> last = findLastNonWhitespaceToken(ts, (int) sp.getEndPosition(returnType), anchorOffset);
                                     if (last == null) {
                                         resolveFinderMethods(cc, path.getParentPath(), prefix, false, factory, consumer);
                                     } else if (last.token().id() == JavaTokenId.LPAREN || last.token().id() == JavaTokenId.COMMA) {
@@ -174,7 +175,7 @@ public class MicronautDataCompletionTask {
                                 break;
                             case VARIABLE:
                                 Tree type = ((VariableTree) path.getLeaf()).getType();
-                                if (type != null && findLastNonWhitespaceToken(ts, (int) sp.getEndPosition(path.getCompilationUnit(), type), anchorOffset) == null) {
+                                if (type != null && findLastNonWhitespaceToken(ts, (int) sp.getEndPosition(type), anchorOffset) == null) {
                                     TreePath parentPath = path.getParentPath();
                                     if (parentPath.getLeaf().getKind() == Tree.Kind.CLASS || parentPath.getLeaf().getKind() == Tree.Kind.INTERFACE) {
                                         resolveFinderMethods(cc, parentPath, prefix, false, factory, consumer);
@@ -265,7 +266,11 @@ public class MicronautDataCompletionTask {
         AnnotationMirror controllerAnn = Utils.getAnnotation(te.getAnnotationMirrors(), CONTROLLER_ANNOTATION_NAME);
         if (controllerAnn != null) {
             List<VariableElement> repositories = Utils.getRepositoriesFor(info, te);
-            if (!repositories.isEmpty()) {
+            if (repositories.isEmpty()) {
+                Utils.collectMissingEndpoints(info, te, (annName, controllerId) -> {
+                    consumer.accept(factory.createControllerMethodItem(info, annName, controllerId, anchorOffset));
+                });
+            } else {
                 Utils.collectMissingDataEndpoints(info, te, prefix, (repository, delegateMethod, controllerId, id) -> {
                     consumer.accept(factory.createControllerMethodItem(info, repository, delegateMethod, controllerId, id, anchorOffset));
                 });
@@ -376,7 +381,7 @@ public class MicronautDataCompletionTask {
             SourcePositions sp = info.getTrees().getSourcePositions();
             Set<String> paramNames = new HashSet<>();
             for (VariableTree param : method.getParameters()) {
-                if (sp.getEndPosition(path.getCompilationUnit(), param) < anchorOffset) {
+                if (sp.getEndPosition(param) < anchorOffset) {
                     paramNames.add(param.getName().toString());
                 }
             }

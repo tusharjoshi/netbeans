@@ -74,7 +74,6 @@ import org.openide.util.Utilities;
 )
 @ActionReferences({
     @ActionReference(path = "Menu/BuildProject", position = 55),
-    @ActionReference(path = "Toolbars/Build", position = 325),
     @ActionReference(path = "Projects/org-netbeans-modules-maven/Actions", position = 1020),
     @ActionReference(path = "Shortcuts", name = "DS-A")
 })
@@ -95,6 +94,9 @@ public class ReloadAction extends AbstractAction {
             return;
         }
         NbMavenProject nbMavenProject = project.getLookup().lookup(NbMavenProject.class);
+        if (nbMavenProject == null) {
+            return;
+        }
         MavenProject mavenProject = nbMavenProject.getMavenProject();
 
         MicroApplication microApplication = MicroApplication.getInstance(project);

@@ -38,6 +38,8 @@ import org.openide.util.lookup.ServiceProvider;
 
 public class NBMNativeMWITest extends NbTestCase {
 
+    private static final String EXPECTED_JAVAC_PLUGIN_VERSION = "3.16.0";
+
     private FileObject wd;
 
     public NBMNativeMWITest(String testName) {
@@ -64,7 +66,7 @@ public class NBMNativeMWITest extends NbTestCase {
         assertEquals("nbm-maven-plugin", model.getBuild().getPlugins().get(0).getArtifactId());
         assertEquals(MavenNbModuleImpl.getLatestNbmPluginVersion(), model.getBuild().getPlugins().get(0).getVersion());
         assertEquals("maven-compiler-plugin", model.getBuild().getPlugins().get(1).getArtifactId());
-        assertEquals("3.11.0", model.getBuild().getPlugins().get(1).getVersion());
+        assertEquals(EXPECTED_JAVAC_PLUGIN_VERSION, model.getBuild().getPlugins().get(1).getVersion());
         assertEquals(0, model.getRepositories().size());
     }
 
@@ -82,7 +84,7 @@ public class NBMNativeMWITest extends NbTestCase {
         assertEquals("nbm-maven-plugin", model.getBuild().getPlugins().get(0).getArtifactId());
         assertEquals(MavenNbModuleImpl.getLatestNbmPluginVersion(), model.getBuild().getPlugins().get(0).getVersion());
         assertEquals("maven-compiler-plugin", model.getBuild().getPlugins().get(1).getArtifactId());
-        assertEquals("3.11.0", model.getBuild().getPlugins().get(1).getVersion());
+        assertEquals(EXPECTED_JAVAC_PLUGIN_VERSION, model.getBuild().getPlugins().get(1).getVersion());
         assertEquals(1, model.getRepositories().size());
     }
 
@@ -109,7 +111,7 @@ public class NBMNativeMWITest extends NbTestCase {
         assertEquals("nbm-maven-plugin", model.getBuild().getPlugins().get(0).getArtifactId());
         assertEquals(MavenNbModuleImpl.getLatestNbmPluginVersion(), model.getBuild().getPlugins().get(0).getVersion());
         assertEquals("maven-compiler-plugin", model.getBuild().getPlugins().get(1).getArtifactId());
-        assertEquals("3.11.0", model.getBuild().getPlugins().get(1).getVersion());
+        assertEquals(EXPECTED_JAVAC_PLUGIN_VERSION, model.getBuild().getPlugins().get(1).getVersion());
         assertEquals(0, model.getRepositories().size());
     }
 
@@ -135,7 +137,7 @@ public class NBMNativeMWITest extends NbTestCase {
         assertEquals("nbm-maven-plugin", model.getBuild().getPlugins().get(0).getArtifactId());
         assertEquals(MavenNbModuleImpl.getLatestNbmPluginVersion(), model.getBuild().getPlugins().get(0).getVersion());
         assertEquals("maven-compiler-plugin", model.getBuild().getPlugins().get(1).getArtifactId());
-        assertEquals("3.11.0", model.getBuild().getPlugins().get(1).getVersion());
+        assertEquals(EXPECTED_JAVAC_PLUGIN_VERSION, model.getBuild().getPlugins().get(1).getVersion());
         assertEquals(1, model.getRepositories().size());
     }
 
@@ -190,39 +192,43 @@ public class NBMNativeMWITest extends NbTestCase {
         assertEquals("nbm-maven-plugin", modeloutput.getBuild().getPlugins().get(0).getArtifactId());
         assertEquals(MavenNbModuleImpl.getLatestNbmPluginVersion(), modeloutput.getBuild().getPlugins().get(0).getVersion());
         assertEquals("maven-compiler-plugin", modeloutput.getBuild().getPlugins().get(1).getArtifactId());
-        assertEquals("3.11.0", modeloutput.getBuild().getPlugins().get(1).getVersion());
+        assertEquals(EXPECTED_JAVAC_PLUGIN_VERSION, modeloutput.getBuild().getPlugins().get(1).getVersion());
         assertEquals(0, model.getRepositories().size());
     }
 
-    private final String POMCOMPILER
-            = "<project>\n"
-            + "<modelVersion>4.0.0</modelVersion>"
-            + "<build>"
-            + "<pluginManagement>"
-            + "<plugins>"
-            + "<plugin>"
-            + "<groupId>org.apache.maven.plugins</groupId>"
-            + "<artifactId>maven-compiler-plugin</artifactId>"
-            + "<version>3.3.1.1</version>"
-            + "</plugin></plugins>"
-            + "</pluginManagement>"
-            + "</build>"
-            + "</project>";
+    private final String POMCOMPILER = """
+            <project>
+                <modelVersion>4.0.0</modelVersion>
+                <build>
+                    <pluginManagement>
+                        <plugins>
+                            <plugin>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-compiler-plugin</artifactId>
+                                <version>3.3.1.1</version>
+                            </plugin>
+                        </plugins>
+                    </pluginManagement>
+                </build>
+            </project>
+            """;
 
-    private final String POMJAR
-            = "<project>\n"
-            + "<modelVersion>4.0.0</modelVersion>"
-            + "<build>"
-            + "<pluginManagement>"
-            + "<plugins>"
-            + "<plugin>"
-            + "<groupId>org.apache.maven.plugins</groupId>"
-            + "<artifactId>maven-jar-plugin</artifactId>"
-            + "<version>2.1.0</version>"
-            + "</plugin></plugins>"
-            + "</pluginManagement>"
-            + "</build>"
-            + "</project>";
+    private final String POMJAR = """
+            <project>
+                <modelVersion>4.0.0</modelVersion>
+                <build>
+                    <pluginManagement>
+                        <plugins>
+                            <plugin>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-jar-plugin</artifactId>
+                                <version>2.1.0</version>
+                            </plugin>
+                        </plugins>
+                    </pluginManagement>
+                </build>
+            </project>
+            """;
 
     @ServiceProvider(service=IndexingNotificationProvider.class, position=1)
     public static class NoOpNotificationProvider implements IndexingNotificationProvider {

@@ -40,7 +40,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import org.eclipse.lsp4j.ApplyWorkspaceEditParams;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -133,8 +132,8 @@ public final class ExtractSuperclassOrInterfaceRefactoring extends CodeRefactori
             if (!treeUtilities.isSynthetic(memberTreePath)) {
                 Element memberElm = trees.getElement(memberTreePath);
                 if (memberElm != null) {
-                    long startMember = sourcePositions.getStartPosition(info.getCompilationUnit(), member);
-                    long endMember = sourcePositions.getEndPosition(info.getCompilationUnit(), member);
+                    long startMember = sourcePositions.getStartPosition(member);
+                    long endMember = sourcePositions.getEndPosition(member);
                     boolean selected = offset > startMember && offset < endMember;
                     Set<Modifier> mods = memberElm.getModifiers();
                     if (memberElm.getKind() == ElementKind.FIELD) {
@@ -244,7 +243,7 @@ public final class ExtractSuperclassOrInterfaceRefactoring extends CodeRefactori
                 refactoring = r;
             }
             refactoring.getContext().add(JavaRefactoringUtils.getClasspathInfoFor(file));
-            client.applyEdit(new ApplyWorkspaceEditParams(perform(refactoring, EXTRACT_SUPERCLASS_REFACTORING_COMMAND.equals(command) ? "Extract Superclass" : "Extract Interface")));
+            sendRefactoringChanges(client, refactoring, EXTRACT_SUPERCLASS_REFACTORING_COMMAND.equals(command) ? "Extract Superclass" : "Extract Interface");
         } catch (Exception ex) {
             client.showMessage(new MessageParams(MessageType.Error, ex.getLocalizedMessage()));
         }

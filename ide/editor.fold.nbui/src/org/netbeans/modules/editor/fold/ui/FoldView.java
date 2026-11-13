@@ -42,6 +42,7 @@ import javax.swing.text.Position;
 import javax.swing.text.Position.Bias;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.View;
+import org.netbeans.api.editor.document.LineDocumentUtils;
 import org.netbeans.api.editor.fold.Fold;
 import org.netbeans.api.editor.fold.FoldTemplate;
 import org.netbeans.api.editor.settings.FontColorNames;
@@ -54,6 +55,7 @@ import org.netbeans.modules.editor.lib2.view.ViewUtils;
 import org.openide.util.NbBundle;
 
 import static org.netbeans.modules.editor.fold.ui.Bundle.*;
+
 import org.netbeans.modules.editor.lib2.caret.CaretFoldExpander;
 
 
@@ -102,6 +104,8 @@ final class FoldView extends EditorView {
     private AttributeSet    selectedColors;
     
     private int options;
+    
+    private boolean showTooltip;
 
     /**
      * Coloring that will be used for code folding icons displayed in editor
@@ -114,7 +118,13 @@ final class FoldView extends EditorView {
     public static final String COLORING_PLACEHOLDER_BORDER = "code-folding-border"; // NOI18N
 
     
-    public FoldView(JTextComponent textComponent, Fold fold, FontColorSettings colorSettings, int options) {
+    public FoldView(
+            JTextComponent textComponent,
+            Fold fold,
+            FontColorSettings colorSettings,
+            int options,
+            boolean showTooltip
+    ) {
         super(null);
         int offset = fold.getStartOffset();
         int len = fold.getEndOffset() - offset;
@@ -126,6 +136,7 @@ final class FoldView extends EditorView {
         this.selectedColors = colorSettings.getFontColors(FontColorNames.SELECTION_COLORING);
         this.foldingBorderColors = colorSettings.getFontColors(COLORING_PLACEHOLDER_BORDER);
         this.options = options;
+        this.showTooltip = showTooltip;
     }
 
     @Override
@@ -215,8 +226,8 @@ final class FoldView extends EditorView {
             if ((options & 2) > 0) {
                 int start = fold.getStartOffset();
                 int end = fold.getEndOffset();
-                int startLine = Utilities.getLineOffset(bd, start);
-                int endLine = Utilities.getLineOffset(bd, end) + 1;
+                int startLine = LineDocumentUtils.getLineIndex(bd, start);
+                int endLine = LineDocumentUtils.getLineIndex(bd, end) + 1;
                 
                 if (endLine <= startLine + 1) {
                     mask &= ~2;
@@ -318,6 +329,10 @@ final class FoldView extends EditorView {
 
     @Override
     public JComponent getToolTip(double x, double y, Shape allocation) {
+        if (!showTooltip) {
+            return null;
+        }
+        
         Container container = getContainer();
         if (container instanceof JEditorPane) {
             JEditorPane editorPane = (JEditorPane) getContainer();

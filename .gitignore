@@ -50,6 +50,9 @@
 /nb/ide.launcher/windows/nbproject/Package-*.bash
 /platform/o.n.bootstrap/launcher/windows/nbproject/Makefile-*.mk
 /platform/o.n.bootstrap/launcher/windows/nbproject/Package-*.bash
+/enterprise/web.jspparser/test/unit/data/emptyWebProject/lib/*.jar
+/enterprise/web.jspparser/test/unit/data/project2/lib/*.jar
+/enterprise/web.jspparser/test/unit/data/project2_jakarta/lib/*.jar
 
 # Database logs
 derby.log
@@ -118,3 +121,6 @@ derby.log
 
 # idea
 .idea
+
+#ant generated file
+.ant-targets-build.xml

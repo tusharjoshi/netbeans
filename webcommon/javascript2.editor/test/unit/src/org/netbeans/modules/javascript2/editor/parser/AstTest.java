@@ -137,6 +137,10 @@ public class AstTest extends CslTestBase {
         checkAstResult("testfiles/parser/asyncFunctions/asyncFunctions7.js");
     }
 
+    public void testTopLevelAwait() throws Exception {
+        checkAstResult("testfiles/parser/topLevelAwait.js");
+    }
+
     public void testBinary01() throws Exception {
         checkAstResult("testfiles/ecmascript6/parser/expression/binary/binary01.js");
     }
@@ -2050,6 +2054,10 @@ public class AstTest extends CslTestBase {
         checkAstResult("testfiles/ecmascript6/parser/ES6/generator/static-generator-method.js");
     }
 
+    public void testGeneratorClassMethod() throws Exception {
+        checkAstResult("testfiles/ecmascript6/parser/ES6/generator/generator-class-method.js");
+    }
+
     public void testDakutenHandakuten() throws Exception {
         checkAstResult("testfiles/ecmascript6/parser/ES6/identifier/dakuten_handakuten.js");
     }
@@ -2094,8 +2102,8 @@ public class AstTest extends CslTestBase {
         checkAstResult("testfiles/ecmascript6/parser/ES6/identifier/invalid_escaped_surrogate_pairs.js");
     }
 
-    public void testInvalidExpressionAwait() throws Exception {
-        checkAstResult("testfiles/ecmascript6/parser/ES6/identifier/invalid_expression_await.js");
+    public void testExportAwait() throws Exception {
+        checkAstResult("testfiles/ecmascript6/parser/ES6/identifier/export_await.js");
     }
 
     public void testInvalidFunctionWait() throws Exception {

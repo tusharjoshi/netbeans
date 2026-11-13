@@ -15,9 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-74A83F7B4D5752ECCC0F35E48BC2DCA4642D8873 org.openjfx:javafx-base:17.0.7:mac-aarch64
-2ED79724BC255776770260BDE2BCBF9AFB244440 org.openjfx:javafx-controls:17.0.7:mac-aarch64
-EF2075C43298EA0F88CCBA14C0E10FF4F77624B8 org.openjfx:javafx-graphics:17.0.7:mac-aarch64
-11AED525AFB44DCAD8FCA74890D8057BB626EB04 org.openjfx:javafx-media:17.0.7:mac-aarch64
-A3C78A4862766AB5FBA02E1986B9F51D1AD4241A org.openjfx:javafx-web:17.0.7:mac-aarch64
-ABF206FDD97CF59CCA24B09EDCF666C65B9AEC31 org.openjfx:javafx-swing:17.0.7:mac-aarch64
+2102971F774411BFA700065292502DA6B8BBFF36 org.openjfx:javafx-base:23.0.2:mac-aarch64
+F17565955B614E6F1A7BC4BB4A81AB764A1D7126 org.openjfx:javafx-controls:23.0.2:mac-aarch64
+974BD044704F4DB84D041488E387369E09190363 org.openjfx:javafx-graphics:23.0.2:mac-aarch64
+D8D24541DF99DD7FACCC86C13570D88F553C63F7 org.openjfx:javafx-media:23.0.2:mac-aarch64
+0D963484C7F71305C81F68308AA7DFD3A22EF9E7 org.openjfx:javafx-web:23.0.2:mac-aarch64
+D6406FB857AB77732DEC3992B6C45C1DFDEEF957 org.openjfx:javafx-swing:23.0.2:mac-aarch64
+EDD536594023B0778ECEAD9CBEA34E72EAF0F517 org.openjfx:javafx-fxml:23.0.2:mac-aarch64

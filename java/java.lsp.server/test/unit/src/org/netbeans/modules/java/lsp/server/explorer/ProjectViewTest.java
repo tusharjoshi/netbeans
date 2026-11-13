@@ -63,6 +63,7 @@ import org.netbeans.api.project.ui.OpenProjects;
 import org.netbeans.api.sendopts.CommandLine;
 import org.netbeans.api.templates.FileBuilder;
 import org.netbeans.junit.NbTestCase;
+import static org.netbeans.modules.java.lsp.server.LspTestUtils.tripleSlashUri;
 import org.netbeans.modules.java.lsp.server.explorer.api.CreateExplorerParams;
 import org.netbeans.modules.java.lsp.server.explorer.api.NodeChangedParams;
 import org.netbeans.modules.java.lsp.server.explorer.api.NodeOperationParams;
@@ -76,6 +77,8 @@ import org.netbeans.modules.java.lsp.server.input.QuickPickItem;
 import org.netbeans.modules.java.lsp.server.input.ShowInputBoxParams;
 import org.netbeans.modules.java.lsp.server.input.ShowMutliStepInputParams;
 import org.netbeans.modules.java.lsp.server.input.ShowQuickPickParams;
+import org.netbeans.modules.java.lsp.server.protocol.ClientConfigurationManager;
+import org.netbeans.modules.java.lsp.server.protocol.OutputMessage;
 import org.netbeans.modules.java.lsp.server.protocol.SaveDocumentRequestParams;
 import org.netbeans.modules.java.lsp.server.protocol.SetTextEditorDecorationParams;
 import org.netbeans.modules.java.lsp.server.protocol.ShowStatusMessageParams;
@@ -99,14 +102,6 @@ public class ProjectViewTest extends NbTestCase {
     private final Gson gson = new Gson();
     private Socket clientSocket;
     private Thread serverThread;
-    
-    static {
-        // TODO remove ASAP from MicronautGradleArtifactsImplTest and ProjectViewTest
-        // investigate "javax.net.ssl.SSLHandshakeException: Received fatal alert: handshake_failure"
-        // during gradle download "at org.netbeans.modules.gradle.spi.newproject.TemplateOperation$InitStep.execute(TemplateOperation.java:317)"
-        // this looks like a misconfigured webserver to me
-        System.setProperty("https.protocols", "TLSv1.2");
-    }
 
     public ProjectViewTest(String name) {
         super(name);
@@ -148,6 +143,7 @@ public class ProjectViewTest extends NbTestCase {
         Semaphore nodeChanges = new Semaphore(0);
         NbCodeClientCapabilities caps = new NbCodeClientCapabilities();
         List<MessageParams> loggedMessages = new ArrayList<>();
+        ClientConfigurationManager confManager = new ClientConfigurationManager(this);
 
         @Override
         public CompletableFuture<Void> createProgress(WorkDoneProgressCreateParams params) {
@@ -284,6 +280,31 @@ public class ProjectViewTest extends NbTestCase {
         public CompletableFuture<Boolean> requestDocumentSave(SaveDocumentRequestParams documentUris) {
             return CompletableFuture.completedFuture(false);
         }
+
+        @Override
+        public CompletableFuture<Void> writeOutput(OutputMessage message) {
+            return CompletableFuture.completedFuture(null);
+        }
+
+        @Override
+        public CompletableFuture<Void> showOutput(String outputName) {
+            return CompletableFuture.completedFuture(null);
+        }
+
+        @Override
+        public CompletableFuture<Void> closeOutput(String outputName) {
+            return CompletableFuture.completedFuture(null);
+        }
+        
+        @Override
+        public CompletableFuture<Void> resetOutput(String outputName) {
+            return CompletableFuture.completedFuture(null);
+        }
+
+        @Override
+        public ClientConfigurationManager getClientConfigurationManager() {
+            return confManager;
+        }
     }
 
     private static Launcher<NbLanguageServer> createLauncher(NbCodeLanguageClient client, InputStream in, OutputStream out,
@@ -396,7 +417,7 @@ public class ProjectViewTest extends NbTestCase {
         InitializeResult result = server.initialize(new InitializeParams()).get();
                 
         // by default the ProjectsRootNode initializes its contents asynchronously; a proper reaction to that will be tested in another testcase. Save the complexity here.
-        System.setProperty("test.projectnode.sync", "true");
+        System.setProperty("treeViewProvider.sync", "true");
 
         CompletableFuture<TreeItem> explorer = server.getTreeViewService().explorerManager(new CreateExplorerParams("foundProjects"));
         TreeItem root = explorer.get();
@@ -504,7 +525,7 @@ public class ProjectViewTest extends NbTestCase {
             }
         }
         
-        assertEquals(URLMapper.findURL(newFile, URLMapper.EXTERNAL).toString(), found.resourceUri);
+        assertEquals(tripleSlashUri(URLMapper.findURL(newFile, URLMapper.EXTERNAL).toString()), found.resourceUri);
     }
     
     /**

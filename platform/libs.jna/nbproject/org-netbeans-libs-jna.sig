@@ -1,5 +1,5 @@
 #Signature file v4.1
-#Version 2.19
+#Version 2.28
 
 CLSS public abstract interface com.sun.jna.AltCallingConvention
 
@@ -28,7 +28,7 @@ meth public abstract java.lang.Object callback(java.lang.Object[])
 CLSS public com.sun.jna.CallbackReference
 intf java.io.Closeable
 meth protected void dispose()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public com.sun.jna.Pointer getTrampoline()
 meth public static com.sun.jna.Callback getCallback(java.lang.Class<?>,com.sun.jna.Pointer)
 meth public static com.sun.jna.Pointer getFunctionPointer(com.sun.jna.Callback)
@@ -201,7 +201,7 @@ meth protected static long malloc(long)
 meth protected static void free(long)
 meth protected void boundsCheck(long,long)
 meth protected void dispose()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public boolean valid()
 meth public byte getByte(long)
 meth public char getChar(long)
@@ -274,8 +274,8 @@ fld public final static int POINTER_SIZE
 fld public final static int SIZE_T_SIZE
 fld public final static int WCHAR_SIZE
 fld public final static java.lang.String DEFAULT_ENCODING
-fld public final static java.lang.String VERSION = "5.14.0"
-fld public final static java.lang.String VERSION_NATIVE = "7.0.0"
+fld public final static java.lang.String VERSION = "5.19.1"
+fld public final static java.lang.String VERSION_NATIVE = "7.0.4"
 fld public final static java.nio.charset.Charset DEFAULT_CHARSET
 innr public abstract interface static ffi_callback
 meth public static <%0 extends com.sun.jna.Library> {%%0} load(java.lang.Class<{%%0}>)
@@ -283,13 +283,13 @@ meth public static <%0 extends com.sun.jna.Library> {%%0} load(java.lang.Class<{
 meth public static <%0 extends com.sun.jna.Library> {%%0} load(java.lang.String,java.lang.Class<{%%0}>)
 meth public static <%0 extends com.sun.jna.Library> {%%0} load(java.lang.String,java.lang.Class<{%%0}>,java.util.Map<java.lang.String,?>)
 meth public static <%0 extends java.lang.Object> {%%0} loadLibrary(java.lang.Class<{%%0}>)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static <%0 extends java.lang.Object> {%%0} loadLibrary(java.lang.Class<{%%0}>,java.util.Map<java.lang.String,?>)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static <%0 extends java.lang.Object> {%%0} loadLibrary(java.lang.String,java.lang.Class<{%%0}>)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static <%0 extends java.lang.Object> {%%0} loadLibrary(java.lang.String,java.lang.Class<{%%0}>,java.util.Map<java.lang.String,?>)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static boolean isProtected()
 meth public static boolean isSupportedNativeType(java.lang.Class<?>)
 meth public static boolean registered(java.lang.Class<?>)
@@ -299,6 +299,8 @@ meth public static byte[] toByteArray(java.lang.String,java.nio.charset.Charset)
 meth public static char[] toCharArray(java.lang.String)
 meth public static com.sun.jna.Callback$UncaughtExceptionHandler getCallbackExceptionHandler()
 meth public static com.sun.jna.Library synchronizedLibrary(com.sun.jna.Library)
+meth public static com.sun.jna.NativeLibrary getNativeLibrary(com.sun.jna.Library)
+meth public static com.sun.jna.NativeLibrary getNativeLibrary(java.lang.Class<?>)
 meth public static com.sun.jna.Pointer getComponentPointer(java.awt.Component)
 meth public static com.sun.jna.Pointer getDirectBufferPointer(java.nio.Buffer)
 meth public static com.sun.jna.Pointer getWindowPointer(java.awt.Window)
@@ -340,7 +342,7 @@ meth public static void setProtected(boolean)
 meth public static void unregister()
 meth public static void unregister(java.lang.Class<?>)
 supr java.lang.Object
-hfds CB_HAS_INITIALIZER,CB_OPTION_DIRECT,CB_OPTION_IN_DLL,CVT_ARRAY_BOOLEAN,CVT_ARRAY_BYTE,CVT_ARRAY_CHAR,CVT_ARRAY_DOUBLE,CVT_ARRAY_FLOAT,CVT_ARRAY_INT,CVT_ARRAY_LONG,CVT_ARRAY_SHORT,CVT_BOOLEAN,CVT_BUFFER,CVT_BYTE,CVT_CALLBACK,CVT_DEFAULT,CVT_FLOAT,CVT_INTEGER_TYPE,CVT_JNIENV,CVT_NATIVE_MAPPED,CVT_NATIVE_MAPPED_STRING,CVT_NATIVE_MAPPED_WSTRING,CVT_OBJECT,CVT_POINTER,CVT_POINTER_TYPE,CVT_SHORT,CVT_STRING,CVT_STRUCTURE,CVT_STRUCTURE_BYVAL,CVT_TYPE_MAPPER,CVT_TYPE_MAPPER_STRING,CVT_TYPE_MAPPER_WSTRING,CVT_UNSUPPORTED,CVT_WSTRING,DEBUG_JNA_LOAD_LEVEL,DEFAULT_HANDLER,JNA_TMPLIB_PREFIX,LOG,MAX_ALIGNMENT,MAX_PADDING,TYPE_BOOL,TYPE_LONG,TYPE_LONG_DOUBLE,TYPE_SIZE_T,TYPE_VOIDP,TYPE_WCHAR_T,_OPTION_ENCLOSING_LIBRARY,callbackExceptionHandler,finalizer,jnidispatchPath,libraries,nativeThreadTerminationFlag,nativeThreads,registeredClasses,registeredLibraries,typeOptions
+hfds CB_HAS_INITIALIZER,CB_OPTION_DIRECT,CB_OPTION_IN_DLL,CVT_ARRAY_BOOLEAN,CVT_ARRAY_BYTE,CVT_ARRAY_CHAR,CVT_ARRAY_DOUBLE,CVT_ARRAY_FLOAT,CVT_ARRAY_INT,CVT_ARRAY_LONG,CVT_ARRAY_SHORT,CVT_BOOLEAN,CVT_BUFFER,CVT_BYTE,CVT_CALLBACK,CVT_DEFAULT,CVT_FLOAT,CVT_INTEGER_TYPE,CVT_JNIENV,CVT_NATIVE_MAPPED,CVT_NATIVE_MAPPED_STRING,CVT_NATIVE_MAPPED_WSTRING,CVT_OBJECT,CVT_POINTER,CVT_POINTER_TYPE,CVT_SHORT,CVT_STRING,CVT_STRUCTURE,CVT_STRUCTURE_BYVAL,CVT_TYPE_MAPPER,CVT_TYPE_MAPPER_STRING,CVT_TYPE_MAPPER_WSTRING,CVT_UNSUPPORTED,CVT_WSTRING,DEBUG_JNA_LOAD_LEVEL,DEFAULT_HANDLER,JNA_TMPLIB_PREFIX,LOG,MAX_ALIGNMENT,MAX_PADDING,TYPE_BOOL,TYPE_LONG,TYPE_LONG_DOUBLE,TYPE_SIZE_T,TYPE_VOIDP,TYPE_WCHAR_T,_OPTION_ENCLOSING_LIBRARY,accessControllerDoPrivileged,callbackExceptionHandler,finalizer,jnidispatchPath,libraries,nativeThreadTerminationFlag,nativeThreads,registeredClasses,registeredLibraries,securityManagerExposerConstructor,securityManagerGetClassContext,stackWalkerFilter,stackWalkerGetInstance,stackWalkerRetainClassReference,stackWalkerWalk,typeOptions
 hcls AWT,Buffers
 
 CLSS public abstract interface static com.sun.jna.Native$ffi_callback
@@ -365,7 +367,7 @@ meth public java.lang.String toString()
 meth public java.util.Map<java.lang.String,?> getOptions()
 meth public void close()
 meth public void dispose()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 supr java.lang.Object
 hfds DEBUG_LOAD_LEVEL,DEFAULT_OPEN_OPTIONS,LOG,NATIVE_SYMBOL_PROVIDER,addSuppressedMethod,callFlags,cleanable,encoding,functions,handle,libraries,libraryName,libraryPath,librarySearchPath,options,searchPaths,symbolProvider
 hcls NativeLibraryDisposer
@@ -402,6 +404,7 @@ fld public final static boolean HAS_JAWT
 fld public final static boolean RO_FIELDS
 fld public final static int AIX = 7
 fld public final static int ANDROID = 8
+fld public final static int DRAGONFLYBSD = 12
 fld public final static int FREEBSD = 4
 fld public final static int GNU = 9
 fld public final static int KFREEBSD = 10
@@ -422,6 +425,7 @@ meth public final static boolean is64Bit()
 meth public final static boolean isAIX()
 meth public final static boolean isARM()
 meth public final static boolean isAndroid()
+meth public final static boolean isDragonFlyBSD()
 meth public final static boolean isFreeBSD()
 meth public final static boolean isGNU()
 meth public final static boolean isIntel()
@@ -432,6 +436,7 @@ meth public final static boolean isMac()
 meth public final static boolean isNetBSD()
 meth public final static boolean isOpenBSD()
 meth public final static boolean isPPC()
+meth public final static boolean isRISCV()
 meth public final static boolean isSPARC()
 meth public final static boolean isSolaris()
 meth public final static boolean isWindows()
@@ -616,7 +621,7 @@ meth public void write()
 meth public void writeField(java.lang.String)
 meth public void writeField(java.lang.String,java.lang.Object)
 supr java.lang.Object
-hfds LOG,PLACEHOLDER_MEMORY,actualAlignType,alignType,array,autoRead,autoWrite,busy,encoding,fieldOrder,layoutInfo,memory,nativeStrings,readCalled,reads,size,structAlignment,structFields,typeInfo,typeMapper
+hfds LOG,PLACEHOLDER_MEMORY,actualAlignType,alignType,array,autoRead,autoWrite,busy,cacheStructureLock,encoding,fieldList,fieldOrder,layoutInfo,memory,nativeStrings,readCalled,reads,size,structAlignment,structFields,typeInfo,typeMapper,validationMap
 hcls AutoAllocated,FFIType,LayoutInfo,NativeStringTracking,StructureSet
 
 CLSS public abstract interface static com.sun.jna.Structure$ByReference
@@ -850,8 +855,10 @@ meth public abstract char charAt(int)
 meth public abstract int length()
 meth public abstract java.lang.CharSequence subSequence(int,int)
 meth public abstract java.lang.String toString()
+meth public boolean isEmpty()
 meth public java.util.stream.IntStream chars()
 meth public java.util.stream.IntStream codePoints()
+meth public static int compare(java.lang.CharSequence,java.lang.CharSequence)
 
 CLSS public abstract interface java.lang.Comparable<%0 extends java.lang.Object>
 meth public abstract int compareTo({java.lang.Comparable%0})
@@ -879,6 +886,7 @@ CLSS public java.lang.Object
 cons public init()
 meth protected java.lang.Object clone() throws java.lang.CloneNotSupportedException
 meth protected void finalize() throws java.lang.Throwable
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="9")
 meth public boolean equals(java.lang.Object)
 meth public final java.lang.Class<?> getClass()
 meth public final void notify()
@@ -946,8 +954,12 @@ intf java.lang.annotation.Annotation
 meth public abstract java.lang.annotation.ElementType[] value()
 
 CLSS public abstract java.lang.ref.Reference<%0 extends java.lang.Object>
+meth protected java.lang.Object clone() throws java.lang.CloneNotSupportedException
 meth public boolean enqueue()
 meth public boolean isEnqueued()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="16")
+meth public final boolean refersTo({java.lang.ref.Reference%0})
+meth public static void reachabilityFence(java.lang.Object)
 meth public void clear()
 meth public {java.lang.ref.Reference%0} get()
 supr java.lang.Object
@@ -958,5 +970,6 @@ cons public init({java.lang.ref.WeakReference%0},java.lang.ref.ReferenceQueue<? 
 supr java.lang.ref.Reference<{java.lang.ref.WeakReference%0}>
 
 CLSS public abstract interface java.lang.reflect.InvocationHandler
+meth public !varargs static java.lang.Object invokeDefault(java.lang.Object,java.lang.reflect.Method,java.lang.Object[]) throws java.lang.Throwable
 meth public abstract java.lang.Object invoke(java.lang.Object,java.lang.reflect.Method,java.lang.Object[]) throws java.lang.Throwable
 

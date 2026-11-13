@@ -210,7 +210,7 @@ public class BatchSearch {
                 toRegisterSet.add(cpInfo.getClassPath(PathKind.SOURCE));
             }
 
-            toRegister = !toRegisterSet.isEmpty() ? toRegisterSet.toArray(new ClassPath[0]) : null;
+            toRegister = !toRegisterSet.isEmpty() ? toRegisterSet.toArray(ClassPath[]::new) : null;
 
             if (toRegister != null) {
                 GlobalPathRegistry.getDefault().register(ClassPath.SOURCE, toRegister);
@@ -359,8 +359,8 @@ public class BatchSearch {
             Folder[] result = new Folder[list.size()];
             int i=0;
             for (Object item:list) {
-                if (item instanceof FileObject)
-                    result[i] = new Folder((FileObject) item);
+                if (item instanceof FileObject fileObject)
+                    result[i] = new Folder(fileObject);
                 else 
                     result[i] = new Folder((NonRecursiveFolder) item);
                 i++;
@@ -493,8 +493,8 @@ public class BatchSearch {
                         continue;
                     }
                     int[] span = new int[] {
-                        (int) ci.getTrees().getSourcePositions().getStartPosition(ci.getCompilationUnit(), tp.getLeaf()),
-                        (int) ci.getTrees().getSourcePositions().getEndPosition(ci.getCompilationUnit(), tp.getLeaf())
+                        (int) ci.getTrees().getSourcePositions().getStartPosition(tp.getLeaf()),
+                        (int) ci.getTrees().getSourcePositions().getEndPosition(tp.getLeaf())
                     };
 
                     result.add(span);

@@ -24,7 +24,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -265,7 +264,7 @@ public class PluginIndexManager {
         qf.setValue(prefix);
         qf.setOccur(QueryField.OCCUR_MUST);
         qf.setMatch(QueryField.MATCH_EXACT);
-        for (NBVersionInfo v : RepositoryQueries.findResult(Collections.singletonList(qf), null).getResults()) {
+        for (NBVersionInfo v : RepositoryQueries.findResult(List.of(qf), null).getResults()) {
             result.add(v.getGroupId() + '|' + v.getArtifactId() + '|' + v.getVersion());
         }
         // This is more complete but much too slow:
@@ -331,7 +330,7 @@ public class PluginIndexManager {
         return Collections.emptyMap();
     }
     private static Map<String,List<String>> parsePhases(String u, String packaging) throws Exception {
-        Document doc = XMLUtil.parse(new InputSource(u), false, false, XMLUtil.defaultErrorHandler(), null);
+        Document doc = XMLUtil.parse(new InputSource(u), false, false, true, XMLUtil.defaultErrorHandler(), null);
         for (Element componentsEl : XMLUtil.findSubElements(doc.getDocumentElement())) {
             for (Element componentEl : XMLUtil.findSubElements(componentsEl)) {
                 if (XMLUtil.findText(XMLUtil.findElement(componentEl, "role", null)).trim().equals("org.apache.maven.lifecycle.mapping.LifecycleMapping")
@@ -380,8 +379,8 @@ public class PluginIndexManager {
             return null;
         }
         LOG.log(Level.FINER, "parsing plugin.xml from {0}", jar);
-            try {
-            return XMLUtil.parse(new InputSource("jar:" + BaseUtilities.toURI(jar) + "!/META-INF/maven/plugin.xml"), false, false, XMLUtil.defaultErrorHandler(), null);
+        try {
+            return XMLUtil.parse(new InputSource("jar:" + BaseUtilities.toURI(jar) + "!/META-INF/maven/plugin.xml"), false, false, true, XMLUtil.defaultErrorHandler(), null);
         } catch (Exception x) {
             LOG.log(Level.FINE, "could not parse " + jar, x.toString());
             return null;

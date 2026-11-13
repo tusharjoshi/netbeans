@@ -39,6 +39,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -69,7 +70,10 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.swing.text.Document;
 import org.netbeans.api.editor.mimelookup.MimeRegistration;
+import org.netbeans.api.java.classpath.ClassPath;
 import org.netbeans.api.java.lexer.JavaTokenId;
+import org.netbeans.api.java.queries.SourceJavadocAttacher;
+import org.netbeans.api.java.source.ClasspathInfo;
 import org.netbeans.api.java.source.CodeStyle;
 import org.netbeans.api.java.source.CodeStyleUtils;
 import org.netbeans.api.java.source.CompilationController;
@@ -97,6 +101,7 @@ import org.netbeans.modules.parsing.api.ResultIterator;
 import org.netbeans.modules.parsing.api.Source;
 import org.netbeans.modules.parsing.api.UserTask;
 import org.netbeans.modules.parsing.spi.ParseException;
+import org.netbeans.spi.java.classpath.support.ClassPathSupport;
 import org.netbeans.spi.lsp.CompletionCollector;
 import org.openide.filesystems.FileObject;
 import org.openide.util.Exceptions;
@@ -161,9 +166,50 @@ public class JavaCompletionCollector implements CompletionCollector {
                     @Override
                     public Future<String> create(CompilationInfo compilationInfo, Element element, Callable<Boolean> cancel) {
                         ElementJavadoc doc = ElementJavadoc.create(compilationInfo, element, cancel);
+                        if (doc.getGotoSourceAction() == null && doc.getURL() == null) {
+                            // try to attach sources and get doc from them
+                            CompletableFuture<String> docFromSources = docFromAttachedSources(compilationInfo, element, cancel, doc);
+                            if (docFromSources != null) {
+                                return docFromSources;
+                            }
+                        }
                         return ((CompletableFuture<String>) doc.getTextAsync()).thenApplyAsync(content -> {
                             return Utilities.resolveLinks(content, doc);
                         });
+                    }
+
+                    private CompletableFuture<String> docFromAttachedSources(CompilationInfo compilationInfo, Element element, Callable<Boolean> cancel, ElementJavadoc currentDoc) {
+                        final TypeElement te = compilationInfo.getElementUtilities().outermostTypeElement(element);
+                        final ClasspathInfo cpInfo = compilationInfo.getClasspathInfo();
+                        final ClassPath cp = ClassPathSupport.createProxyClassPath(
+                                cpInfo.getClassPath(ClasspathInfo.PathKind.BOOT),
+                                cpInfo.getClassPath(ClasspathInfo.PathKind.COMPILE),
+                                cpInfo.getClassPath(ClasspathInfo.PathKind.SOURCE));
+                        final FileObject resource = cp.findResource(te.getQualifiedName().toString().replace('.', '/') + ".class");
+                        if (resource != null) {
+                            final FileObject root = cp.findOwnerRoot(resource);
+                            if (root != null) {
+                                CompletableFuture<String> future = new CompletableFuture<>();
+                                try {
+                                    SourceJavadocAttacher.attachSources(root.toURL(), new SourceJavadocAttacher.AttachmentListener() {
+                                        @Override
+                                        public void attachmentSucceeded() {
+                                            ElementJavadoc ejd = ElementJavadoc.create(compilationInfo, element, cancel);
+                                            future.complete(Utilities.resolveLinks(ejd.getText(), ejd));
+                                        }
+
+                                        @Override
+                                        public void attachmentFailed() {
+                                            future.complete(Utilities.resolveLinks(currentDoc.getText(), currentDoc));
+                                        }
+                                    });
+                                }catch (Throwable t) {
+                                    future.completeExceptionally(t);
+                                }
+                                return future;
+                            }
+                        }
+                        return null;
                     }
                 }, () -> false);
                 ParserManager.parse(Collections.singletonList(Source.create(doc)), new UserTask() {
@@ -221,25 +267,34 @@ public class JavaCompletionCollector implements CompletionCollector {
         }
     }
 
-    public static Supplier<List<TextEdit>> addImport(Document doc, int offset, ElementHandle<?> handle) {
+    public static Supplier<List<TextEdit>> addImportAndInjectPackageIfNeeded(Document doc, int offset, ElementHandle<?> handle) {
         return () -> {
-            AtomicReference<String> pkg = new AtomicReference<>();
-            List<TextEdit> textEdits = modify2TextEdits(JavaSource.forDocument(doc), copy -> {
-                copy.toPhase(JavaSource.Phase.RESOLVED);
-                String fqn = SourceUtils.resolveImport(copy, copy.getTreeUtilities().pathFor(offset), handle.getQualifiedName());
-                if (fqn != null) {
-                    int idx = fqn.lastIndexOf('.');
-                    if (idx >= 0) {
-                        pkg.set(fqn.substring(0, idx + 1));
-                    }
-                }
-            });
-            if (textEdits.isEmpty() && pkg.get() != null) {
-                textEdits.add(new TextEdit(offset, offset, pkg.get()));
+            ResolvedImport resolved = addImport(doc, offset, handle);
+            List<TextEdit> edits;
+            String insertName = resolved.insertName();
+            int dotIdx = insertName.lastIndexOf('.');
+            if (dotIdx >= 0) {
+                edits = new ArrayList<>(resolved.importEdits().size() + 1);
+                edits.addAll(resolved.importEdits());
+                edits.add(new TextEdit(offset, offset, insertName.substring(0, dotIdx + 1)));
+            } else {
+                edits = resolved.importEdits();
             }
-            return textEdits;
+            return edits;
         };
     }
+
+    public static ResolvedImport addImport(Document doc, int offset, ElementHandle<?> handle) {
+        AtomicReference<String> insertName = new AtomicReference<>();
+        List<TextEdit> textEdits = modify2TextEdits(JavaSource.forDocument(doc), copy -> {
+            copy.toPhase(JavaSource.Phase.RESOLVED);
+            insertName.set(SourceUtils.resolveImport(copy, copy.getTreeUtilities().pathFor(offset), handle.getQualifiedName()));
+        });
+
+        return new ResolvedImport(textEdits, insertName.get());
+    }
+
+    public record ResolvedImport(List<TextEdit> importEdits, String insertName) {}
 
     public static boolean isOfKind(Element e, EnumSet<ElementKind> kinds) {
         if (kinds.contains(e.getKind())) {
@@ -318,6 +373,7 @@ public class JavaCompletionCollector implements CompletionCollector {
                     .kind(Completion.Kind.Folder)
                     .sortText(String.format("%04d%s", 1950, moduleName))
                     .insertTextFormat(Completion.TextFormat.PlainText)
+                    .textEdit(new TextEdit(substitutionOffset, offset, moduleName))
                     .build();
         }
 
@@ -430,7 +486,7 @@ public class JavaCompletionCollector implements CompletionCollector {
                 TreePath tp = info.getTreeUtilities().pathFor(substitutionOffset);
                 if (castStartOffset < 0) {
                     if (tp != null && tp.getLeaf().getKind() == Tree.Kind.MEMBER_SELECT) {
-                        castStartOffset = (int)info.getTrees().getSourcePositions().getStartPosition(tp.getCompilationUnit(), tp.getLeaf());
+                        castStartOffset = (int)info.getTrees().getSourcePositions().getStartPosition(tp.getLeaf());
                     }
                 }
                 StringBuilder castText = new StringBuilder();
@@ -472,23 +528,28 @@ public class JavaCompletionCollector implements CompletionCollector {
         }
 
         @Override
-        public Completion createExecutableItem(CompilationInfo info, ExecutableElement elem, ExecutableType type, int substitutionOffset, ReferencesCount referencesCount, boolean isInherited, boolean isDeprecated, boolean inImport, boolean addSemicolon, boolean smartType, int assignToVarOffset, boolean memberRef) {
-            return createExecutableItem(info, elem, type, null, null, substitutionOffset, referencesCount, isInherited, isDeprecated, inImport, addSemicolon, smartType, assignToVarOffset, memberRef);
+        public Completion createExecutableItem(CompilationInfo info, ExecutableElement elem, ExecutableType type, int substitutionOffset, ReferencesCount referencesCount, boolean isInherited, boolean isDeprecated, boolean inImport, boolean addSemicolon, boolean smartType, int assignToVarOffset, boolean memberRef, boolean insertTextParams) {
+            return createExecutableItem(info, elem, type, substitutionOffset, referencesCount, isInherited, isDeprecated, inImport, addSemicolon, false, smartType, assignToVarOffset, memberRef, insertTextParams);
         }
 
         @Override
-        public Completion createTypeCastableExecutableItem(CompilationInfo info, ExecutableElement elem, ExecutableType type, TypeMirror castType, int substitutionOffset, ReferencesCount referencesCount, boolean isInherited, boolean isDeprecated, boolean inImport, boolean addSemicolon, boolean smartType, int assignToVarOffset, boolean memberRef) {
-            return createExecutableItem(info, elem, type, null, castType, substitutionOffset, referencesCount, isInherited, isDeprecated, inImport, addSemicolon, smartType, assignToVarOffset, memberRef);
+        public Completion createExecutableItem(CompilationInfo info, ExecutableElement elem, ExecutableType type, int substitutionOffset, ReferencesCount referencesCount, boolean isInherited, boolean isDeprecated, boolean inImport, boolean addSemicolon, boolean afterConstructorTypeParams, boolean smartType, int assignToVarOffset, boolean memberRef, boolean insertTextParams) {
+            return createExecutableItem(info, elem, type, null, null, substitutionOffset, referencesCount, isInherited, isDeprecated, inImport, addSemicolon, afterConstructorTypeParams, smartType, assignToVarOffset, memberRef, insertTextParams);
         }
 
         @Override
-        public Completion createThisOrSuperConstructorItem(CompilationInfo info, ExecutableElement elem, ExecutableType type, int substitutionOffset, boolean isDeprecated, String name) {
-            return createExecutableItem(info, elem, type, name, null, substitutionOffset, null, false, isDeprecated, false, false, false, -1, false);
+        public Completion createTypeCastableExecutableItem(CompilationInfo info, ExecutableElement elem, ExecutableType type, TypeMirror castType, int substitutionOffset, ReferencesCount referencesCount, boolean isInherited, boolean isDeprecated, boolean inImport, boolean addSemicolon, boolean smartType, int assignToVarOffset, boolean memberRef, boolean insertTextParams) {
+            return createExecutableItem(info, elem, type, null, castType, substitutionOffset, referencesCount, isInherited, isDeprecated, inImport, addSemicolon, false, smartType, assignToVarOffset, memberRef, insertTextParams);
+        }
+
+        @Override
+        public Completion createThisOrSuperConstructorItem(CompilationInfo info, ExecutableElement elem, ExecutableType type, int substitutionOffset, boolean isDeprecated, String name, boolean insertTextParams) {
+            return createExecutableItem(info, elem, type, name, null, substitutionOffset, null, false, isDeprecated, false, false, false, false, -1, false, insertTextParams);
         }
 
         @Override
         public Completion createOverrideMethodItem(CompilationInfo info, ExecutableElement elem, ExecutableType type, int substitutionOffset, boolean implement) {
-            Completion item = createExecutableItem(info, elem, type, substitutionOffset, null, false, false, false, false, false, -1, false);
+            Completion item = createExecutableItem(info, elem, type, substitutionOffset, null, false, false, false, false, false, -1, false, true);
             CompletionCollector.Builder builder = CompletionCollector.newBuilder(item.getLabel())
                     .kind(elementKind2CompletionItemKind(elem.getKind()))
                     .labelDetail(String.format("%s - %s", item.getLabelDetail(), implement ? "implement" : "override"))
@@ -579,7 +640,7 @@ public class JavaCompletionCollector implements CompletionCollector {
                     } else {
                         insertText.append("\n{\n$0}");
                     }
-                    builder.command(new Command("Complete Abstract Methods", "java.complete.abstract.methods"));
+                    builder.command(new Command("Complete Abstract Methods", "nbls.java.complete.abstract.methods"));
                 } catch (IOException ioe) {
                 }
                 builder.insertTextFormat(Completion.TextFormat.Snippet);
@@ -630,7 +691,8 @@ public class JavaCompletionCollector implements CompletionCollector {
                 if (ts.moveNext() && ts.offset() <= offset) {
                     switch (ts.token().id()) {
                         case STRING_LITERAL:
-                            textEdit = new TextEdit(ts.offset(), offset, value);
+                            int end = ts.offset() + ts.token().length() == offset + 1 ? offset + 1 : offset;
+                            textEdit = new TextEdit(ts.offset(), end, value);
                             break;
                         case MULTILINE_STRING_LITERAL:
                             String[] tokenLines = ts.token().text().toString().split("\n");
@@ -651,7 +713,7 @@ public class JavaCompletionCollector implements CompletionCollector {
                 }
             }
             Builder builder = CompletionCollector.newBuilder(label)
-                    .kind(Completion.Kind.Text)
+                    .kind(Completion.Kind.Value)
                     .sortText(value)
                     .insertTextFormat(Completion.TextFormat.PlainText)
                     .documentation(documentation);
@@ -664,25 +726,20 @@ public class JavaCompletionCollector implements CompletionCollector {
         private static final Object KEY_IMPORT_TEXT_EDITS = new Object();
 
         @Override
-        public Completion createStaticMemberItem(CompilationInfo info, DeclaredType type, Element memberElem, TypeMirror memberType, boolean multipleVersions, int substitutionOffset, boolean isDeprecated, boolean addSemicolon) {
-            //TODO: prefer static imports (but would be much slower?)
-            //TODO: should be resolveImport instead of addImports:
-            Map<Element, TextEdit> imports = (Map<Element, TextEdit>) info.getCachedValue(KEY_IMPORT_TEXT_EDITS);
+        public Completion createStaticMemberItem(CompilationInfo info, DeclaredType type, Element memberElem, TypeMirror memberType, boolean multipleVersions, int substitutionOffset, boolean isDeprecated, boolean addSemicolon, boolean smartType) {
+            Map<Element, ResolvedImport> imports = (Map<Element, ResolvedImport>) info.getCachedValue(KEY_IMPORT_TEXT_EDITS);
             if (imports == null) {
                 info.putCachedValue(KEY_IMPORT_TEXT_EDITS, imports = new HashMap<>(), CompilationInfo.CacheClearPolicy.ON_TASK_END);
             }
-            TextEdit currentClassImport = imports.computeIfAbsent(type.asElement(), toImport -> {
-                List<TextEdit> textEdits = modify2TextEdits(JavaSource.forFileObject(info.getFileObject()), wc -> {
-                    wc.toPhase(JavaSource.Phase.ELEMENTS_RESOLVED);
-                    wc.rewrite(info.getCompilationUnit(), GeneratorUtilities.get(wc).addImports(wc.getCompilationUnit(), new HashSet<>(Arrays.asList(toImport))));
-                });
-                return textEdits.isEmpty() ? null : textEdits.get(0);
+            ResolvedImport currentClassImport = imports.computeIfAbsent(type.asElement(), toImport -> {
+                return addImport(doc, offset, ElementHandle.create(toImport));
             });
             String label = type.asElement().getSimpleName() + "." + memberElem.getSimpleName();
             String sortText = memberElem.getSimpleName().toString();
             String memberTypeName;
             StringBuilder labelDetail = new StringBuilder();
-            StringBuilder insertText = new StringBuilder(label);
+            StringBuilder insertText = new StringBuilder();
+            insertText.append(currentClassImport.insertName()).append(".").append(memberElem.getSimpleName());
             boolean asTemplate = false;
             if (memberElem.getKind().isField()) {
                 memberTypeName = Utilities.getTypeName(info, memberType, false).toString();
@@ -739,12 +796,12 @@ public class JavaCompletionCollector implements CompletionCollector {
                     .labelDescription(memberTypeName)
                     .insertText(insertText.toString())
                     .insertTextFormat(asTemplate ? Completion.TextFormat.Snippet : Completion.TextFormat.PlainText)
-                    .sortText(String.format("%04d%s", memberElem.getKind().isField() ? 720 : 750, sortText));
+                    .sortText(String.format("%04d%s", (memberElem.getKind().isField() ? 720 : 750) + (smartType ? 0: 1000), sortText));
             if (labelDetail.length() > 0) {
                 builder.labelDetail(labelDetail.toString());
             }
-            if (currentClassImport != null) {
-                builder.additionalTextEdits(Collections.singletonList(currentClassImport));
+            if (!currentClassImport.importEdits().isEmpty()) {
+                builder.additionalTextEdits(currentClassImport.importEdits());
             }
             ElementHandle<Element> handle = SUPPORTED_ELEMENT_KINDS.contains(memberElem.getKind().name()) ? ElementHandle.create(memberElem) : null;
             if (handle != null) {
@@ -757,7 +814,7 @@ public class JavaCompletionCollector implements CompletionCollector {
         }
 
         @Override
-        public Completion createStaticMemberItem(ElementHandle<TypeElement> handle, String name, int substitutionOffset, boolean addSemicolon, ReferencesCount referencesCount, Source source) {
+        public Completion createStaticMemberItem(ElementHandle<TypeElement> handle, String name, int substitutionOffset, boolean addSemicolon, ReferencesCount referencesCount, Source source, boolean smartType) {
             return null; //TODO: fill
         }
 
@@ -814,6 +871,7 @@ public class JavaCompletionCollector implements CompletionCollector {
             }
             labelDetail.append(") - generate");
             sortParams.append(')');
+            ElementHandle<?> parentPath = ElementHandle.create(parent);
             return CompletionCollector.newBuilder(simpleName)
                     .kind(Completion.Kind.Constructor)
                     .labelDetail(labelDetail.toString())
@@ -824,7 +882,11 @@ public class JavaCompletionCollector implements CompletionCollector {
                         wc.toPhase(JavaSource.Phase.ELEMENTS_RESOLVED);
                         TreePath tp = wc.getTreeUtilities().pathFor(substitutionOffset);
                         if (TreeUtilities.CLASS_TREE_KINDS.contains(tp.getLeaf().getKind())) {
-                            if (parent == wc.getTrees().getElement(tp)) {
+                            Element currentType = wc.getTrees().getElement(tp);
+                            ElementHandle<?> currentTypePath =
+                                    currentType != null ? ElementHandle.create(currentType)
+                                                        : null;
+                            if (Objects.equals(parentPath, currentTypePath)) {
                                 ArrayList<VariableElement> fieldElements = new ArrayList<>();
                                 for (VariableElement fieldElement : fields) {
                                     if (fieldElement != null && fieldElement.getKind().isField()) {
@@ -1040,7 +1102,7 @@ public class JavaCompletionCollector implements CompletionCollector {
             if (handle != null) {
                 builder.documentation(getDocumentation(doc, off, handle));
                 if (!addSimpleName && !inImport) {
-                    builder.additionalTextEdits(addImport(doc, off, handle));
+                    builder.additionalTextEdits(addImportAndInjectPackageIfNeeded(doc, off, handle));
                 }
             }
             if (isDeprecated) {
@@ -1049,14 +1111,16 @@ public class JavaCompletionCollector implements CompletionCollector {
             return builder.build();
         }
 
-        private Completion createExecutableItem(CompilationInfo info, ExecutableElement elem, ExecutableType type, String name, TypeMirror castType, int substitutionOffset, ReferencesCount referencesCount, boolean isInherited, boolean isDeprecated, boolean inImport, boolean addSemicolon, boolean smartType, int assignToVarOffset, boolean memberRef) {
+        private Completion createExecutableItem(CompilationInfo info, ExecutableElement elem, ExecutableType type, String name, TypeMirror castType, int substitutionOffset, ReferencesCount referencesCount, boolean isInherited, boolean isDeprecated, boolean inImport, boolean addSemicolon, boolean afterConstructorTypeParams, boolean smartType, int assignToVarOffset, boolean memberRef, boolean insertTextParams) {
             String simpleName = name != null ? name : (elem.getKind() == ElementKind.METHOD ? elem : elem.getEnclosingElement()).getSimpleName().toString();
             Iterator<? extends VariableElement> it = elem.getParameters().iterator();
             Iterator<? extends TypeMirror> tIt = type.getParameterTypes().iterator();
             StringBuilder labelDetail = new StringBuilder();
             StringBuilder insertText = new StringBuilder();
             StringBuilder sortParams = new StringBuilder();
-            insertText.append(simpleName);
+            if (!afterConstructorTypeParams) {
+                insertText.append(simpleName);
+            }
             labelDetail.append("(");
             CodeStyle cs = CodeStyle.getDefault(doc);
             if (!inImport && !memberRef) {
@@ -1071,7 +1135,7 @@ public class JavaCompletionCollector implements CompletionCollector {
                 if (tm == null) {
                     break;
                 }
-                if (!inImport && !memberRef && cnt == 0 && cs.spaceWithinMethodCallParens()) {
+                if (!inImport && !memberRef && insertTextParams && cnt == 0 && cs.spaceWithinMethodCallParens()) {
                     insertText.append(' ');
                 }
                 cnt++;
@@ -1080,14 +1144,19 @@ public class JavaCompletionCollector implements CompletionCollector {
                 labelDetail.append(paramTypeName).append(' ').append(paramName);
                 sortParams.append(paramTypeName);
                 if (!inImport && !memberRef) {
-                    VariableElement inst = instanceOf(tm, paramName);
-                    insertText.append("${").append(cnt).append(":").append(inst != null ? inst.getSimpleName() : paramName).append("}");
                     asTemplate = true;
+                    if (insertTextParams) {
+                        VariableElement inst = instanceOf(tm, paramName);
+                        insertText.append("${").append(cnt).append(":").append(inst != null ? inst.getSimpleName() : paramName).append("}");
+                    } else if (cnt == 1) {
+                        // Ensure that the cursor is placed in-between the inserted parentheses i.e. "(|)"
+                        insertText.append("$1");
+                    }
                 }
                 if (tIt.hasNext()) {
                     labelDetail.append(", ");
                     sortParams.append(',');
-                    if (!inImport && !memberRef) {
+                    if (!inImport && !memberRef && insertTextParams) {
                         if (cs.spaceBeforeComma()) {
                             insertText.append(' ');
                         }
@@ -1096,7 +1165,7 @@ public class JavaCompletionCollector implements CompletionCollector {
                             insertText.append(' ');
                         }
                     }
-                } else if (!inImport && !memberRef && cs.spaceWithinMethodCallParens()) {
+                } else if (!inImport && !memberRef && insertTextParams && cs.spaceWithinMethodCallParens()) {
                     insertText.append(' ');
                 }
             }
@@ -1119,7 +1188,7 @@ public class JavaCompletionCollector implements CompletionCollector {
                     } else {
                         insertText.append("\n{\n$0}");
                     }
-                    command = new Command("Complete Abstract Methods", "java.complete.abstract.methods");
+                    command = new Command("Complete Abstract Methods", "nbls.java.complete.abstract.methods");
                     asTemplate = true;
                 } else if (asTemplate) {
                     insertText.append("$0");
@@ -1141,7 +1210,7 @@ public class JavaCompletionCollector implements CompletionCollector {
                 int castStartOffset = assignToVarOffset;
                 if (castStartOffset < 0) {
                     if (tp != null && tp.getLeaf().getKind() == Tree.Kind.MEMBER_SELECT) {
-                        castStartOffset = (int)info.getTrees().getSourcePositions().getStartPosition(tp.getCompilationUnit(), tp.getLeaf());
+                        castStartOffset = (int)info.getTrees().getSourcePositions().getStartPosition(tp.getLeaf());
                     }
                 }
                 StringBuilder castText = new StringBuilder();
@@ -1167,6 +1236,12 @@ public class JavaCompletionCollector implements CompletionCollector {
             }
             if (isDeprecated) {
                 builder.addTag(Completion.Tag.Deprecated);
+            }
+            if (command == null && !insertTextParams && cnt > 0) {
+                command = new Command("Show Signature Help", "editor.action.triggerParameterHints");
+            }
+            if (command != null) {
+                builder.command(command);
             }
             return builder.build();
         }
@@ -1272,7 +1347,7 @@ public class JavaCompletionCollector implements CompletionCollector {
             }
             if (path != null) {
                 Trees trees = info.getTrees();
-                int pos = (int)trees.getSourcePositions().getStartPosition(path.getCompilationUnit(), path.getLeaf().getKind() == Tree.Kind.VARIABLE ? ((VariableTree)path.getLeaf()).getType() : path.getLeaf());
+                int pos = (int)trees.getSourcePositions().getStartPosition(path.getLeaf().getKind() == Tree.Kind.VARIABLE ? ((VariableTree)path.getLeaf()).getType() : path.getLeaf());
                 if (pos >= 0) {
                     Scope scope = tu.scopeFor(pos);
                     String stmt = info.getText().substring(pos, offset);
@@ -1318,6 +1393,7 @@ public class JavaCompletionCollector implements CompletionCollector {
                     case LINE_COMMENT:
                     case BLOCK_COMMENT:
                     case JAVADOC_COMMENT:
+                    case JAVADOC_COMMENT_LINE_RUN:
                         break;
                     default:
                         return ts;

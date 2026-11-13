@@ -1,5 +1,5 @@
 #Signature file v4.1
-#Version 1.97
+#Version 1.107
 
 CLSS public abstract java.awt.Component
 cons protected init()
@@ -1429,6 +1429,7 @@ meth public int getDebugPort()
 meth public int getPort()
 meth public int hashCode()
 meth public java.lang.Process getProcess()
+meth public java.lang.String getAdditionalLauncherJvmOptions()
 meth public java.lang.String getAdminPassword()
 meth public java.lang.String getAdminUser()
 meth public java.lang.String getDeployerUri()
@@ -1519,6 +1520,7 @@ fld public final static java.lang.String EE7_DEPLOYER_FRAGMENT = "deployer:gfv4e
 fld public final static java.lang.String EE8_DEPLOYER_FRAGMENT = "deployer:gfv5ee8"
 fld public final static java.lang.String GLASSFISH_AUTOREGISTERED_INSTANCE = "glassfish_autoregistered_instance"
 fld public final static java.lang.String JAKARTAEE10_DEPLOYER_FRAGMENT = "deployer:gfv700ee10"
+fld public final static java.lang.String JAKARTAEE11_DEPLOYER_FRAGMENT = "deployer:gfv800ee11"
 fld public final static java.lang.String JAKARTAEE8_DEPLOYER_FRAGMENT = "deployer:gfv510ee8"
 fld public final static java.lang.String JAKARTAEE91_DEPLOYER_FRAGMENT = "deployer:gfv610ee9"
 fld public final static java.lang.String JAKARTAEE9_DEPLOYER_FRAGMENT = "deployer:gfv6ee9"
@@ -1547,7 +1549,7 @@ meth public void addServerInstance(org.netbeans.modules.glassfish.common.Glassfi
 meth public void removeChangeListener(javax.swing.event.ChangeListener)
 meth public void resultChanged(org.openide.util.LookupEvent)
 supr java.lang.Object
-hfds AUTOINSTANCECOPIED,EE6WC_INSTANCES_PATH,EE6_INSTANCES_PATH,EE7_INSTANCES_PATH,EE8_INSTANCES_PATH,JAKARTAEE10_INSTANCES_PATH,JAKARTAEE8_INSTANCES_PATH,JAKARTAEE91_INSTANCES_PATH,JAKARTAEE9_INSTANCES_PATH,LOGGER,activeDisplayNames,cf,displayName,glassFishProvider,instanceMap,instancesDirNames,lookupResult,needsJdk6,noPasswordOptions,support,uriFragments
+hfds AUTOINSTANCECOPIED,EE6WC_INSTANCES_PATH,EE6_INSTANCES_PATH,EE7_INSTANCES_PATH,EE8_INSTANCES_PATH,JAKARTAEE10_INSTANCES_PATH,JAKARTAEE11_INSTANCES_PATH,JAKARTAEE8_INSTANCES_PATH,JAKARTAEE91_INSTANCES_PATH,JAKARTAEE9_INSTANCES_PATH,LOGGER,activeDisplayNames,cf,displayName,glassFishProvider,instanceMap,instancesDirNames,lookupResult,needsJdk6,noPasswordOptions,support,uriFragments
 
 CLSS public org.netbeans.modules.glassfish.common.Installer
 cons public init()
@@ -1638,7 +1640,21 @@ fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLAS
 fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_1
 fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_10
 fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_11
+fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_12
+fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_13
+fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_14
+fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_15
+fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_16
+fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_17
+fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_18
+fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_19
 fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_2
+fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_20
+fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_21
+fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_22
+fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_23
+fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_24
+fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_25
 fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_3
 fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_4
 fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_5
@@ -1646,6 +1662,8 @@ fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLAS
 fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_7
 fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_8
 fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_0_9
+fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_7_1_0
+fld public final static org.netbeans.modules.glassfish.common.ServerDetails GLASSFISH_SERVER_8_0_0
 meth public boolean isInstalledInDirectory(java.io.File)
 meth public int getVersion()
 meth public java.lang.String getDirectUrl()
@@ -1897,10 +1915,12 @@ fld protected javax.swing.JLabel hostLocalLabel
 fld protected javax.swing.JLabel hostRemoteLabel
 fld protected javax.swing.JLabel httpPortLabel
 fld protected javax.swing.JLabel installationLocationLabel
+fld protected javax.swing.JLabel jvmOptionsLabel
 fld protected javax.swing.JLabel passwordLabel
 fld protected javax.swing.JLabel targetLabel
 fld protected javax.swing.JLabel userNameLabel
 fld protected javax.swing.JPasswordField passwordField
+fld protected javax.swing.JTextField additionalLauncherJvmOptionsField
 fld protected javax.swing.JTextField dasPortField
 fld protected javax.swing.JTextField domainField
 fld protected javax.swing.JTextField domainsFolderField
@@ -1915,6 +1935,7 @@ meth protected abstract void initHost()
 meth protected abstract void initPorts()
 meth protected void disableAllFields()
 meth protected void enableFields()
+meth protected void initAdditionalLauncherJvmOptions()
 meth protected void initCheckBoxes()
 meth protected void initCredentials()
 meth protected void initDirectoriesFields()
@@ -1925,6 +1946,7 @@ meth protected void storeCheckBoxes()
 meth protected void storeCredentials()
 meth protected void storeFormFields()
 meth protected void storeHost()
+meth protected void storeJvmOptions()
 meth protected void storePorts()
 meth protected void storeTarget()
 meth protected void updatePasswordVisibility()
@@ -2098,6 +2120,8 @@ meth public static boolean isJavaPlatformSupported(org.netbeans.modules.glassfis
  anno 2 org.netbeans.api.annotations.common.NonNull()
 meth public static java.lang.String getDefaultJavaHome()
 meth public static java.lang.String getJavaHome(org.netbeans.api.java.platform.JavaPlatform)
+meth public static java.lang.String supportedJavaSERange(org.netbeans.modules.glassfish.common.GlassfishInstance)
+ anno 1 org.netbeans.api.annotations.common.NonNull()
 meth public static org.netbeans.api.java.platform.JavaPlatform findInstalledPlatform(java.io.File)
  anno 1 org.netbeans.api.annotations.common.NonNull()
 meth public static org.netbeans.api.java.platform.JavaPlatform findPlatformByJavaHome(org.netbeans.api.java.platform.JavaPlatform[],java.io.File)
@@ -2225,6 +2249,7 @@ fld public final static java.lang.String JDBC_RESOURCE = "jdbc-resource"
 fld public final static java.lang.String JRUBY_CONTAINER = "jruby"
 fld public final static java.lang.String JRUBY_HOME = "jruby.home"
 fld public final static java.lang.String JVM_MODE = "jvmMode"
+fld public final static java.lang.String JVM_OPTIONS_ATTR = "jvmOptions"
 fld public final static java.lang.String LOOPBACK_FLAG = "loopbackOn"
 fld public final static java.lang.String NB73_IMPORT_FIXED = "nb73ImportFixed"
 fld public final static java.lang.String NORMAL_MODE
@@ -2371,6 +2396,7 @@ meth public static org.netbeans.modules.glassfish.spi.ServerUtilities getEe6Util
 meth public static org.netbeans.modules.glassfish.spi.ServerUtilities getEe7Utilities()
 meth public static org.netbeans.modules.glassfish.spi.ServerUtilities getEe8Utilities()
 meth public static org.netbeans.modules.glassfish.spi.ServerUtilities getJakartaEe10Utilities()
+meth public static org.netbeans.modules.glassfish.spi.ServerUtilities getJakartaEe11Utilities()
 meth public static org.netbeans.modules.glassfish.spi.ServerUtilities getJakartaEe8Utilities()
 meth public static org.netbeans.modules.glassfish.spi.ServerUtilities getJakartaEe91Utilities()
 meth public static org.netbeans.modules.glassfish.spi.ServerUtilities getJakartaEe9Utilities()

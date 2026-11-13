@@ -347,7 +347,7 @@ BACKQUOTE_CHARS=("{"*([^$`\\{]|("\\"{ANY_CHAR}))|{BACKQUOTE_LITERAL_DOLLAR})
 
 HEREDOC_CHARS=([^$\\{]|("\\"{ANY_CHAR}))({HEREDOC_LABEL_NO_NEWLINE} | {HEREDOC_NON_LABEL} | {LABEL})*
 NOWDOC_CHARS=({NEWLINE}*(([^a-zA-Z_\x7f-\xff\n\r][^\n\r]*)|({LABEL}[^a-zA-Z0-9_\x7f-\xff;\n\r][^\n\r]*)|({LABEL}[;][^\n\r]+)))
-PHP_OPERATOR="=>"|"++"|"--"|"==="|"!=="|"=="|"!="|"<>"|"<="|">="|"+="|"-="|"*="|"/="|".="|"%="|"<<="|">>="|"&="|"|="|"^="|"||"|"&&"|"<<"|">>"|"**"|"**="|"..."|"="|"+"|"-"|"/"|"*"|"%"|"<"|">"|"!"|"@"|"^"|"&"|"|"|"~"|"<=>"|"??"|"??="
+PHP_OPERATOR="=>"|"++"|"--"|"==="|"!=="|"=="|"!="|"<>"|"<="|">="|"+="|"-="|"*="|"/="|".="|"%="|"<<="|">>="|"&="| "|>" |"|="|"^="|"||"|"&&"|"<<"|">>"|"**"|"**="|"..."|"="|"+"|"-"|"/"|"*"|"%"|"<"|">"|"!"|"@"|"^"|"&"|"|"|"~"|"<=>"|"??"|"??="
 PHP_TEXTUAL_OPERATOR="OR"|"AND"|"XOR"
 // XXX how to define case sensitive patterns?
 PHP_TYPE_INT=[i][n][t]
@@ -923,6 +923,18 @@ PHP_TYPE_NEVER=[n][e][v][e][r]
     return PHPTokenId.PHP_PUBLIC;
 }
 
+<ST_PHP_IN_SCRIPTING>"public(set)" {
+    return PHPTokenId.PHP_PUBLIC_SET;
+}
+
+<ST_PHP_IN_SCRIPTING>"protected(set)" {
+    return PHPTokenId.PHP_PROTECTED_SET;
+}
+
+<ST_PHP_IN_SCRIPTING>"private(set)" {
+    return PHPTokenId.PHP_PRIVATE_SET;
+}
+
 <ST_PHP_IN_SCRIPTING>"readonly" {
     return PHPTokenId.PHP_READONLY;
 }
@@ -1090,6 +1102,10 @@ PHP_TYPE_NEVER=[n][e][v][e][r]
 
 <ST_PHP_IN_SCRIPTING>"__FUNCTION__" {
     return PHPTokenId.PHP__FUNCTION__;
+}
+
+<ST_PHP_IN_SCRIPTING>"__PROPERTY__" {
+    return PHPTokenId.PHP__PROPERTY__;
 }
 
 <ST_PHP_IN_SCRIPTING>"__METHOD__" {

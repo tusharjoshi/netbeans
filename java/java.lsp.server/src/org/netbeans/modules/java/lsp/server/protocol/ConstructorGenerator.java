@@ -116,8 +116,8 @@ public final class ConstructorGenerator extends CodeActionsProvider {
             int endOffset = getOffset(info, params.getRange().getEnd());
             for (Tree m : ((ClassTree) tp.getLeaf()).getMembers()) {
                 if (m.getKind() != Tree.Kind.VARIABLE) continue;
-                int start = (int) info.getTrees().getSourcePositions().getStartPosition(tp.getCompilationUnit(), m);
-                int end   = (int) info.getTrees().getSourcePositions().getEndPosition(tp.getCompilationUnit(), m);
+                int start = (int) info.getTrees().getSourcePositions().getStartPosition(m);
+                int end   = (int) info.getTrees().getSourcePositions().getEndPosition(m);
                 if (startOffset <= end && endOffset >= start) {
                     VariableElement var = (VariableElement) info.getTrees().getElement(new TreePath(tp, m));
                     if (uninitializedFields.contains(var)) {
@@ -188,7 +188,7 @@ public final class ConstructorGenerator extends CodeActionsProvider {
         data.put(OFFSET, startOffset);
         data.put(CONSTRUCTORS, constructors);
         data.put(FIELDS, fields);
-        return Collections.singletonList(createCodeAction(client, Bundle.DN_GenerateConstructor(), isSource ? CODE_GENERATOR_KIND : CodeActionKind.QuickFix, null, "nbls.generate.code", GENERATE_CONSTRUCTOR, data));
+        return Collections.singletonList(createCodeAction(client, Bundle.DN_GenerateConstructor(), isSource ? CODE_GENERATOR_KIND : CodeActionKind.QuickFix, null, "nbls.generate.code", Utils.encodeCommand(GENERATE_CONSTRUCTOR, client.getNbCodeCapabilities()), data));
     }
 
     @Override

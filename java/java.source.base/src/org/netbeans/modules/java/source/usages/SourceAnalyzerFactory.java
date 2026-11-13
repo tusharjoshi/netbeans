@@ -28,7 +28,6 @@ import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import java.io.*;
 import java.net.MalformedURLException;
@@ -718,6 +717,7 @@ public final class SourceAnalyzerFactory {
                     state = errorInDecl ? State.OTHER : State.IMPLEMENTS;
                     scan(node.getImplementsClause(), p);
                     state = State.OTHER;
+                    scan(node.getPermitsClause(), p);
                     scan(node.getMembers(), p);
                     activeClass.pop();
                 } finally {

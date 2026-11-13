@@ -18,24 +18,62 @@
  */
 package org.netbeans.modules.cloud.oracle.assets;
 
+import java.util.Collections;
+import java.util.Set;
 import org.netbeans.modules.cloud.oracle.items.OCID;
 import org.netbeans.modules.cloud.oracle.items.OCIItem;
+import org.openide.util.NbBundle;
 
 /**
  *
  * @author Jan Horvath
  */
+@NbBundle.Messages({
+    "SelectDatabases=Select Oracle Autonomous Database",
+    "SelectVault=Select OCI Vault",
+    "SelectBucket=Select Object Storage Bucket",
+    "SelectCluster=Select Oracle Container Engine for Kubernetes",
+    "SelectCompute=Select Compute Instance",
+    "SelectContainerRepository=Select Container Repository",
+    "SelectMetricsNamespace=Select Metrics Namespace"
+})
 public final class SuggestedItem extends OCIItem {
 
     private final String path;
+    private final Set<String> exclusivePaths;
 
-    public SuggestedItem(String path, String name) {
-        super(OCID.of("", "Suggested"), null, name); //NOI18N
+    public SuggestedItem(String path, String name, Set<String> exclusivePaths) {
+        super(OCID.of("", "Suggested"), null, name, null, null); //NOI18N
         this.path = path;
+        this.exclusivePaths = exclusivePaths;
     }
 
     public String getPath() {
         return path;
     }
-    
+
+    public Set<String> getExclusivePaths() {
+        return Collections.unmodifiableSet(exclusivePaths);
+    }
+
+    public static SuggestedItem forPath(String path) {
+        switch (path) {
+            case "Database": //NOI18N
+                return new SuggestedItem("Database", Bundle.SelectDatabases(), Collections.emptySet()); //NOI18N
+            case "Vault": //NOI18N
+                return new SuggestedItem("Vault", Bundle.SelectVault(), Collections.emptySet()); //NOI18N
+            case "Bucket": //NOI18N
+                return new SuggestedItem("Bucket", Bundle.SelectBucket(), Collections.emptySet()); //NOI18N
+            case "Cluster": //NOI18N
+                return new SuggestedItem("Cluster", Bundle.SelectCluster(), Collections.singleton("ComputeInstance")); //NOI18N
+            case "ComputeInstance": //NOI18N
+                return new SuggestedItem("ComputeInstance", Bundle.SelectCompute(), Collections.singleton("Cluster")); //NOI18N
+            case "ContainerRepository": //NOI18N
+                return new SuggestedItem("ContainerRepository", Bundle.SelectContainerRepository(), Collections.singleton("ContainerRepository")); //NOI18N
+            case "MetricsNamespace": //NOI18N
+                return new SuggestedItem("MetricsNamespace", Bundle.SelectMetricsNamespace(), Collections.singleton("MetricsNamespace")); //NOI18N
+            default:
+                throw new IllegalArgumentException("");
+        }
+    }
 }

@@ -65,6 +65,7 @@ enterprise/j2ee.dd/src/org/netbeans/modules/j2ee/dd/impl/web/model_6_1_frag/*
 extide/gradle/netbeans-gradle-tooling/.gradle/**
 profiler/lib.profiler/release/BUILDINFO.txt
 webcommon/javascript2.jquery/external/jquery-api.xml
+.ant-targets-build.xml
 
 ###### user-specific files
 **/nbproject/private/**
@@ -78,6 +79,7 @@ webcommon/javascript2.jquery/external/jquery-api.xml
 **/Makefile-vc
 **/Makefile-vc-wo-crt
 **/package-list
+**/javax.inject.Named
 java/java.editor/src/org/netbeans/modules/java/editor/resources/JavaExample
 platform/lib.uihandler/src/org/netbeans/lib/uihandler/pubKey
 maven.indexer/external/NOTICE-patched-indexer-core-6.0.0
@@ -251,6 +253,10 @@ ide/xml.text/src/org/netbeans/modules/xml/text/resources/XMLExample
 ide/xml.text/src/org/netbeans/modules/xml/text/resources/XMLExampleIndent
 ide/properties.syntax/src/org/netbeans/modules/properties/syntax/PropertiesExample
 
+###### installer workaround 0.18
+nbbuild/installer/engine/src/org/netbeans/installer/product/components/netbeans-license-javafx.txt
+nbbuild/installer/engine/src/org/netbeans/installer/product/components/netbeans-license-jtb.txt
+nbbuild/installer/engine/src/org/netbeans/installer/product/components/netbeans-license-mysql.txt
 
 ###### GitHub Issue tooling
 .github/**

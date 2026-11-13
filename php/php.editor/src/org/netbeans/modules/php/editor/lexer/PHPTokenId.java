@@ -108,6 +108,9 @@ public enum PHPTokenId implements TokenId {
     PHP_FUNCTION(null, "keyword"), //NOI18N
     PHP_PROTECTED(null, "keyword"), //NOI18N
     PHP_PRIVATE(null, "keyword"), //NOI18N
+    PHP_PUBLIC_SET(null, "keyword"), //NOI18N PHP 8.4
+    PHP_PROTECTED_SET(null, "keyword"), //NOI18N PHP 8.4
+    PHP_PRIVATE_SET(null, "keyword"), //NOI18N PHP 8.4
     PHP_ENDDECLARE(null, "keyword"), //NOI18N
     PHP_CURLY_CLOSE(null, "php"), //NOI18N
     PHP_ELSE("else", "keyword"), //NOI18N
@@ -167,6 +170,7 @@ public enum PHPTokenId implements TokenId {
     PHP_PARENT(null, "keyword"), //NOI18N
     PHP__CLASS__(null, "constant"), //NOI18N
     PHP__TRAIT__(null, "constant"), //NOI18N
+    PHP__PROPERTY__(null, "constant"), //NOI18N PHP 8.4
     PHP__METHOD__(null, "constant"), //NOI18N
     PHP_TRUE(null, "keyword"), //NOI18N
     PHP_FALSE(null, "keyword"), //NOI18N

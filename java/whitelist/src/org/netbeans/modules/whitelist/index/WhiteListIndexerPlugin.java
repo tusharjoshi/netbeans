@@ -96,12 +96,12 @@ public class WhiteListIndexerPlugin implements JavaIndexerPlugin {
         final SourcePositions sp = trees.getSourcePositions();
         for (Map.Entry<? extends Tree, ? extends WhiteListQuery.Result> p : problems.entrySet()) {
             assert !p.getValue().isAllowed() : "only violations should be stored"; // NOI18N
-            final int start = (int) sp.getStartPosition(toProcess, p.getKey());
+            final int start = (int) sp.getStartPosition(p.getKey());
             int ln;
             if (start>=0 && (ln=(int)lm.getLineNumber(start))>=0) {
                 for (WhiteListQuery.RuleDescription rule : p.getValue().getViolatedRules()) {
                     //Lucene API does not promise that the field are returned in the order they were
-                    ///added (currently it behavis in this way but may be changed in the future).
+                    //added (currently it behavis in this way but may be changed in the future).
                     //see http://www.gossamer-threads.com/lists/lucene/java-dev/64013
                     final IndexDocument doc = IndexManager.createDocument(indexable.getRelativePath());
                     final String wlID = rule.getWhiteListID();

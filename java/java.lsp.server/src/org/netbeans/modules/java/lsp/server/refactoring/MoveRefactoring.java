@@ -47,7 +47,6 @@ import net.java.html.json.Function;
 import net.java.html.json.Model;
 import net.java.html.json.ModelOperation;
 import net.java.html.json.Property;
-import org.eclipse.lsp4j.ApplyWorkspaceEditParams;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
@@ -407,7 +406,7 @@ public final class MoveRefactoring extends CodeRefactoring {
                 } else {
                     refactoring.setTarget(Lookup.EMPTY);
                 }
-                client.applyEdit(new ApplyWorkspaceEditParams(perform(refactoring, "Move")));
+                sendRefactoringChanges(client, refactoring, "Move");
             } catch (Exception ex) {
                 if (client == null) {
                     Exceptions.printStackTrace(
@@ -420,6 +419,9 @@ public final class MoveRefactoring extends CodeRefactoring {
         }
 
         private static Project getSelectedProject(NamedPath selectedProject) {
+            if (selectedProject == null) {
+                return null;
+            }
             try {
                 String path = selectedProject.getPath();
                 return path != null ? FileOwnerQuery.getOwner(Utils.fromUri(path)) : null;
@@ -429,6 +431,9 @@ public final class MoveRefactoring extends CodeRefactoring {
         }
 
         private static FileObject getSelectedRoot(NamedPath selectedRoot) {
+            if (selectedRoot == null) {
+                return null;
+            }
             try {
                 String path = selectedRoot.getPath();
                 return path != null ? Utils.fromUri(path) : null;
@@ -499,13 +504,13 @@ public final class MoveRefactoring extends CodeRefactoring {
         CompilationUnitTree compilationUnit = info.getCompilationUnit();
         for (TypeElement typeElement : topLevelElements) {
             ClassTree topLevelClass = trees.getTree(typeElement);
-            long startPosition = sourcePositions.getStartPosition(compilationUnit, topLevelClass);
-            long endPosition = sourcePositions.getEndPosition(compilationUnit, topLevelClass);
+            long startPosition = sourcePositions.getStartPosition(topLevelClass);
+            long endPosition = sourcePositions.getEndPosition(topLevelClass);
             if (offset > startPosition && offset < endPosition) {
                 for (Element element : typeElement.getEnclosedElements()) {
                     Tree member = trees.getTree(element);
-                    long startMember = sourcePositions.getStartPosition(compilationUnit, member);
-                    long endMember = sourcePositions.getEndPosition(compilationUnit, member);
+                    long startMember = sourcePositions.getStartPosition(member);
+                    long endMember = sourcePositions.getEndPosition(member);
                     if (offset > startMember && offset < endMember) {
                         return element;
                     }

@@ -89,9 +89,6 @@ public final class EjbJarVersion extends J2EEBaseVersion {
             "4.0.1", 4010, // NOI18N
             "10.0", 10000 // NOI18N
     );
-    /** -----------------------------------------------------------------------
-     *  Implementation
-     */
 
     /** Creates a new instance of EjbJarVersion 
      */
@@ -129,6 +126,8 @@ public final class EjbJarVersion extends J2EEBaseVersion {
             result = EJBJAR_3_2_6;
         } else if(EJBJAR_4_0.toString().equals(version)) {
             result = EJBJAR_4_0;
+        } else if(EJBJAR_4_0_1.toString().equals(version)) {
+            result = EJBJAR_4_0_1;
         }
 
         return result;

@@ -67,8 +67,8 @@ final class IntroduceVariableFix extends IntroduceFixBase implements Fix {
         TreePath statement = original;
         for (TreePath p : candidates) {
             Tree leaf = p.getLeaf();
-            int leafStart = (int) info.getTrees().getSourcePositions().getStartPosition(info.getCompilationUnit(), leaf);
-            int stPathStart = (int) info.getTrees().getSourcePositions().getStartPosition(info.getCompilationUnit(), statement.getLeaf());
+            int leafStart = (int) info.getTrees().getSourcePositions().getStartPosition(leaf);
+            int stPathStart = (int) info.getTrees().getSourcePositions().getStartPosition(statement.getLeaf());
             if (leafStart < stPathStart) {
                 statement = p;
             }
@@ -128,6 +128,7 @@ final class IntroduceVariableFix extends IntroduceFixBase implements Fix {
     public ChangeInfo implement() throws IOException, BadLocationException, ParseException {
         JButton btnOk = new JButton(NbBundle.getMessage(IntroduceHint.class, "LBL_Ok"));
         JButton btnCancel = new JButton(NbBundle.getMessage(IntroduceHint.class, "LBL_Cancel"));
+        btnCancel.setDefaultCapable(false);
         IntroduceFieldPanel panel = new IntroduceFieldPanel(guessedName, null, duplicatesCount,
                 true, handle.getKind() == Tree.Kind.VARIABLE,
                 IntroduceFieldPanel.VARIABLE,
@@ -168,7 +169,7 @@ final class IntroduceVariableFix extends IntroduceFixBase implements Fix {
                 if (tm == null) {
                     return; //TODO...
                 }
-                tm = Utilities.convertIfAnonymous(Utilities.resolveTypeForDeclaration(parameter, tm));
+                tm = Utilities.convertIfAnonymous(Utilities.resolveTypeForDeclaration(parameter, tm), true);
                 if (!Utilities.isValidType(tm)) {
                     return; // TODO...
                 }

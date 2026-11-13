@@ -62,14 +62,6 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
-                    <code-name-base>org.netbeans.api.progress.nb</code-name-base>
-                    <build-prerequisite/>
-                    <compile-dependency/>
-                    <run-dependency>
-                        <specification-version>1.40</specification-version>
-                    </run-dependency>
-                </dependency>
-                <dependency>
                     <code-name-base>org.netbeans.api.templates</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
@@ -100,15 +92,6 @@
                     <compile-dependency/>
                     <run-dependency>
                         <implementation-version/>
-                    </run-dependency>
-                </dependency>
-                <dependency>
-                    <code-name-base>org.netbeans.libs.lucene</code-name-base>
-                    <build-prerequisite/>
-                    <compile-dependency/>
-                    <run-dependency>
-                        <release-version>3</release-version>
-                        <specification-version>3.0</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -418,6 +401,10 @@
                 <test-type>
                     <name>unit</name>
                     <test-dependency>
+                        <code-name-base>org.netbeans.core.netigso</code-name-base>
+                        <compile-dependency/>
+                    </test-dependency>
+                    <test-dependency>
                         <code-name-base>org.netbeans.core.startup</code-name-base>
                     </test-dependency>
                     <test-dependency>
@@ -542,9 +529,6 @@
                         <code-name-base>org.openide.filesystems</code-name-base>
                     </test-dependency>
                     <test-dependency>
-                        <code-name-base>org.openide.options</code-name-base>
-                    </test-dependency>
-                    <test-dependency>
                         <code-name-base>org.openide.text</code-name-base>
                     </test-dependency>
                     <test-dependency>
@@ -635,10 +619,6 @@
                     </test-dependency>
                     <test-dependency>
                         <code-name-base>org.openide.nodes</code-name-base>
-                        <compile-dependency/>
-                    </test-dependency>
-                    <test-dependency>
-                        <code-name-base>org.openide.options</code-name-base>
                         <compile-dependency/>
                     </test-dependency>
                     <test-dependency>

@@ -1,5 +1,5 @@
 #Signature file v4.1
-#Version 1.55
+#Version 1.65
 
 CLSS public java.beans.PropertyChangeEvent
 cons public init(java.lang.Object,java.lang.String,java.lang.Object,java.lang.Object)
@@ -46,13 +46,19 @@ cons public init()
 intf java.io.Closeable
 meth public abstract int read() throws java.io.IOException
 meth public boolean markSupported()
+meth public byte[] readAllBytes() throws java.io.IOException
+meth public byte[] readNBytes(int) throws java.io.IOException
 meth public int available() throws java.io.IOException
 meth public int read(byte[]) throws java.io.IOException
 meth public int read(byte[],int,int) throws java.io.IOException
+meth public int readNBytes(byte[],int,int) throws java.io.IOException
 meth public long skip(long) throws java.io.IOException
+meth public long transferTo(java.io.OutputStream) throws java.io.IOException
+meth public static java.io.InputStream nullInputStream()
 meth public void close() throws java.io.IOException
 meth public void mark(int)
 meth public void reset() throws java.io.IOException
+meth public void skipNBytes(long) throws java.io.IOException
 supr java.lang.Object
 
 CLSS public abstract interface java.io.ObjectInput
@@ -83,7 +89,9 @@ meth public boolean readBoolean() throws java.io.IOException
 meth public byte readByte() throws java.io.IOException
 meth public char readChar() throws java.io.IOException
 meth public double readDouble() throws java.io.IOException
+meth public final java.io.ObjectInputFilter getObjectInputFilter()
 meth public final java.lang.Object readObject() throws java.io.IOException,java.lang.ClassNotFoundException
+meth public final void setObjectInputFilter(java.io.ObjectInputFilter)
 meth public float readFloat() throws java.io.IOException
 meth public int available() throws java.io.IOException
 meth public int read() throws java.io.IOException
@@ -95,7 +103,7 @@ meth public int skipBytes(int) throws java.io.IOException
 meth public java.io.ObjectInputStream$GetField readFields() throws java.io.IOException,java.lang.ClassNotFoundException
 meth public java.lang.Object readUnshared() throws java.io.IOException,java.lang.ClassNotFoundException
 meth public java.lang.String readLine() throws java.io.IOException
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.String readUTF() throws java.io.IOException
 meth public long readLong() throws java.io.IOException
 meth public short readShort() throws java.io.IOException
@@ -132,6 +140,7 @@ fld public final static byte TC_STRING = 116
 fld public final static int PROTOCOL_VERSION_1 = 1
 fld public final static int PROTOCOL_VERSION_2 = 2
 fld public final static int baseWireHandle = 8257536
+fld public final static java.io.SerializablePermission SERIAL_FILTER_PERMISSION
 fld public final static java.io.SerializablePermission SUBCLASS_IMPLEMENTATION_PERMISSION
 fld public final static java.io.SerializablePermission SUBSTITUTION_PERMISSION
 fld public final static short STREAM_MAGIC = -21267
@@ -147,14 +156,17 @@ meth public abstract char charAt(int)
 meth public abstract int length()
 meth public abstract java.lang.CharSequence subSequence(int,int)
 meth public abstract java.lang.String toString()
+meth public boolean isEmpty()
 meth public java.util.stream.IntStream chars()
 meth public java.util.stream.IntStream codePoints()
+meth public static int compare(java.lang.CharSequence,java.lang.CharSequence)
 
 CLSS public abstract java.lang.ClassLoader
 cons protected init()
 cons protected init(java.lang.ClassLoader)
+cons protected init(java.lang.String,java.lang.ClassLoader)
 meth protected final java.lang.Class<?> defineClass(byte[],int,int)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="1.1")
 meth protected final java.lang.Class<?> defineClass(java.lang.String,byte[],int,int)
 meth protected final java.lang.Class<?> defineClass(java.lang.String,byte[],int,int,java.security.ProtectionDomain)
 meth protected final java.lang.Class<?> defineClass(java.lang.String,java.nio.ByteBuffer,java.security.ProtectionDomain)
@@ -163,21 +175,31 @@ meth protected final java.lang.Class<?> findSystemClass(java.lang.String) throws
 meth protected final void resolveClass(java.lang.Class<?>)
 meth protected final void setSigners(java.lang.Class<?>,java.lang.Object[])
 meth protected java.lang.Class<?> findClass(java.lang.String) throws java.lang.ClassNotFoundException
+meth protected java.lang.Class<?> findClass(java.lang.String,java.lang.String)
 meth protected java.lang.Class<?> loadClass(java.lang.String,boolean) throws java.lang.ClassNotFoundException
 meth protected java.lang.Object getClassLoadingLock(java.lang.String)
 meth protected java.lang.Package definePackage(java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.lang.String,java.net.URL)
 meth protected java.lang.Package getPackage(java.lang.String)
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="9")
 meth protected java.lang.Package[] getPackages()
 meth protected java.lang.String findLibrary(java.lang.String)
 meth protected java.net.URL findResource(java.lang.String)
+meth protected java.net.URL findResource(java.lang.String,java.lang.String) throws java.io.IOException
 meth protected java.util.Enumeration<java.net.URL> findResources(java.lang.String) throws java.io.IOException
 meth protected static boolean registerAsParallelCapable()
+meth public final boolean isRegisteredAsParallelCapable()
 meth public final java.lang.ClassLoader getParent()
+meth public final java.lang.Module getUnnamedModule()
+meth public final java.lang.Package getDefinedPackage(java.lang.String)
+meth public final java.lang.Package[] getDefinedPackages()
 meth public java.io.InputStream getResourceAsStream(java.lang.String)
 meth public java.lang.Class<?> loadClass(java.lang.String) throws java.lang.ClassNotFoundException
+meth public java.lang.String getName()
 meth public java.net.URL getResource(java.lang.String)
 meth public java.util.Enumeration<java.net.URL> getResources(java.lang.String) throws java.io.IOException
+meth public java.util.stream.Stream<java.net.URL> resources(java.lang.String)
 meth public static java.io.InputStream getSystemResourceAsStream(java.lang.String)
+meth public static java.lang.ClassLoader getPlatformClassLoader()
 meth public static java.lang.ClassLoader getSystemClassLoader()
 meth public static java.net.URL getSystemResource(java.lang.String)
 meth public static java.util.Enumeration<java.net.URL> getSystemResources(java.lang.String) throws java.io.IOException
@@ -195,13 +217,17 @@ meth public abstract int compareTo({java.lang.Comparable%0})
 CLSS public abstract interface !annotation java.lang.Deprecated
  anno 0 java.lang.annotation.Documented()
  anno 0 java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy value=RUNTIME)
- anno 0 java.lang.annotation.Target(java.lang.annotation.ElementType[] value=[CONSTRUCTOR, FIELD, LOCAL_VARIABLE, METHOD, PACKAGE, PARAMETER, TYPE])
+ anno 0 java.lang.annotation.Target(java.lang.annotation.ElementType[] value=[CONSTRUCTOR, FIELD, LOCAL_VARIABLE, METHOD, PACKAGE, MODULE, PARAMETER, TYPE])
 intf java.lang.annotation.Annotation
+meth public abstract !hasdefault boolean forRemoval()
+meth public abstract !hasdefault java.lang.String since()
 
 CLSS public abstract java.lang.Enum<%0 extends java.lang.Enum<{java.lang.Enum%0}>>
 cons protected init(java.lang.String,int)
+innr public final static EnumDesc
 intf java.io.Serializable
 intf java.lang.Comparable<{java.lang.Enum%0}>
+intf java.lang.constant.Constable
 meth protected final java.lang.Object clone() throws java.lang.CloneNotSupportedException
 meth protected final void finalize()
 meth public final boolean equals(java.lang.Object)
@@ -210,6 +236,7 @@ meth public final int hashCode()
 meth public final int ordinal()
 meth public final java.lang.Class<{java.lang.Enum%0}> getDeclaringClass()
 meth public final java.lang.String name()
+meth public final java.util.Optional<java.lang.Enum$EnumDesc<{java.lang.Enum%0}>> describeConstable()
 meth public java.lang.String toString()
 meth public static <%0 extends java.lang.Enum<{%%0}>> {%%0} valueOf(java.lang.Class<{%%0}>,java.lang.String)
 supr java.lang.Object
@@ -230,7 +257,9 @@ intf java.lang.annotation.Annotation
 
 CLSS public java.lang.IndexOutOfBoundsException
 cons public init()
+cons public init(int)
 cons public init(java.lang.String)
+cons public init(long)
 supr java.lang.RuntimeException
 
 CLSS public abstract interface java.lang.Iterable<%0 extends java.lang.Object>
@@ -242,6 +271,7 @@ CLSS public java.lang.Object
 cons public init()
 meth protected java.lang.Object clone() throws java.lang.CloneNotSupportedException
 meth protected void finalize() throws java.lang.Throwable
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="9")
 meth public boolean equals(java.lang.Object)
 meth public final java.lang.Class<?> getClass()
 meth public final void notify()
@@ -298,12 +328,6 @@ CLSS public abstract interface !annotation java.lang.annotation.Documented
  anno 0 java.lang.annotation.Target(java.lang.annotation.ElementType[] value=[ANNOTATION_TYPE])
 intf java.lang.annotation.Annotation
 
-CLSS public abstract interface !annotation java.lang.annotation.Inherited
- anno 0 java.lang.annotation.Documented()
- anno 0 java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy value=RUNTIME)
- anno 0 java.lang.annotation.Target(java.lang.annotation.ElementType[] value=[ANNOTATION_TYPE])
-intf java.lang.annotation.Annotation
-
 CLSS public abstract interface !annotation java.lang.annotation.Repeatable
  anno 0 java.lang.annotation.Documented()
  anno 0 java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy value=RUNTIME)
@@ -325,10 +349,16 @@ CLSS public abstract interface !annotation java.lang.annotation.Target
 intf java.lang.annotation.Annotation
 meth public abstract java.lang.annotation.ElementType[] value()
 
+CLSS public abstract interface java.lang.constant.Constable
+meth public abstract java.util.Optional<? extends java.lang.constant.ConstantDesc> describeConstable()
+
 CLSS public abstract interface java.lang.reflect.InvocationHandler
+meth public !varargs static java.lang.Object invokeDefault(java.lang.Object,java.lang.reflect.Method,java.lang.Object[]) throws java.lang.Throwable
 meth public abstract java.lang.Object invoke(java.lang.Object,java.lang.reflect.Method,java.lang.Object[]) throws java.lang.Throwable
 
 CLSS public java.net.URLClassLoader
+cons public init(java.lang.String,java.net.URL[],java.lang.ClassLoader)
+cons public init(java.lang.String,java.net.URL[],java.lang.ClassLoader,java.net.URLStreamHandlerFactory)
 cons public init(java.net.URL[])
 cons public init(java.net.URL[],java.lang.ClassLoader)
 cons public init(java.net.URL[],java.lang.ClassLoader,java.net.URLStreamHandlerFactory)
@@ -376,20 +406,25 @@ cons protected init(int,java.rmi.server.RMIClientSocketFactory,java.rmi.server.R
 meth public java.lang.Object clone() throws java.lang.CloneNotSupportedException
 meth public static boolean unexportObject(java.rmi.Remote,boolean) throws java.rmi.NoSuchObjectException
 meth public static java.rmi.Remote exportObject(java.rmi.Remote,int) throws java.rmi.RemoteException
+meth public static java.rmi.Remote exportObject(java.rmi.Remote,int,java.io.ObjectInputFilter) throws java.rmi.RemoteException
 meth public static java.rmi.Remote exportObject(java.rmi.Remote,int,java.rmi.server.RMIClientSocketFactory,java.rmi.server.RMIServerSocketFactory) throws java.rmi.RemoteException
+meth public static java.rmi.Remote exportObject(java.rmi.Remote,int,java.rmi.server.RMIClientSocketFactory,java.rmi.server.RMIServerSocketFactory,java.io.ObjectInputFilter) throws java.rmi.RemoteException
 meth public static java.rmi.server.RemoteStub exportObject(java.rmi.Remote) throws java.rmi.RemoteException
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 supr java.rmi.server.RemoteServer
 
 CLSS public abstract interface java.security.PrivilegedAction<%0 extends java.lang.Object>
+ anno 0 java.lang.FunctionalInterface()
 meth public abstract {java.security.PrivilegedAction%0} run()
 
 CLSS public abstract interface java.security.PrivilegedExceptionAction<%0 extends java.lang.Object>
+ anno 0 java.lang.FunctionalInterface()
 meth public abstract {java.security.PrivilegedExceptionAction%0} run() throws java.lang.Exception
 
 CLSS public java.security.SecureClassLoader
 cons protected init()
 cons protected init(java.lang.ClassLoader)
+cons protected init(java.lang.String,java.lang.ClassLoader)
 meth protected final java.lang.Class<?> defineClass(java.lang.String,byte[],int,int,java.security.CodeSource)
 meth protected final java.lang.Class<?> defineClass(java.lang.String,java.nio.ByteBuffer,java.security.CodeSource)
 meth protected java.security.PermissionCollection getPermissions(java.security.CodeSource)
@@ -473,6 +508,7 @@ supr java.util.AbstractCollection<{java.util.AbstractSet%0}>
 
 CLSS public abstract interface java.util.Collection<%0 extends java.lang.Object>
 intf java.lang.Iterable<{java.util.Collection%0}>
+meth public <%0 extends java.lang.Object> {%%0}[] toArray(java.util.function.IntFunction<{%%0}[]>)
 meth public abstract <%0 extends java.lang.Object> {%%0}[] toArray({%%0}[])
 meth public abstract boolean add({java.util.Collection%0})
 meth public abstract boolean addAll(java.util.Collection<? extends {java.util.Collection%0}>)
@@ -528,6 +564,7 @@ supr java.lang.Object
 CLSS public abstract interface java.util.Enumeration<%0 extends java.lang.Object>
 meth public abstract boolean hasMoreElements()
 meth public abstract {java.util.Enumeration%0} nextElement()
+meth public java.util.Iterator<{java.util.Enumeration%0}> asIterator()
 
 CLSS public abstract interface java.util.EventListener
 
@@ -641,6 +678,8 @@ supr java.util.HashMap<{java.util.LinkedHashMap%0},{java.util.LinkedHashMap%1}>
 
 CLSS public abstract interface java.util.List<%0 extends java.lang.Object>
 intf java.util.Collection<{java.util.List%0}>
+meth public !varargs static <%0 extends java.lang.Object> java.util.List<{%%0}> of({%%0}[])
+ anno 0 java.lang.SafeVarargs()
 meth public abstract <%0 extends java.lang.Object> {%%0}[] toArray({%%0}[])
 meth public abstract boolean add({java.util.List%0})
 meth public abstract boolean addAll(int,java.util.Collection<? extends {java.util.List%0}>)
@@ -667,6 +706,18 @@ meth public abstract {java.util.List%0} get(int)
 meth public abstract {java.util.List%0} remove(int)
 meth public abstract {java.util.List%0} set(int,{java.util.List%0})
 meth public java.util.Spliterator<{java.util.List%0}> spliterator()
+meth public static <%0 extends java.lang.Object> java.util.List<{%%0}> copyOf(java.util.Collection<? extends {%%0}>)
+meth public static <%0 extends java.lang.Object> java.util.List<{%%0}> of()
+meth public static <%0 extends java.lang.Object> java.util.List<{%%0}> of({%%0})
+meth public static <%0 extends java.lang.Object> java.util.List<{%%0}> of({%%0},{%%0})
+meth public static <%0 extends java.lang.Object> java.util.List<{%%0}> of({%%0},{%%0},{%%0})
+meth public static <%0 extends java.lang.Object> java.util.List<{%%0}> of({%%0},{%%0},{%%0},{%%0})
+meth public static <%0 extends java.lang.Object> java.util.List<{%%0}> of({%%0},{%%0},{%%0},{%%0},{%%0})
+meth public static <%0 extends java.lang.Object> java.util.List<{%%0}> of({%%0},{%%0},{%%0},{%%0},{%%0},{%%0})
+meth public static <%0 extends java.lang.Object> java.util.List<{%%0}> of({%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0})
+meth public static <%0 extends java.lang.Object> java.util.List<{%%0}> of({%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0})
+meth public static <%0 extends java.lang.Object> java.util.List<{%%0}> of({%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0})
+meth public static <%0 extends java.lang.Object> java.util.List<{%%0}> of({%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0})
 meth public void replaceAll(java.util.function.UnaryOperator<{java.util.List%0}>)
 meth public void sort(java.util.Comparator<? super {java.util.List%0}>)
 
@@ -692,6 +743,8 @@ supr java.util.ResourceBundle
 
 CLSS public abstract interface java.util.Map<%0 extends java.lang.Object, %1 extends java.lang.Object>
 innr public abstract interface static Entry
+meth public !varargs static <%0 extends java.lang.Object, %1 extends java.lang.Object> java.util.Map<{%%0},{%%1}> ofEntries(java.util.Map$Entry<? extends {%%0},? extends {%%1}>[])
+ anno 0 java.lang.SafeVarargs()
 meth public abstract boolean containsKey(java.lang.Object)
 meth public abstract boolean containsValue(java.lang.Object)
 meth public abstract boolean equals(java.lang.Object)
@@ -708,6 +761,19 @@ meth public abstract {java.util.Map%1} put({java.util.Map%0},{java.util.Map%1})
 meth public abstract {java.util.Map%1} remove(java.lang.Object)
 meth public boolean remove(java.lang.Object,java.lang.Object)
 meth public boolean replace({java.util.Map%0},{java.util.Map%1},{java.util.Map%1})
+meth public static <%0 extends java.lang.Object, %1 extends java.lang.Object> java.util.Map$Entry<{%%0},{%%1}> entry({%%0},{%%1})
+meth public static <%0 extends java.lang.Object, %1 extends java.lang.Object> java.util.Map<{%%0},{%%1}> copyOf(java.util.Map<? extends {%%0},? extends {%%1}>)
+meth public static <%0 extends java.lang.Object, %1 extends java.lang.Object> java.util.Map<{%%0},{%%1}> of()
+meth public static <%0 extends java.lang.Object, %1 extends java.lang.Object> java.util.Map<{%%0},{%%1}> of({%%0},{%%1})
+meth public static <%0 extends java.lang.Object, %1 extends java.lang.Object> java.util.Map<{%%0},{%%1}> of({%%0},{%%1},{%%0},{%%1})
+meth public static <%0 extends java.lang.Object, %1 extends java.lang.Object> java.util.Map<{%%0},{%%1}> of({%%0},{%%1},{%%0},{%%1},{%%0},{%%1})
+meth public static <%0 extends java.lang.Object, %1 extends java.lang.Object> java.util.Map<{%%0},{%%1}> of({%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1})
+meth public static <%0 extends java.lang.Object, %1 extends java.lang.Object> java.util.Map<{%%0},{%%1}> of({%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1})
+meth public static <%0 extends java.lang.Object, %1 extends java.lang.Object> java.util.Map<{%%0},{%%1}> of({%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1})
+meth public static <%0 extends java.lang.Object, %1 extends java.lang.Object> java.util.Map<{%%0},{%%1}> of({%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1})
+meth public static <%0 extends java.lang.Object, %1 extends java.lang.Object> java.util.Map<{%%0},{%%1}> of({%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1})
+meth public static <%0 extends java.lang.Object, %1 extends java.lang.Object> java.util.Map<{%%0},{%%1}> of({%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1})
+meth public static <%0 extends java.lang.Object, %1 extends java.lang.Object> java.util.Map<{%%0},{%%1}> of({%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1},{%%0},{%%1})
 meth public void forEach(java.util.function.BiConsumer<? super {java.util.Map%0},? super {java.util.Map%1}>)
 meth public void replaceAll(java.util.function.BiFunction<? super {java.util.Map%0},? super {java.util.Map%1},? extends {java.util.Map%1}>)
 meth public {java.util.Map%1} compute({java.util.Map%0},java.util.function.BiFunction<? super {java.util.Map%0},? super {java.util.Map%1},? extends {java.util.Map%1}>)
@@ -729,27 +795,61 @@ meth public static <%0 extends java.lang.Comparable<? super {%%0}>, %1 extends j
 meth public static <%0 extends java.lang.Object, %1 extends java.lang.Comparable<? super {%%1}>> java.util.Comparator<java.util.Map$Entry<{%%0},{%%1}>> comparingByValue()
 meth public static <%0 extends java.lang.Object, %1 extends java.lang.Object> java.util.Comparator<java.util.Map$Entry<{%%0},{%%1}>> comparingByKey(java.util.Comparator<? super {%%0}>)
 meth public static <%0 extends java.lang.Object, %1 extends java.lang.Object> java.util.Comparator<java.util.Map$Entry<{%%0},{%%1}>> comparingByValue(java.util.Comparator<? super {%%1}>)
+meth public static <%0 extends java.lang.Object, %1 extends java.lang.Object> java.util.Map$Entry<{%%0},{%%1}> copyOf(java.util.Map$Entry<? extends {%%0},? extends {%%1}>)
 
 CLSS public java.util.Properties
 cons public init()
+cons public init(int)
 cons public init(java.util.Properties)
-fld protected java.util.Properties defaults
+fld protected volatile java.util.Properties defaults
+meth protected void rehash()
+meth public boolean contains(java.lang.Object)
+meth public boolean containsKey(java.lang.Object)
+meth public boolean containsValue(java.lang.Object)
+meth public boolean equals(java.lang.Object)
+meth public boolean isEmpty()
+meth public boolean remove(java.lang.Object,java.lang.Object)
+meth public boolean replace(java.lang.Object,java.lang.Object,java.lang.Object)
+meth public int hashCode()
+meth public int size()
+meth public java.lang.Object clone()
+meth public java.lang.Object compute(java.lang.Object,java.util.function.BiFunction<? super java.lang.Object,? super java.lang.Object,?>)
+meth public java.lang.Object computeIfAbsent(java.lang.Object,java.util.function.Function<? super java.lang.Object,?>)
+meth public java.lang.Object computeIfPresent(java.lang.Object,java.util.function.BiFunction<? super java.lang.Object,? super java.lang.Object,?>)
+meth public java.lang.Object get(java.lang.Object)
+meth public java.lang.Object getOrDefault(java.lang.Object,java.lang.Object)
+meth public java.lang.Object merge(java.lang.Object,java.lang.Object,java.util.function.BiFunction<? super java.lang.Object,? super java.lang.Object,?>)
+meth public java.lang.Object put(java.lang.Object,java.lang.Object)
+meth public java.lang.Object putIfAbsent(java.lang.Object,java.lang.Object)
+meth public java.lang.Object remove(java.lang.Object)
+meth public java.lang.Object replace(java.lang.Object,java.lang.Object)
 meth public java.lang.Object setProperty(java.lang.String,java.lang.String)
 meth public java.lang.String getProperty(java.lang.String)
 meth public java.lang.String getProperty(java.lang.String,java.lang.String)
+meth public java.lang.String toString()
+meth public java.util.Collection<java.lang.Object> values()
 meth public java.util.Enumeration<?> propertyNames()
+meth public java.util.Enumeration<java.lang.Object> elements()
+meth public java.util.Enumeration<java.lang.Object> keys()
+meth public java.util.Set<java.lang.Object> keySet()
 meth public java.util.Set<java.lang.String> stringPropertyNames()
+meth public java.util.Set<java.util.Map$Entry<java.lang.Object,java.lang.Object>> entrySet()
+meth public void clear()
+meth public void forEach(java.util.function.BiConsumer<? super java.lang.Object,? super java.lang.Object>)
 meth public void list(java.io.PrintStream)
 meth public void list(java.io.PrintWriter)
 meth public void load(java.io.InputStream) throws java.io.IOException
 meth public void load(java.io.Reader) throws java.io.IOException
 meth public void loadFromXML(java.io.InputStream) throws java.io.IOException
+meth public void putAll(java.util.Map<?,?>)
+meth public void replaceAll(java.util.function.BiFunction<? super java.lang.Object,? super java.lang.Object,?>)
 meth public void save(java.io.OutputStream,java.lang.String)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void store(java.io.OutputStream,java.lang.String) throws java.io.IOException
 meth public void store(java.io.Writer,java.lang.String) throws java.io.IOException
 meth public void storeToXML(java.io.OutputStream,java.lang.String) throws java.io.IOException
 meth public void storeToXML(java.io.OutputStream,java.lang.String,java.lang.String) throws java.io.IOException
+meth public void storeToXML(java.io.OutputStream,java.lang.String,java.nio.charset.Charset) throws java.io.IOException
 supr java.util.Hashtable<java.lang.Object,java.lang.Object>
 
 CLSS public abstract interface java.util.RandomAccess
@@ -775,12 +875,16 @@ meth public final static void clearCache(java.lang.ClassLoader)
 meth public java.lang.String getBaseBundleName()
 meth public java.util.Locale getLocale()
 meth public java.util.Set<java.lang.String> keySet()
+meth public static java.util.ResourceBundle getBundle(java.lang.String,java.lang.Module)
 meth public static java.util.ResourceBundle getBundle(java.lang.String,java.util.Locale,java.lang.ClassLoader)
 meth public static java.util.ResourceBundle getBundle(java.lang.String,java.util.Locale,java.lang.ClassLoader,java.util.ResourceBundle$Control)
+meth public static java.util.ResourceBundle getBundle(java.lang.String,java.util.Locale,java.lang.Module)
 supr java.lang.Object
 
 CLSS public abstract interface java.util.Set<%0 extends java.lang.Object>
 intf java.util.Collection<{java.util.Set%0}>
+meth public !varargs static <%0 extends java.lang.Object> java.util.Set<{%%0}> of({%%0}[])
+ anno 0 java.lang.SafeVarargs()
 meth public abstract <%0 extends java.lang.Object> {%%0}[] toArray({%%0}[])
 meth public abstract boolean add({java.util.Set%0})
 meth public abstract boolean addAll(java.util.Collection<? extends {java.util.Set%0}>)
@@ -797,6 +901,18 @@ meth public abstract java.lang.Object[] toArray()
 meth public abstract java.util.Iterator<{java.util.Set%0}> iterator()
 meth public abstract void clear()
 meth public java.util.Spliterator<{java.util.Set%0}> spliterator()
+meth public static <%0 extends java.lang.Object> java.util.Set<{%%0}> copyOf(java.util.Collection<? extends {%%0}>)
+meth public static <%0 extends java.lang.Object> java.util.Set<{%%0}> of()
+meth public static <%0 extends java.lang.Object> java.util.Set<{%%0}> of({%%0})
+meth public static <%0 extends java.lang.Object> java.util.Set<{%%0}> of({%%0},{%%0})
+meth public static <%0 extends java.lang.Object> java.util.Set<{%%0}> of({%%0},{%%0},{%%0})
+meth public static <%0 extends java.lang.Object> java.util.Set<{%%0}> of({%%0},{%%0},{%%0},{%%0})
+meth public static <%0 extends java.lang.Object> java.util.Set<{%%0}> of({%%0},{%%0},{%%0},{%%0},{%%0})
+meth public static <%0 extends java.lang.Object> java.util.Set<{%%0}> of({%%0},{%%0},{%%0},{%%0},{%%0},{%%0})
+meth public static <%0 extends java.lang.Object> java.util.Set<{%%0}> of({%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0})
+meth public static <%0 extends java.lang.Object> java.util.Set<{%%0}> of({%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0})
+meth public static <%0 extends java.lang.Object> java.util.Set<{%%0}> of({%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0})
+meth public static <%0 extends java.lang.Object> java.util.Set<{%%0}> of({%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0},{%%0})
 
 CLSS public java.util.Vector<%0 extends java.lang.Object>
 cons public init()
@@ -878,6 +994,7 @@ CLSS public java.util.logging.LogRecord
 cons public init(java.util.logging.Level,java.lang.String)
 intf java.io.Serializable
 meth public int getThreadID()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="16")
 meth public java.lang.Object[] getParameters()
 meth public java.lang.String getLoggerName()
 meth public java.lang.String getMessage()
@@ -885,14 +1002,19 @@ meth public java.lang.String getResourceBundleName()
 meth public java.lang.String getSourceClassName()
 meth public java.lang.String getSourceMethodName()
 meth public java.lang.Throwable getThrown()
+meth public java.time.Instant getInstant()
 meth public java.util.ResourceBundle getResourceBundle()
 meth public java.util.logging.Level getLevel()
+meth public java.util.logging.LogRecord setLongThreadID(long)
+meth public long getLongThreadID()
 meth public long getMillis()
 meth public long getSequenceNumber()
+meth public void setInstant(java.time.Instant)
 meth public void setLevel(java.util.logging.Level)
 meth public void setLoggerName(java.lang.String)
 meth public void setMessage(java.lang.String)
 meth public void setMillis(long)
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void setParameters(java.lang.Object[])
 meth public void setResourceBundle(java.util.ResourceBundle)
 meth public void setResourceBundleName(java.lang.String)
@@ -900,6 +1022,7 @@ meth public void setSequenceNumber(long)
 meth public void setSourceClassName(java.lang.String)
 meth public void setSourceMethodName(java.lang.String)
 meth public void setThreadID(int)
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="16")
 meth public void setThrown(java.lang.Throwable)
 supr java.lang.Object
 
@@ -914,12 +1037,6 @@ meth public java.lang.String format(java.util.logging.LogRecord)
 meth public java.lang.String getHead(java.util.logging.Handler)
 meth public java.lang.String getTail(java.util.logging.Handler)
 supr java.util.logging.Formatter
-
-CLSS public abstract interface javax.activation.DataSource
-meth public abstract java.io.InputStream getInputStream() throws java.io.IOException
-meth public abstract java.io.OutputStream getOutputStream() throws java.io.IOException
-meth public abstract java.lang.String getContentType()
-meth public abstract java.lang.String getName()
 
 CLSS public abstract interface !annotation javax.persistence.Access
  anno 0 java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy value=RUNTIME)
@@ -1676,9 +1793,9 @@ supr java.lang.Enum<javax.persistence.ParameterMode>
 CLSS public javax.persistence.Persistence
 cons public init()
 fld protected final static java.util.Set<javax.persistence.spi.PersistenceProvider> providers
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String PERSISTENCE_PROVIDER = "javax.persistence.spi.PeristenceProvider"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static javax.persistence.EntityManagerFactory createEntityManagerFactory(java.lang.String)
 meth public static javax.persistence.EntityManagerFactory createEntityManagerFactory(java.lang.String,java.util.Map)
 meth public static javax.persistence.PersistenceUtil getPersistenceUtil()
@@ -2759,250 +2876,29 @@ meth public abstract javax.persistence.spi.LoadState isLoadedWithoutReference(ja
 
 CLSS abstract interface javax.persistence.spi.package-info
 
-CLSS public abstract javax.rmi.CORBA.Stub
-cons public init()
-intf java.io.Serializable
-meth public boolean equals(java.lang.Object)
-meth public int hashCode()
-meth public java.lang.String toString()
-meth public void connect(org.omg.CORBA.ORB) throws java.rmi.RemoteException
-supr org.omg.CORBA_2_3.portable.ObjectImpl
-
-CLSS public abstract interface javax.rmi.CORBA.Tie
-intf org.omg.CORBA.portable.InvokeHandler
-meth public abstract java.rmi.Remote getTarget()
-meth public abstract org.omg.CORBA.ORB orb()
-meth public abstract org.omg.CORBA.Object thisObject()
-meth public abstract void deactivate() throws java.rmi.NoSuchObjectException
-meth public abstract void orb(org.omg.CORBA.ORB)
-meth public abstract void setTarget(java.rmi.Remote)
-
-CLSS public javax.rmi.PortableRemoteObject
-cons protected init() throws java.rmi.RemoteException
-meth public static java.lang.Object narrow(java.lang.Object,java.lang.Class)
-meth public static java.rmi.Remote toStub(java.rmi.Remote) throws java.rmi.NoSuchObjectException
-meth public static void connect(java.rmi.Remote,java.rmi.Remote) throws java.rmi.RemoteException
-meth public static void exportObject(java.rmi.Remote) throws java.rmi.RemoteException
-meth public static void unexportObject(java.rmi.Remote) throws java.rmi.NoSuchObjectException
-supr java.lang.Object
-
 CLSS public abstract interface javax.sql.CommonDataSource
 meth public abstract int getLoginTimeout() throws java.sql.SQLException
 meth public abstract java.io.PrintWriter getLogWriter() throws java.sql.SQLException
 meth public abstract java.util.logging.Logger getParentLogger() throws java.sql.SQLFeatureNotSupportedException
 meth public abstract void setLogWriter(java.io.PrintWriter) throws java.sql.SQLException
 meth public abstract void setLoginTimeout(int) throws java.sql.SQLException
+meth public java.sql.ShardingKeyBuilder createShardingKeyBuilder() throws java.sql.SQLException
 
 CLSS public abstract interface javax.sql.DataSource
 intf java.sql.Wrapper
 intf javax.sql.CommonDataSource
+meth public abstract int getLoginTimeout() throws java.sql.SQLException
+meth public abstract java.io.PrintWriter getLogWriter() throws java.sql.SQLException
 meth public abstract java.sql.Connection getConnection() throws java.sql.SQLException
 meth public abstract java.sql.Connection getConnection(java.lang.String,java.lang.String) throws java.sql.SQLException
-
-CLSS public abstract javax.xml.bind.Binder<%0 extends java.lang.Object>
-cons public init()
-meth public abstract <%0 extends java.lang.Object> javax.xml.bind.JAXBElement<{%%0}> unmarshal({javax.xml.bind.Binder%0},java.lang.Class<{%%0}>) throws javax.xml.bind.JAXBException
-meth public abstract java.lang.Object getJAXBNode({javax.xml.bind.Binder%0})
-meth public abstract java.lang.Object getProperty(java.lang.String) throws javax.xml.bind.PropertyException
-meth public abstract java.lang.Object unmarshal({javax.xml.bind.Binder%0}) throws javax.xml.bind.JAXBException
-meth public abstract java.lang.Object updateJAXB({javax.xml.bind.Binder%0}) throws javax.xml.bind.JAXBException
-meth public abstract javax.xml.bind.ValidationEventHandler getEventHandler() throws javax.xml.bind.JAXBException
-meth public abstract javax.xml.validation.Schema getSchema()
-meth public abstract void marshal(java.lang.Object,{javax.xml.bind.Binder%0}) throws javax.xml.bind.JAXBException
-meth public abstract void setEventHandler(javax.xml.bind.ValidationEventHandler) throws javax.xml.bind.JAXBException
-meth public abstract void setProperty(java.lang.String,java.lang.Object) throws javax.xml.bind.PropertyException
-meth public abstract void setSchema(javax.xml.validation.Schema)
-meth public abstract {javax.xml.bind.Binder%0} getXMLNode(java.lang.Object)
-meth public abstract {javax.xml.bind.Binder%0} updateXML(java.lang.Object) throws javax.xml.bind.JAXBException
-meth public abstract {javax.xml.bind.Binder%0} updateXML(java.lang.Object,{javax.xml.bind.Binder%0}) throws javax.xml.bind.JAXBException
-supr java.lang.Object
-
-CLSS public abstract javax.xml.bind.JAXBContext
-cons protected init()
-fld public final static java.lang.String JAXB_CONTEXT_FACTORY = "javax.xml.bind.context.factory"
-meth public !varargs static javax.xml.bind.JAXBContext newInstance(java.lang.Class[]) throws javax.xml.bind.JAXBException
-meth public <%0 extends java.lang.Object> javax.xml.bind.Binder<{%%0}> createBinder(java.lang.Class<{%%0}>)
-meth public abstract javax.xml.bind.Marshaller createMarshaller() throws javax.xml.bind.JAXBException
-meth public abstract javax.xml.bind.Unmarshaller createUnmarshaller() throws javax.xml.bind.JAXBException
-meth public abstract javax.xml.bind.Validator createValidator() throws javax.xml.bind.JAXBException
-meth public javax.xml.bind.Binder<org.w3c.dom.Node> createBinder()
-meth public javax.xml.bind.JAXBIntrospector createJAXBIntrospector()
-meth public static javax.xml.bind.JAXBContext newInstance(java.lang.Class[],java.util.Map<java.lang.String,?>) throws javax.xml.bind.JAXBException
-meth public static javax.xml.bind.JAXBContext newInstance(java.lang.String) throws javax.xml.bind.JAXBException
-meth public static javax.xml.bind.JAXBContext newInstance(java.lang.String,java.lang.ClassLoader) throws javax.xml.bind.JAXBException
-meth public static javax.xml.bind.JAXBContext newInstance(java.lang.String,java.lang.ClassLoader,java.util.Map<java.lang.String,?>) throws javax.xml.bind.JAXBException
-meth public void generateSchema(javax.xml.bind.SchemaOutputResolver) throws java.io.IOException
-supr java.lang.Object
-
-CLSS public javax.xml.bind.JAXBElement<%0 extends java.lang.Object>
-cons public init(javax.xml.namespace.QName,java.lang.Class<{javax.xml.bind.JAXBElement%0}>,java.lang.Class,{javax.xml.bind.JAXBElement%0})
-cons public init(javax.xml.namespace.QName,java.lang.Class<{javax.xml.bind.JAXBElement%0}>,{javax.xml.bind.JAXBElement%0})
-fld protected boolean nil
-fld protected final java.lang.Class scope
-fld protected final java.lang.Class<{javax.xml.bind.JAXBElement%0}> declaredType
-fld protected final javax.xml.namespace.QName name
-fld protected {javax.xml.bind.JAXBElement%0} value
-innr public final static GlobalScope
-intf java.io.Serializable
-meth public boolean isGlobalScope()
-meth public boolean isNil()
-meth public boolean isTypeSubstituted()
-meth public java.lang.Class getScope()
-meth public java.lang.Class<{javax.xml.bind.JAXBElement%0}> getDeclaredType()
-meth public javax.xml.namespace.QName getName()
-meth public void setNil(boolean)
-meth public void setValue({javax.xml.bind.JAXBElement%0})
-meth public {javax.xml.bind.JAXBElement%0} getValue()
-supr java.lang.Object
-
-CLSS public abstract javax.xml.bind.JAXBIntrospector
-cons public init()
-meth public abstract boolean isElement(java.lang.Object)
-meth public abstract javax.xml.namespace.QName getElementName(java.lang.Object)
-meth public static java.lang.Object getValue(java.lang.Object)
-supr java.lang.Object
-
-CLSS public abstract interface javax.xml.bind.Marshaller
-fld public final static java.lang.String JAXB_ENCODING = "jaxb.encoding"
-fld public final static java.lang.String JAXB_FORMATTED_OUTPUT = "jaxb.formatted.output"
-fld public final static java.lang.String JAXB_FRAGMENT = "jaxb.fragment"
-fld public final static java.lang.String JAXB_NO_NAMESPACE_SCHEMA_LOCATION = "jaxb.noNamespaceSchemaLocation"
-fld public final static java.lang.String JAXB_SCHEMA_LOCATION = "jaxb.schemaLocation"
-innr public abstract static Listener
-meth public abstract <%0 extends javax.xml.bind.annotation.adapters.XmlAdapter> void setAdapter(java.lang.Class<{%%0}>,{%%0})
-meth public abstract <%0 extends javax.xml.bind.annotation.adapters.XmlAdapter> {%%0} getAdapter(java.lang.Class<{%%0}>)
-meth public abstract java.lang.Object getProperty(java.lang.String) throws javax.xml.bind.PropertyException
-meth public abstract javax.xml.bind.Marshaller$Listener getListener()
-meth public abstract javax.xml.bind.ValidationEventHandler getEventHandler() throws javax.xml.bind.JAXBException
-meth public abstract javax.xml.bind.attachment.AttachmentMarshaller getAttachmentMarshaller()
-meth public abstract javax.xml.validation.Schema getSchema()
-meth public abstract org.w3c.dom.Node getNode(java.lang.Object) throws javax.xml.bind.JAXBException
-meth public abstract void marshal(java.lang.Object,java.io.File) throws javax.xml.bind.JAXBException
-meth public abstract void marshal(java.lang.Object,java.io.OutputStream) throws javax.xml.bind.JAXBException
-meth public abstract void marshal(java.lang.Object,java.io.Writer) throws javax.xml.bind.JAXBException
-meth public abstract void marshal(java.lang.Object,javax.xml.stream.XMLEventWriter) throws javax.xml.bind.JAXBException
-meth public abstract void marshal(java.lang.Object,javax.xml.stream.XMLStreamWriter) throws javax.xml.bind.JAXBException
-meth public abstract void marshal(java.lang.Object,javax.xml.transform.Result) throws javax.xml.bind.JAXBException
-meth public abstract void marshal(java.lang.Object,org.w3c.dom.Node) throws javax.xml.bind.JAXBException
-meth public abstract void marshal(java.lang.Object,org.xml.sax.ContentHandler) throws javax.xml.bind.JAXBException
-meth public abstract void setAdapter(javax.xml.bind.annotation.adapters.XmlAdapter)
-meth public abstract void setAttachmentMarshaller(javax.xml.bind.attachment.AttachmentMarshaller)
-meth public abstract void setEventHandler(javax.xml.bind.ValidationEventHandler) throws javax.xml.bind.JAXBException
-meth public abstract void setListener(javax.xml.bind.Marshaller$Listener)
-meth public abstract void setProperty(java.lang.String,java.lang.Object) throws javax.xml.bind.PropertyException
-meth public abstract void setSchema(javax.xml.validation.Schema)
-
-CLSS public abstract javax.xml.bind.SchemaOutputResolver
-cons public init()
-meth public abstract javax.xml.transform.Result createOutput(java.lang.String,java.lang.String) throws java.io.IOException
-supr java.lang.Object
-
-CLSS public abstract interface javax.xml.bind.Unmarshaller
-innr public abstract static Listener
-meth public abstract <%0 extends java.lang.Object> javax.xml.bind.JAXBElement<{%%0}> unmarshal(javax.xml.stream.XMLEventReader,java.lang.Class<{%%0}>) throws javax.xml.bind.JAXBException
-meth public abstract <%0 extends java.lang.Object> javax.xml.bind.JAXBElement<{%%0}> unmarshal(javax.xml.stream.XMLStreamReader,java.lang.Class<{%%0}>) throws javax.xml.bind.JAXBException
-meth public abstract <%0 extends java.lang.Object> javax.xml.bind.JAXBElement<{%%0}> unmarshal(javax.xml.transform.Source,java.lang.Class<{%%0}>) throws javax.xml.bind.JAXBException
-meth public abstract <%0 extends java.lang.Object> javax.xml.bind.JAXBElement<{%%0}> unmarshal(org.w3c.dom.Node,java.lang.Class<{%%0}>) throws javax.xml.bind.JAXBException
-meth public abstract <%0 extends javax.xml.bind.annotation.adapters.XmlAdapter> void setAdapter(java.lang.Class<{%%0}>,{%%0})
-meth public abstract <%0 extends javax.xml.bind.annotation.adapters.XmlAdapter> {%%0} getAdapter(java.lang.Class<{%%0}>)
-meth public abstract boolean isValidating() throws javax.xml.bind.JAXBException
-meth public abstract java.lang.Object getProperty(java.lang.String) throws javax.xml.bind.PropertyException
-meth public abstract java.lang.Object unmarshal(java.io.File) throws javax.xml.bind.JAXBException
-meth public abstract java.lang.Object unmarshal(java.io.InputStream) throws javax.xml.bind.JAXBException
-meth public abstract java.lang.Object unmarshal(java.io.Reader) throws javax.xml.bind.JAXBException
-meth public abstract java.lang.Object unmarshal(java.net.URL) throws javax.xml.bind.JAXBException
-meth public abstract java.lang.Object unmarshal(javax.xml.stream.XMLEventReader) throws javax.xml.bind.JAXBException
-meth public abstract java.lang.Object unmarshal(javax.xml.stream.XMLStreamReader) throws javax.xml.bind.JAXBException
-meth public abstract java.lang.Object unmarshal(javax.xml.transform.Source) throws javax.xml.bind.JAXBException
-meth public abstract java.lang.Object unmarshal(org.w3c.dom.Node) throws javax.xml.bind.JAXBException
-meth public abstract java.lang.Object unmarshal(org.xml.sax.InputSource) throws javax.xml.bind.JAXBException
-meth public abstract javax.xml.bind.Unmarshaller$Listener getListener()
-meth public abstract javax.xml.bind.UnmarshallerHandler getUnmarshallerHandler()
-meth public abstract javax.xml.bind.ValidationEventHandler getEventHandler() throws javax.xml.bind.JAXBException
-meth public abstract javax.xml.bind.attachment.AttachmentUnmarshaller getAttachmentUnmarshaller()
-meth public abstract javax.xml.validation.Schema getSchema()
-meth public abstract void setAdapter(javax.xml.bind.annotation.adapters.XmlAdapter)
-meth public abstract void setAttachmentUnmarshaller(javax.xml.bind.attachment.AttachmentUnmarshaller)
-meth public abstract void setEventHandler(javax.xml.bind.ValidationEventHandler) throws javax.xml.bind.JAXBException
-meth public abstract void setListener(javax.xml.bind.Unmarshaller$Listener)
-meth public abstract void setProperty(java.lang.String,java.lang.Object) throws javax.xml.bind.PropertyException
-meth public abstract void setSchema(javax.xml.validation.Schema)
-meth public abstract void setValidating(boolean) throws javax.xml.bind.JAXBException
-
-CLSS public abstract interface javax.xml.bind.UnmarshallerHandler
-intf org.xml.sax.ContentHandler
-meth public abstract java.lang.Object getResult() throws javax.xml.bind.JAXBException
-
-CLSS public abstract interface javax.xml.bind.Validator
-meth public abstract boolean validate(java.lang.Object) throws javax.xml.bind.JAXBException
-meth public abstract boolean validateRoot(java.lang.Object) throws javax.xml.bind.JAXBException
-meth public abstract java.lang.Object getProperty(java.lang.String) throws javax.xml.bind.PropertyException
-meth public abstract javax.xml.bind.ValidationEventHandler getEventHandler() throws javax.xml.bind.JAXBException
-meth public abstract void setEventHandler(javax.xml.bind.ValidationEventHandler) throws javax.xml.bind.JAXBException
-meth public abstract void setProperty(java.lang.String,java.lang.Object) throws javax.xml.bind.PropertyException
-
-CLSS public abstract interface !annotation javax.xml.bind.annotation.XmlAccessorType
- anno 0 java.lang.annotation.Inherited()
- anno 0 java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy value=RUNTIME)
- anno 0 java.lang.annotation.Target(java.lang.annotation.ElementType[] value=[PACKAGE, TYPE])
-intf java.lang.annotation.Annotation
-meth public abstract !hasdefault javax.xml.bind.annotation.XmlAccessType value()
-
-CLSS public abstract interface !annotation javax.xml.bind.annotation.XmlEnum
- anno 0 java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy value=RUNTIME)
- anno 0 java.lang.annotation.Target(java.lang.annotation.ElementType[] value=[TYPE])
-intf java.lang.annotation.Annotation
-meth public abstract !hasdefault java.lang.Class<?> value()
-
-CLSS public abstract interface !annotation javax.xml.bind.annotation.XmlRegistry
- anno 0 java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy value=RUNTIME)
- anno 0 java.lang.annotation.Target(java.lang.annotation.ElementType[] value=[TYPE])
-intf java.lang.annotation.Annotation
-
-CLSS public abstract interface !annotation javax.xml.bind.annotation.XmlRootElement
- anno 0 java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy value=RUNTIME)
- anno 0 java.lang.annotation.Target(java.lang.annotation.ElementType[] value=[TYPE])
-intf java.lang.annotation.Annotation
-meth public abstract !hasdefault java.lang.String name()
-meth public abstract !hasdefault java.lang.String namespace()
-
-CLSS public abstract interface !annotation javax.xml.bind.annotation.XmlSchema
- anno 0 java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy value=RUNTIME)
- anno 0 java.lang.annotation.Target(java.lang.annotation.ElementType[] value=[PACKAGE])
-fld public final static java.lang.String NO_LOCATION = "##generate"
-intf java.lang.annotation.Annotation
-meth public abstract !hasdefault java.lang.String location()
-meth public abstract !hasdefault java.lang.String namespace()
-meth public abstract !hasdefault javax.xml.bind.annotation.XmlNsForm attributeFormDefault()
-meth public abstract !hasdefault javax.xml.bind.annotation.XmlNsForm elementFormDefault()
-meth public abstract !hasdefault javax.xml.bind.annotation.XmlNs[] xmlns()
-
-CLSS public abstract interface !annotation javax.xml.bind.annotation.XmlSeeAlso
- anno 0 java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy value=RUNTIME)
- anno 0 java.lang.annotation.Target(java.lang.annotation.ElementType[] value=[TYPE])
-intf java.lang.annotation.Annotation
-meth public abstract java.lang.Class[] value()
-
-CLSS public abstract interface !annotation javax.xml.bind.annotation.XmlTransient
- anno 0 java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy value=RUNTIME)
- anno 0 java.lang.annotation.Target(java.lang.annotation.ElementType[] value=[FIELD, METHOD, TYPE])
-intf java.lang.annotation.Annotation
-
-CLSS public abstract interface !annotation javax.xml.bind.annotation.XmlType
- anno 0 java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy value=RUNTIME)
- anno 0 java.lang.annotation.Target(java.lang.annotation.ElementType[] value=[TYPE])
-innr public final static DEFAULT
-intf java.lang.annotation.Annotation
-meth public abstract !hasdefault java.lang.Class factoryClass()
-meth public abstract !hasdefault java.lang.String factoryMethod()
-meth public abstract !hasdefault java.lang.String name()
-meth public abstract !hasdefault java.lang.String namespace()
-meth public abstract !hasdefault java.lang.String[] propOrder()
+meth public abstract void setLogWriter(java.io.PrintWriter) throws java.sql.SQLException
+meth public abstract void setLoginTimeout(int) throws java.sql.SQLException
+meth public java.sql.ConnectionBuilder createConnectionBuilder() throws java.sql.SQLException
 
 CLSS public abstract interface javax.xml.namespace.NamespaceContext
 meth public abstract java.lang.String getNamespaceURI(java.lang.String)
 meth public abstract java.lang.String getPrefix(java.lang.String)
-meth public abstract java.util.Iterator getPrefixes(java.lang.String)
+meth public abstract java.util.Iterator<java.lang.String> getPrefixes(java.lang.String)
 
 CLSS public abstract interface javax.xml.transform.Result
 fld public final static java.lang.String PI_DISABLE_OUTPUT_ESCAPING = "javax.xml.transform.disable-output-escaping"
@@ -3013,6 +2909,7 @@ meth public abstract void setSystemId(java.lang.String)
 CLSS public abstract interface javax.xml.transform.Source
 meth public abstract java.lang.String getSystemId()
 meth public abstract void setSystemId(java.lang.String)
+meth public boolean isEmpty()
 
 CLSS public javax.xml.transform.stream.StreamSource
 cons public init()
@@ -3024,6 +2921,7 @@ cons public init(java.io.Reader,java.lang.String)
 cons public init(java.lang.String)
 fld public final static java.lang.String FEATURE = "http://javax.xml.transform.stream.StreamSource/feature"
 intf javax.xml.transform.Source
+meth public boolean isEmpty()
 meth public java.io.InputStream getInputStream()
 meth public java.io.Reader getReader()
 meth public java.lang.String getPublicId()
@@ -3038,26 +2936,26 @@ supr java.lang.Object
 CLSS public org.eclipse.persistence.Version
 cons public init()
 fld public final static int JDK_1_5 = 1
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static int JDK_1_6 = 2
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static int JDK_1_7 = 3
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static int JDK_1_8 = 4
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static int JDK_1_9 = 5
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static int JDK_VERSION_NOT_SET = 0
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public static int JDK_VERSION
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static boolean isJDK15()
 meth public static boolean isJDK16()
 meth public static boolean isJDK17()
 meth public static boolean isJDK18()
 meth public static boolean isJDK19()
 meth public static int getJDKVersion()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static java.lang.String getBuildDate()
 meth public static java.lang.String getBuildNumber()
 meth public static java.lang.String getBuildRevision()
@@ -3071,9 +2969,9 @@ meth public static void main(java.lang.String[])
 meth public static void printVersion()
 meth public static void setProduct(java.lang.String)
 meth public static void useJDK15()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static void useJDK16()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 supr java.lang.Object
 hfds SEPARATOR,buildDate,buildRevision,buildTime,buildType,product,qualifier,version
 
@@ -3091,7 +2989,7 @@ meth public abstract !hasdefault java.lang.Class targetClass()
 meth public abstract java.lang.String databaseType()
 
 CLSS public abstract interface !annotation org.eclipse.persistence.annotations.BasicCollection
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
  anno 0 java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy value=RUNTIME)
  anno 0 java.lang.annotation.Target(java.lang.annotation.ElementType[] value=[METHOD, FIELD])
 intf java.lang.annotation.Annotation
@@ -3131,7 +3029,7 @@ meth public abstract !hasdefault boolean alwaysRefresh()
 meth public abstract !hasdefault boolean disableHits()
 meth public abstract !hasdefault boolean refreshOnlyIfNewer()
 meth public abstract !hasdefault boolean shared()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public abstract !hasdefault int expiry()
 meth public abstract !hasdefault int size()
 meth public abstract !hasdefault org.eclipse.persistence.annotations.CacheCoordinationType coordinationType()
@@ -3949,7 +3847,7 @@ fld public final static java.lang.String MULTITENANT_SCHEMA_PROPERTY_DEFAULT = "
 fld public final static java.lang.String NON_JTA_DATASOURCE = "javax.persistence.nonJtaDataSource"
 fld public final static java.lang.String ORACLE_PROXY_TYPE = "eclipselink.oracle.proxy-type"
 fld public final static java.lang.String ORDER_UPDATES = "eclipselink.order-updates"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String PERSISTENCE_CONTEXT_CLOSE_ON_COMMIT = "eclipselink.persistence-context.close-on-commit"
 fld public final static java.lang.String PERSISTENCE_CONTEXT_COMMIT_ORDER = "eclipselink.persistence-context.commit-order"
 fld public final static java.lang.String PERSISTENCE_CONTEXT_COMMIT_WITHOUT_PERSIST_RULES = "eclipselink.persistence-context.commit-without-persist-rules"
@@ -4001,7 +3899,7 @@ supr java.lang.Object
 CLSS public org.eclipse.persistence.config.ParserType
 cons public init()
 fld public final static java.lang.String ANTLR = "ANTLR"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String DEFAULT = "Hermes"
 fld public final static java.lang.String Hermes = "Hermes"
 supr java.lang.Object
@@ -4022,7 +3920,7 @@ fld public final static java.lang.String ALLOW_CONVERT_RESULT_TO_BOOLEAN = "ecli
 fld public final static java.lang.String ALLOW_NATIVE_SQL_QUERIES = "eclipselink.jdbc.allow-native-sql-queries"
 fld public final static java.lang.String ALLOW_NULL_MAX_MIN = "eclipselink.allow-null-max-min"
 fld public final static java.lang.String ALLOW_ZERO_ID = "eclipselink.allow-zero-id"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String APP_LOCATION = "eclipselink.application-location"
 fld public final static java.lang.String BATCH_WRITING = "eclipselink.jdbc.batch-writing"
 fld public final static java.lang.String BATCH_WRITING_SIZE = "eclipselink.jdbc.batch-writing.size"
@@ -4141,45 +4039,45 @@ fld public final static java.lang.String JAVASE_DB_INTERACTION = "INTERACT_WITH_
 fld public final static java.lang.String JDBC_ALLOW_PARTIAL_PARAMETERS = "eclipselink.jdbc.allow-partial-bind-parameters"
 fld public final static java.lang.String JDBC_BIND_PARAMETERS = "eclipselink.jdbc.bind-parameters"
 fld public final static java.lang.String JDBC_CONNECTIONS_INITIAL = "eclipselink.jdbc.connections.initial"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String JDBC_CONNECTIONS_MAX = "eclipselink.jdbc.connections.max"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String JDBC_CONNECTIONS_MIN = "eclipselink.jdbc.connections.min"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String JDBC_CONNECTIONS_WAIT = "eclipselink.jdbc.connections.wait-timeout"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String JDBC_CONNECTOR = "eclipselink.jdbc.connector"
 fld public final static java.lang.String JDBC_DRIVER = "javax.persistence.jdbc.driver"
 fld public final static java.lang.String JDBC_FORCE_BIND_PARAMETERS = "eclipselink.jdbc.force-bind-parameters"
 fld public final static java.lang.String JDBC_PASSWORD = "javax.persistence.jdbc.password"
 fld public final static java.lang.String JDBC_PROPERTY = "eclipselink.jdbc.property."
 fld public final static java.lang.String JDBC_READ_CONNECTIONS_INITIAL = "eclipselink.jdbc.read-connections.initial"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String JDBC_READ_CONNECTIONS_MAX = "eclipselink.jdbc.read-connections.max"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String JDBC_READ_CONNECTIONS_MIN = "eclipselink.jdbc.read-connections.min"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String JDBC_READ_CONNECTIONS_SHARED = "eclipselink.jdbc.read-connections.shared"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String JDBC_RESULT_SET_ACCESS_OPTIMIZATION = "eclipselink.jdbc.result-set-access-optimization"
 fld public final static java.lang.String JDBC_SEQUENCE_CONNECTION_POOL = "eclipselink.jdbc.sequence-connection-pool"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String JDBC_SEQUENCE_CONNECTION_POOL_DATASOURCE = "eclipselink.jdbc.sequence-connection-pool.non-jta-data-source"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String JDBC_SEQUENCE_CONNECTION_POOL_INITIAL = "eclipselink.jdbc.sequence-connection-pool.initial"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String JDBC_SEQUENCE_CONNECTION_POOL_MAX = "eclipselink.jdbc.sequence-connection-pool.max"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String JDBC_SEQUENCE_CONNECTION_POOL_MIN = "eclipselink.jdbc.sequence-connection-pool.min"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String JDBC_URL = "javax.persistence.jdbc.url"
 fld public final static java.lang.String JDBC_USER = "javax.persistence.jdbc.user"
 fld public final static java.lang.String JDBC_WRITE_CONNECTIONS_INITIAL = "eclipselink.jdbc.write-connections.initial"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String JDBC_WRITE_CONNECTIONS_MAX = "eclipselink.jdbc.write-connections.max"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String JDBC_WRITE_CONNECTIONS_MIN = "eclipselink.jdbc.write-connections.min"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String JOIN_EXISTING_TRANSACTION = "eclipselink.transaction.join-existing"
 fld public final static java.lang.String JPQL_PARSER = "eclipselink.jpql.parser"
 fld public final static java.lang.String JPQL_TOLERATE = "eclipselink.tolerate-invalid-jpql"
@@ -4216,7 +4114,7 @@ fld public final static java.lang.String NOSQL_PROPERTY = "eclipselink.nosql.pro
 fld public final static java.lang.String NOSQL_USER = "eclipselink.nosql.property.user"
 fld public final static java.lang.String ORACLE_PROXY_TYPE = "eclipselink.oracle.proxy-type"
 fld public final static java.lang.String ORDER_UPDATES = "eclipselink.order-updates"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String ORM_SCHEMA_VALIDATION = "eclipselink.orm.validate.schema"
 fld public final static java.lang.String PARTITIONING = "eclipselink.partitioning"
 fld public final static java.lang.String PARTITIONING_CALLBACK = "eclipselink.partitioning.callback"
@@ -4541,7 +4439,7 @@ fld public final static java.lang.String None = "None"
 fld public final static java.lang.String OC4J = "OC4J"
 fld public final static java.lang.String SAPNetWeaver_7_1 = "NetWeaver_7_1"
 fld public final static java.lang.String SunAS9 = "SunAS9"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String WebLogic = "WebLogic"
 fld public final static java.lang.String WebLogic_10 = "WebLogic_10"
 fld public final static java.lang.String WebLogic_12 = "WebLogic_12"
@@ -5510,7 +5408,7 @@ meth public void setInternalDefaultTable()
 meth public void setInternalDefaultTable(org.eclipse.persistence.internal.helper.DatabaseTable)
 meth public void setIsCascadeOnDeleteSetOnDatabaseOnSecondaryTables(boolean)
 meth public void setIsIsolated(boolean)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void setIsNativeConnectionRequired(boolean)
 meth public void setJavaClass(java.lang.Class)
 meth public void setJavaClassName(java.lang.String)
@@ -6770,7 +6668,7 @@ meth public abstract long getExpiryTimeInMillis(org.eclipse.persistence.internal
 meth public boolean isInvalidated(org.eclipse.persistence.internal.identitymaps.CacheKey)
 meth public boolean isInvalidationRandomized()
 meth public boolean shouldRefreshInvalidObjectsInUnitOfWork()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public boolean shouldRefreshInvalidObjectsOnClone()
 meth public boolean shouldUpdateReadTimeOnUpdate()
 meth public java.lang.Object clone()
@@ -6778,7 +6676,7 @@ meth public long getRemainingValidTime(org.eclipse.persistence.internal.identity
 meth public void initialize(org.eclipse.persistence.descriptors.ClassDescriptor,org.eclipse.persistence.internal.sessions.AbstractSession)
 meth public void setIsInvalidationRandomized(boolean)
 meth public void setShouldRefreshInvalidObjectsInUnitOfWork(boolean)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void setShouldRefreshInvalidObjectsOnClone(boolean)
 meth public void setShouldUpdateReadTimeOnUpdate(boolean)
 supr java.lang.Object
@@ -10566,7 +10464,7 @@ meth public org.eclipse.persistence.expressions.Expression all(int[])
 meth public org.eclipse.persistence.expressions.Expression all(java.lang.Object[])
 meth public org.eclipse.persistence.expressions.Expression all(java.util.List)
 meth public org.eclipse.persistence.expressions.Expression all(java.util.Vector)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public org.eclipse.persistence.expressions.Expression all(long[])
 meth public org.eclipse.persistence.expressions.Expression all(org.eclipse.persistence.expressions.Expression)
 meth public org.eclipse.persistence.expressions.Expression all(org.eclipse.persistence.queries.ReportQuery)
@@ -10582,7 +10480,7 @@ meth public org.eclipse.persistence.expressions.Expression any(int[])
 meth public org.eclipse.persistence.expressions.Expression any(java.lang.Object[])
 meth public org.eclipse.persistence.expressions.Expression any(java.util.List)
 meth public org.eclipse.persistence.expressions.Expression any(java.util.Vector)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public org.eclipse.persistence.expressions.Expression any(long[])
 meth public org.eclipse.persistence.expressions.Expression any(org.eclipse.persistence.expressions.Expression)
 meth public org.eclipse.persistence.expressions.Expression any(org.eclipse.persistence.queries.ReportQuery)
@@ -10592,7 +10490,7 @@ meth public org.eclipse.persistence.expressions.Expression anyOf(java.lang.Strin
 meth public org.eclipse.persistence.expressions.Expression anyOfAllowingNone(java.lang.String)
 meth public org.eclipse.persistence.expressions.Expression anyOfAllowingNone(java.lang.String,boolean)
 meth public org.eclipse.persistence.expressions.Expression as(java.lang.Class)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public org.eclipse.persistence.expressions.Expression as(java.lang.String)
 meth public org.eclipse.persistence.expressions.Expression asOf(org.eclipse.persistence.history.AsOfClause)
 meth public org.eclipse.persistence.expressions.Expression ascending()
@@ -10669,12 +10567,12 @@ meth public org.eclipse.persistence.expressions.Expression getField(org.eclipse.
 meth public org.eclipse.persistence.expressions.Expression getFunction(int)
 meth public org.eclipse.persistence.expressions.Expression getFunction(int,java.util.List)
 meth public org.eclipse.persistence.expressions.Expression getFunction(int,java.util.Vector)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public org.eclipse.persistence.expressions.Expression getFunction(java.lang.String)
 meth public org.eclipse.persistence.expressions.Expression getFunction(java.lang.String,java.lang.Object)
 meth public org.eclipse.persistence.expressions.Expression getFunctionWithArguments(java.lang.String,java.util.List)
 meth public org.eclipse.persistence.expressions.Expression getFunctionWithArguments(java.lang.String,java.util.Vector)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public org.eclipse.persistence.expressions.Expression getNumberVal()
 meth public org.eclipse.persistence.expressions.Expression getParameter(java.lang.String)
 meth public org.eclipse.persistence.expressions.Expression getParameter(java.lang.String,java.lang.Object)
@@ -10846,7 +10744,7 @@ meth public org.eclipse.persistence.expressions.Expression some(int[])
 meth public org.eclipse.persistence.expressions.Expression some(java.lang.Object[])
 meth public org.eclipse.persistence.expressions.Expression some(java.util.List)
 meth public org.eclipse.persistence.expressions.Expression some(java.util.Vector)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public org.eclipse.persistence.expressions.Expression some(long[])
 meth public org.eclipse.persistence.expressions.Expression some(org.eclipse.persistence.expressions.Expression)
 meth public org.eclipse.persistence.expressions.Expression some(org.eclipse.persistence.queries.ReportQuery)
@@ -11209,14 +11107,14 @@ meth public java.lang.Object applyFunction(java.lang.Object,java.util.Vector)
 meth public java.lang.String getName()
 meth public java.lang.String toString()
 meth public java.lang.String[] getDatabaseStrings()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.String[] getDatabaseStrings(int)
 meth public java.lang.String[] getJavaStrings()
 meth public org.eclipse.persistence.expressions.Expression expressionFor(org.eclipse.persistence.expressions.Expression)
 meth public org.eclipse.persistence.expressions.Expression expressionFor(org.eclipse.persistence.expressions.Expression,java.lang.Object)
 meth public org.eclipse.persistence.expressions.Expression expressionForArguments(org.eclipse.persistence.expressions.Expression,java.util.List)
 meth public org.eclipse.persistence.expressions.Expression expressionForArguments(org.eclipse.persistence.expressions.Expression,java.util.Vector)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public org.eclipse.persistence.expressions.Expression expressionForWithBaseLast(org.eclipse.persistence.expressions.Expression,java.lang.Object)
 meth public org.eclipse.persistence.expressions.Expression newExpressionForArgument(org.eclipse.persistence.expressions.Expression,java.lang.Object)
 meth public org.eclipse.persistence.expressions.Expression newExpressionForArgumentWithBaseLast(org.eclipse.persistence.expressions.Expression,java.lang.Object)
@@ -11335,7 +11233,7 @@ meth public static org.eclipse.persistence.expressions.ExpressionOperator nullsF
 meth public static org.eclipse.persistence.expressions.ExpressionOperator nullsLast()
 meth public static org.eclipse.persistence.expressions.ExpressionOperator or()
 meth public static org.eclipse.persistence.expressions.ExpressionOperator oracleDateName()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static org.eclipse.persistence.expressions.ExpressionOperator power()
 meth public static org.eclipse.persistence.expressions.ExpressionOperator ref()
 meth public static org.eclipse.persistence.expressions.ExpressionOperator refToHex()
@@ -11373,25 +11271,25 @@ meth public static org.eclipse.persistence.expressions.ExpressionOperator substr
 meth public static org.eclipse.persistence.expressions.ExpressionOperator subtract()
 meth public static org.eclipse.persistence.expressions.ExpressionOperator sum()
 meth public static org.eclipse.persistence.expressions.ExpressionOperator sybaseAddMonthsOperator()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static org.eclipse.persistence.expressions.ExpressionOperator sybaseAtan2Operator()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static org.eclipse.persistence.expressions.ExpressionOperator sybaseInStringOperator()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static org.eclipse.persistence.expressions.ExpressionOperator sybaseLocate2Operator()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static org.eclipse.persistence.expressions.ExpressionOperator sybaseLocateOperator()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static org.eclipse.persistence.expressions.ExpressionOperator sybaseToCharOperator()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static org.eclipse.persistence.expressions.ExpressionOperator sybaseToCharWithFormatOperator()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static org.eclipse.persistence.expressions.ExpressionOperator sybaseToDateOperator()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static org.eclipse.persistence.expressions.ExpressionOperator sybaseToDateToStringOperator()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static org.eclipse.persistence.expressions.ExpressionOperator sybaseToNumberOperator()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static org.eclipse.persistence.expressions.ExpressionOperator tan()
 meth public static org.eclipse.persistence.expressions.ExpressionOperator tanh()
 meth public static org.eclipse.persistence.expressions.ExpressionOperator toChar()
@@ -11427,7 +11325,7 @@ meth public void printsJavaAs(java.lang.String)
 meth public void printsJavaAs(java.util.Vector)
 meth public void setArgumentIndices(int[])
 meth public void setIsBindingSupported(java.lang.Boolean)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void setName(java.lang.String)
 meth public void setNodeClass(java.lang.Class)
 meth public void setSelector(int)
@@ -11440,15 +11338,15 @@ cons public init()
 fld protected boolean changed
 fld protected boolean isComplete
 fld protected int numberOfItems
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld protected java.lang.String[] separators
 fld protected java.lang.String[] startStrings
 fld protected java.lang.String[] terminationStrings
 meth public boolean isComplete()
 meth public int getNumberOfItems()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.String[] getDatabaseStrings()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.String[] getDatabaseStrings(int)
 meth public java.lang.String[] getSeparators()
 meth public java.lang.String[] getStartStrings()
@@ -11456,10 +11354,10 @@ meth public java.lang.String[] getTerminationStrings()
 meth public org.eclipse.persistence.expressions.ExpressionOperator clone()
 meth public void copyTo(org.eclipse.persistence.expressions.ExpressionOperator)
 meth public void incrementNumberOfItems()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void setIsComplete(boolean)
 meth public void setNumberOfItems(int)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void setSeparator(java.lang.String)
 meth public void setSeparators(java.lang.String[])
 meth public void setStartString(java.lang.String)
@@ -12838,7 +12736,7 @@ meth public java.lang.String getDropCascadeString()
 meth public java.lang.String getDropDatabaseSchemaString(java.lang.String)
 meth public java.lang.String getFunctionCallHeader()
 meth public java.lang.String getIdentifierQuoteCharacter()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.String getInOutputProcedureToken()
 meth public java.lang.String getIndexNamePrefix(boolean)
 meth public java.lang.String getInputProcedureToken()
@@ -12848,7 +12746,7 @@ meth public java.lang.String getNoWaitString()
 meth public java.lang.String getOutputProcedureToken()
 meth public java.lang.String getPingSQL()
 meth public java.lang.String getProcedureArgument(java.lang.String,java.lang.Object,java.lang.Integer,org.eclipse.persistence.queries.StoredProcedureCall,org.eclipse.persistence.internal.sessions.AbstractSession)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.String getProcedureArgument(java.lang.String,java.lang.Object,org.eclipse.persistence.internal.databaseaccess.DatasourceCall$ParameterType,org.eclipse.persistence.queries.StoredProcedureCall,org.eclipse.persistence.internal.sessions.AbstractSession)
 meth public java.lang.String getProcedureArgumentString()
 meth public java.lang.String getProcedureAsString()
@@ -13244,7 +13142,7 @@ meth public java.lang.Object convertObject(java.lang.Object,java.lang.Class)
 meth public java.lang.Object getCustomModifyValueForCall(org.eclipse.persistence.queries.Call,java.lang.Object,org.eclipse.persistence.internal.helper.DatabaseField,boolean)
 meth public java.lang.String getEndDelimiter()
 meth public java.lang.String getIdentifierQuoteCharacter()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.String getStartDelimiter()
 meth public java.lang.String getTableQualifier()
 meth public java.lang.String toString()
@@ -15662,7 +15560,7 @@ meth public void buildOutAssignment(java.lang.StringBuilder,org.eclipse.persiste
 meth public void buildOutDeclare(java.lang.StringBuilder,org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument)
 meth public void buildOutputRow(org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument,org.eclipse.persistence.internal.sessions.AbstractRecord,org.eclipse.persistence.sessions.DatabaseRecord,java.util.List<org.eclipse.persistence.internal.helper.DatabaseField>,java.util.List)
 meth public void logParameter(java.lang.StringBuilder,java.lang.Integer,org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument,org.eclipse.persistence.internal.sessions.AbstractRecord,org.eclipse.persistence.platform.database.DatabasePlatform)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void logParameter(java.lang.StringBuilder,org.eclipse.persistence.internal.databaseaccess.DatasourceCall$ParameterType,org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument,org.eclipse.persistence.internal.sessions.AbstractRecord,org.eclipse.persistence.platform.database.DatabasePlatform)
 meth public void setCompatibleType(java.lang.String)
 meth public void setJavaType(java.lang.Class)
@@ -16135,7 +16033,7 @@ meth public abstract void buildOutAssignment(java.lang.StringBuilder,org.eclipse
 meth public abstract void buildOutDeclare(java.lang.StringBuilder,org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument)
 meth public abstract void buildOutputRow(org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument,org.eclipse.persistence.internal.sessions.AbstractRecord,org.eclipse.persistence.sessions.DatabaseRecord,java.util.List<org.eclipse.persistence.internal.helper.DatabaseField>,java.util.List)
 meth public abstract void logParameter(java.lang.StringBuilder,java.lang.Integer,org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument,org.eclipse.persistence.internal.sessions.AbstractRecord,org.eclipse.persistence.platform.database.DatabasePlatform)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public abstract void logParameter(java.lang.StringBuilder,org.eclipse.persistence.internal.databaseaccess.DatasourceCall$ParameterType,org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument,org.eclipse.persistence.internal.sessions.AbstractRecord,org.eclipse.persistence.platform.database.DatabasePlatform)
 meth public abstract void translate(org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument,org.eclipse.persistence.internal.sessions.AbstractRecord,org.eclipse.persistence.internal.sessions.AbstractRecord,java.util.List<org.eclipse.persistence.internal.helper.DatabaseField>,java.util.List<org.eclipse.persistence.internal.helper.DatabaseField>,java.util.List,org.eclipse.persistence.queries.StoredProcedureCall)
 
@@ -16244,7 +16142,7 @@ fld public final static java.lang.String SET_IS_PROPERTY_METHOD_PREFIX = "setIs"
 fld public final static java.lang.String SET_PROPERTY_METHOD_PREFIX = "set"
 fld public final static java.lang.String SPACE = " "
 fld public static boolean isZeroValidPrimaryKey
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public static boolean shouldOptimizeDates
 intf java.io.Serializable
 meth protected static int compareVersions(java.util.List<java.lang.Integer>,java.util.List<java.lang.Integer>)
@@ -17931,7 +17829,7 @@ CLSS public abstract interface org.eclipse.persistence.internal.indirection.Wrap
 meth public abstract org.eclipse.persistence.indirection.ValueHolderInterface getWrappedValueHolder()
 
 CLSS public org.eclipse.persistence.internal.indirection.jdk8.IndirectList<%0 extends java.lang.Object>
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 cons public init()
 cons public init(int)
 cons public init(int,int)
@@ -17939,7 +17837,7 @@ cons public init(java.util.Collection<? extends {org.eclipse.persistence.interna
 supr org.eclipse.persistence.indirection.IndirectList<{org.eclipse.persistence.internal.indirection.jdk8.IndirectList%0}>
 
 CLSS public org.eclipse.persistence.internal.indirection.jdk8.IndirectMap<%0 extends java.lang.Object, %1 extends java.lang.Object>
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 cons public init()
 cons public init(int)
 cons public init(int,float)
@@ -17947,7 +17845,7 @@ cons public init(java.util.Map<? extends {org.eclipse.persistence.internal.indir
 supr org.eclipse.persistence.indirection.IndirectMap<{org.eclipse.persistence.internal.indirection.jdk8.IndirectMap%0},{org.eclipse.persistence.internal.indirection.jdk8.IndirectMap%1}>
 
 CLSS public org.eclipse.persistence.internal.indirection.jdk8.IndirectSet<%0 extends java.lang.Object>
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 cons public init()
 cons public init(int)
 cons public init(int,float)
@@ -18106,10 +18004,6 @@ supr org.eclipse.persistence.sessions.SessionEventAdapter
 hfds shouldValidateInstantiationPolicy
 
 CLSS public org.eclipse.persistence.internal.jaxb.WrappedValue
-cons public init(javax.xml.namespace.QName,java.lang.Class,java.lang.Object)
-meth public boolean isSetValue()
-meth public void setValue(java.lang.Object)
-supr javax.xml.bind.JAXBElement
 hfds setValue
 
 CLSS public org.eclipse.persistence.internal.jaxb.XMLJavaTypeConverter
@@ -18871,7 +18765,7 @@ meth protected void writeDDL(java.lang.String,java.lang.String,org.eclipse.persi
 meth protected void writeDDL(java.lang.String,java.util.Map,org.eclipse.persistence.internal.sessions.DatabaseSessionImpl,java.lang.ClassLoader)
 meth protected void writeDDLToDatabase(org.eclipse.persistence.tools.schemaframework.SchemaManager,org.eclipse.persistence.internal.jpa.EntityManagerSetupImpl$TableCreationType)
 meth protected void writeDDLToFiles(org.eclipse.persistence.tools.schemaframework.SchemaManager,java.lang.String,java.lang.Object,java.lang.Object,org.eclipse.persistence.internal.jpa.EntityManagerSetupImpl$TableCreationType)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth protected void writeDDLToFiles(org.eclipse.persistence.tools.schemaframework.SchemaManager,java.lang.String,java.lang.Object,java.lang.Object,org.eclipse.persistence.internal.jpa.EntityManagerSetupImpl$TableCreationType,java.util.Map)
 meth protected void writeMetadataDDLToDatabase(org.eclipse.persistence.internal.jpa.EntityManagerSetupImpl$TableCreationType,java.util.Map,org.eclipse.persistence.internal.sessions.DatabaseSessionImpl,java.lang.ClassLoader)
 meth protected void writeMetadataDDLToScript(org.eclipse.persistence.internal.jpa.EntityManagerSetupImpl$TableCreationType,java.util.Map,org.eclipse.persistence.internal.sessions.DatabaseSessionImpl,java.lang.ClassLoader)
@@ -29675,11 +29569,11 @@ supr org.eclipse.persistence.internal.jpa.transaction.TransactionWrapperImpl
 hfds isJoined
 
 CLSS public org.eclipse.persistence.internal.jpa.transaction.TransactionImpl
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 hfds connection,dataSource,listeners,markedForRollback,proxyClass,status
 
 CLSS public org.eclipse.persistence.internal.jpa.transaction.TransactionManagerImpl
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 hfds tx
 
 CLSS public abstract interface org.eclipse.persistence.internal.jpa.transaction.TransactionWrapper
@@ -32036,7 +31930,7 @@ cons public init(byte[],int,int)
 cons public init(java.io.InputStream) throws java.io.IOException
 cons public init(java.lang.String) throws java.io.IOException
 fld public final byte[] b
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final int header
 fld public final static int EXPAND_FRAMES = 8
 fld public final static int SKIP_CODE = 1
@@ -32125,7 +32019,7 @@ meth public int newClass(java.lang.String)
 meth public int newConst(java.lang.Object)
 meth public int newField(java.lang.String,java.lang.String,java.lang.String)
 meth public int newHandle(int,java.lang.String,java.lang.String,java.lang.String)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public int newHandle(int,java.lang.String,java.lang.String,java.lang.String,boolean)
 meth public int newMethod(java.lang.String,java.lang.String,java.lang.String,boolean)
 meth public int newMethodType(java.lang.String)
@@ -32198,7 +32092,7 @@ supr java.lang.Object
 
 CLSS public final org.eclipse.persistence.internal.libraries.asm.Handle
 cons public init(int,java.lang.String,java.lang.String,java.lang.String)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 cons public init(int,java.lang.String,java.lang.String,java.lang.String,boolean)
 meth public boolean equals(java.lang.Object)
 meth public boolean isInterface()
@@ -32260,7 +32154,7 @@ meth public void visitLocalVariable(java.lang.String,java.lang.String,java.lang.
 meth public void visitLookupSwitchInsn(org.eclipse.persistence.internal.libraries.asm.Label,int[],org.eclipse.persistence.internal.libraries.asm.Label[])
 meth public void visitMaxs(int,int)
 meth public void visitMethodInsn(int,java.lang.String,java.lang.String,java.lang.String)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void visitMethodInsn(int,java.lang.String,java.lang.String,java.lang.String,boolean)
 meth public void visitMultiANewArrayInsn(java.lang.String,int)
 meth public void visitParameter(java.lang.String,int)
@@ -32320,7 +32214,7 @@ fld public final static int ANEWARRAY = 189
 fld public final static int ARETURN = 176
 fld public final static int ARRAYLENGTH = 190
 fld public final static int ASM10_EXPERIMENTAL = 17432576
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static int ASM4 = 262144
 fld public final static int ASM5 = 327680
 fld public final static int ASM6 = 393216
@@ -32710,15 +32604,15 @@ hfds labels,maxLocals,maxStack,owner
 CLSS public org.eclipse.persistence.internal.libraries.asm.commons.AnnotationRemapper
 cons protected init(int,java.lang.String,org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor,org.eclipse.persistence.internal.libraries.asm.commons.Remapper)
 cons protected init(int,org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor,org.eclipse.persistence.internal.libraries.asm.commons.Remapper)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 cons public init(java.lang.String,org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor,org.eclipse.persistence.internal.libraries.asm.commons.Remapper)
 cons public init(org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor,org.eclipse.persistence.internal.libraries.asm.commons.Remapper)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld protected final java.lang.String descriptor
 fld protected final org.eclipse.persistence.internal.libraries.asm.commons.Remapper remapper
 meth protected org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor createAnnotationRemapper(java.lang.String,org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor)
 meth protected org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor createAnnotationRemapper(org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor visitAnnotation(java.lang.String,java.lang.String)
 meth public org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor visitArray(java.lang.String)
 meth public void visit(java.lang.String,java.lang.Object)
@@ -32732,7 +32626,7 @@ fld protected final org.eclipse.persistence.internal.libraries.asm.commons.Remap
 fld protected java.lang.String className
 meth protected org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor createAnnotationRemapper(java.lang.String,org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor)
 meth protected org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor createAnnotationRemapper(org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth protected org.eclipse.persistence.internal.libraries.asm.FieldVisitor createFieldRemapper(org.eclipse.persistence.internal.libraries.asm.FieldVisitor)
 meth protected org.eclipse.persistence.internal.libraries.asm.MethodVisitor createMethodRemapper(org.eclipse.persistence.internal.libraries.asm.MethodVisitor)
 meth protected org.eclipse.persistence.internal.libraries.asm.ModuleVisitor createModuleRemapper(org.eclipse.persistence.internal.libraries.asm.ModuleVisitor)
@@ -32780,7 +32674,7 @@ cons public init(org.eclipse.persistence.internal.libraries.asm.FieldVisitor,org
 fld protected final org.eclipse.persistence.internal.libraries.asm.commons.Remapper remapper
 meth protected org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor createAnnotationRemapper(java.lang.String,org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor)
 meth protected org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor createAnnotationRemapper(org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor visitAnnotation(java.lang.String,boolean)
 meth public org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor visitTypeAnnotation(int,org.eclipse.persistence.internal.libraries.asm.TypePath,java.lang.String,boolean)
 supr org.eclipse.persistence.internal.libraries.asm.FieldVisitor
@@ -32944,13 +32838,13 @@ meth public void instanceOf(org.eclipse.persistence.internal.libraries.asm.Type)
 meth public void invokedynamic(java.lang.String,java.lang.String,org.eclipse.persistence.internal.libraries.asm.Handle,java.lang.Object[])
 meth public void invokeinterface(java.lang.String,java.lang.String,java.lang.String)
 meth public void invokespecial(java.lang.String,java.lang.String,java.lang.String)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void invokespecial(java.lang.String,java.lang.String,java.lang.String,boolean)
 meth public void invokestatic(java.lang.String,java.lang.String,java.lang.String)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void invokestatic(java.lang.String,java.lang.String,java.lang.String,boolean)
 meth public void invokevirtual(java.lang.String,java.lang.String,java.lang.String)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void invokevirtual(java.lang.String,java.lang.String,java.lang.String,boolean)
 meth public void jsr(org.eclipse.persistence.internal.libraries.asm.Label)
 meth public void lcmp()
@@ -33045,7 +32939,7 @@ cons public init(org.eclipse.persistence.internal.libraries.asm.MethodVisitor,or
 fld protected final org.eclipse.persistence.internal.libraries.asm.commons.Remapper remapper
 meth protected org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor createAnnotationRemapper(java.lang.String,org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor)
 meth protected org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor createAnnotationRemapper(org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public !varargs void visitInvokeDynamicInsn(java.lang.String,java.lang.String,org.eclipse.persistence.internal.libraries.asm.Handle,java.lang.Object[])
 meth public org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor visitAnnotation(java.lang.String,boolean)
 meth public org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor visitAnnotationDefault()
@@ -33113,7 +33007,7 @@ cons public init(org.eclipse.persistence.internal.libraries.asm.RecordComponentV
 fld protected final org.eclipse.persistence.internal.libraries.asm.commons.Remapper remapper
 meth protected org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor createAnnotationRemapper(java.lang.String,org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor)
 meth protected org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor createAnnotationRemapper(org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor visitAnnotation(java.lang.String,boolean)
 meth public org.eclipse.persistence.internal.libraries.asm.AnnotationVisitor visitTypeAnnotation(int,org.eclipse.persistence.internal.libraries.asm.TypePath,java.lang.String,boolean)
 supr org.eclipse.persistence.internal.libraries.asm.RecordComponentVisitor
@@ -33121,7 +33015,7 @@ supr org.eclipse.persistence.internal.libraries.asm.RecordComponentVisitor
 CLSS public abstract org.eclipse.persistence.internal.libraries.asm.commons.Remapper
 cons public init()
 meth protected org.eclipse.persistence.internal.libraries.asm.signature.SignatureVisitor createRemappingSignatureAdapter(org.eclipse.persistence.internal.libraries.asm.signature.SignatureVisitor)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth protected org.eclipse.persistence.internal.libraries.asm.signature.SignatureVisitor createSignatureRemapper(org.eclipse.persistence.internal.libraries.asm.signature.SignatureVisitor)
 meth public java.lang.Object mapValue(java.lang.Object)
 meth public java.lang.String map(java.lang.String)
@@ -33882,13 +33776,6 @@ supr java.lang.Object
 hfds NEXT_PATTERN,PREFIX_PATTERN,SIMPLE_PATTERN,matcher,prefix,token
 
 CLSS public org.eclipse.persistence.internal.oxm.ByteArrayDataSource
-cons public init(byte[],java.lang.String)
-intf javax.activation.DataSource
-meth public java.io.InputStream getInputStream()
-meth public java.io.OutputStream getOutputStream()
-meth public java.lang.String getContentType()
-meth public java.lang.String getName()
-supr java.lang.Object
 hfds bytes,contentType
 
 CLSS public org.eclipse.persistence.internal.oxm.ByteArraySource
@@ -38821,7 +38708,7 @@ meth public static java.lang.Class<?>[] getMethodParameterTypes(java.lang.reflec
 meth public static java.lang.ClassLoader getClassLoaderForClass(java.lang.Class<?>)
 meth public static java.lang.ClassLoader getContextClassLoader(java.lang.Thread)
 meth public static java.lang.ClassLoader privilegedGetClassLoaderForClass(java.lang.Class<?>)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public static java.lang.reflect.Field getDeclaredField(java.lang.Class<?>,java.lang.String,boolean) throws java.lang.NoSuchFieldException
 meth public static java.lang.reflect.Field getField(java.lang.Class<?>,java.lang.String,boolean) throws java.lang.NoSuchFieldException
 meth public static java.lang.reflect.Field[] getDeclaredFields(java.lang.Class<?>)
@@ -39351,9 +39238,9 @@ meth public java.lang.Object copy(java.lang.Object)
 meth public java.lang.Object copy(java.lang.Object,org.eclipse.persistence.queries.AttributeGroup)
 meth public java.lang.Object copyInternal(java.lang.Object,org.eclipse.persistence.sessions.CopyGroup)
 meth public java.lang.Object copyObject(java.lang.Object)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.Object copyObject(java.lang.Object,org.eclipse.persistence.sessions.ObjectCopyingPolicy)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.Object createProtectedInstanceFromCachedData(java.lang.Object,java.lang.Integer,org.eclipse.persistence.descriptors.ClassDescriptor)
 meth public java.lang.Object deleteObject(java.lang.Object)
 meth public java.lang.Object executeCall(org.eclipse.persistence.queries.Call,org.eclipse.persistence.internal.sessions.AbstractRecord,org.eclipse.persistence.queries.DatabaseQuery)
@@ -39417,7 +39304,7 @@ meth public java.util.Vector executeSQL(java.lang.String)
 meth public java.util.Vector executeSelectingCall(org.eclipse.persistence.queries.Call)
 meth public java.util.Vector getDefaultReadOnlyClasses()
 meth public java.util.Vector keyFromObject(java.lang.Object)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.util.Vector priviledgedExecuteSelectingCall(org.eclipse.persistence.queries.Call)
 meth public java.util.Vector readAllObjects(java.lang.Class)
 meth public java.util.Vector readAllObjects(java.lang.Class,java.lang.String)
@@ -39507,7 +39394,7 @@ meth public void copyDescriptorsFromProject()
 meth public void deferEvent(org.eclipse.persistence.descriptors.DescriptorEvent)
 meth public void deleteAllObjects(java.util.Collection)
 meth public void deleteAllObjects(java.util.Vector)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void dontLogMessages()
 meth public void endOperationProfile(java.lang.String)
 meth public void endOperationProfile(java.lang.String,org.eclipse.persistence.queries.DatabaseQuery,int)
@@ -39523,9 +39410,9 @@ meth public void initializeIdentityMapAccessor()
 meth public void load(java.lang.Object,org.eclipse.persistence.queries.AttributeGroup)
 meth public void load(java.lang.Object,org.eclipse.persistence.queries.AttributeGroup,org.eclipse.persistence.descriptors.ClassDescriptor,boolean)
 meth public void log(int,java.lang.String,java.lang.Object[],org.eclipse.persistence.internal.databaseaccess.Accessor)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void log(int,java.lang.String,java.lang.Object[],org.eclipse.persistence.internal.databaseaccess.Accessor,boolean)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void log(int,java.lang.String,java.lang.String)
 meth public void log(int,java.lang.String,java.lang.String,java.lang.Object)
 meth public void log(int,java.lang.String,java.lang.String,java.lang.Object,java.lang.Object)
@@ -40060,12 +39947,12 @@ meth public boolean containsObjectInIdentityMap(java.lang.Object)
 meth public boolean containsObjectInIdentityMap(java.lang.Object,java.lang.Class)
 meth public boolean containsObjectInIdentityMap(java.lang.Object,java.lang.Class,org.eclipse.persistence.descriptors.ClassDescriptor)
 meth public boolean containsObjectInIdentityMap(java.util.Vector,java.lang.Class)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public boolean containsObjectInIdentityMap(org.eclipse.persistence.sessions.Record,java.lang.Class)
 meth public boolean isValid(java.lang.Object)
 meth public boolean isValid(java.lang.Object,java.lang.Class)
 meth public boolean isValid(java.util.Vector,java.lang.Class)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public boolean isValid(org.eclipse.persistence.sessions.Record,java.lang.Class)
 meth public java.lang.Object getFromIdentityMap(java.lang.Object)
 meth public java.lang.Object getFromIdentityMap(java.lang.Object,java.lang.Class)
@@ -40073,9 +39960,9 @@ meth public java.lang.Object getFromIdentityMap(java.lang.Object,java.lang.Class
 meth public java.lang.Object getFromIdentityMap(java.lang.Object,java.lang.Class,org.eclipse.persistence.descriptors.ClassDescriptor)
 meth public java.lang.Object getFromIdentityMap(java.lang.Object,java.lang.Object,java.lang.Class,boolean,org.eclipse.persistence.descriptors.ClassDescriptor)
 meth public java.lang.Object getFromIdentityMap(java.util.Vector,java.lang.Class)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.Object getFromIdentityMap(java.util.Vector,java.lang.Class,boolean)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.Object getFromIdentityMap(org.eclipse.persistence.expressions.Expression,java.lang.Class,org.eclipse.persistence.sessions.Record)
 meth public java.lang.Object getFromIdentityMap(org.eclipse.persistence.expressions.Expression,java.lang.Class,org.eclipse.persistence.sessions.Record,int)
 meth public java.lang.Object getFromIdentityMap(org.eclipse.persistence.expressions.Expression,java.lang.Class,org.eclipse.persistence.sessions.Record,int,boolean)
@@ -40094,7 +39981,7 @@ meth public java.lang.Object getWriteLockValue(java.lang.Object)
 meth public java.lang.Object getWriteLockValue(java.lang.Object,java.lang.Class)
 meth public java.lang.Object getWriteLockValue(java.lang.Object,java.lang.Class,org.eclipse.persistence.descriptors.ClassDescriptor)
 meth public java.lang.Object getWriteLockValue(java.util.Vector,java.lang.Class)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.Object primaryKeyFromVector(java.util.Vector)
 meth public java.lang.Object putInIdentityMap(java.lang.Object)
 meth public java.lang.Object putInIdentityMap(java.lang.Object,java.lang.Object)
@@ -40102,16 +39989,16 @@ meth public java.lang.Object putInIdentityMap(java.lang.Object,java.lang.Object,
 meth public java.lang.Object putInIdentityMap(java.lang.Object,java.lang.Object,java.lang.Object,long)
 meth public java.lang.Object putInIdentityMap(java.lang.Object,java.lang.Object,java.lang.Object,long,org.eclipse.persistence.descriptors.ClassDescriptor)
 meth public java.lang.Object putInIdentityMap(java.lang.Object,java.util.Vector)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.Object putInIdentityMap(java.lang.Object,java.util.Vector,java.lang.Object)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.Object putInIdentityMap(java.lang.Object,java.util.Vector,java.lang.Object,long)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.Object removeFromIdentityMap(java.lang.Object)
 meth public java.lang.Object removeFromIdentityMap(java.lang.Object,java.lang.Class)
 meth public java.lang.Object removeFromIdentityMap(java.lang.Object,java.lang.Class,org.eclipse.persistence.descriptors.ClassDescriptor,java.lang.Object)
 meth public java.lang.Object removeFromIdentityMap(java.util.Vector,java.lang.Class)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.util.Map<java.lang.Object,java.lang.Object> getAllFromIdentityMapWithEntityPK(java.lang.Object[],org.eclipse.persistence.descriptors.ClassDescriptor)
 meth public java.util.Map<java.lang.Object,org.eclipse.persistence.internal.identitymaps.CacheKey> getAllCacheKeysFromIdentityMapWithEntityPK(java.lang.Object[],org.eclipse.persistence.descriptors.ClassDescriptor)
 meth public java.util.Vector getAllFromIdentityMap(org.eclipse.persistence.expressions.Expression,java.lang.Class,org.eclipse.persistence.sessions.Record)
@@ -40155,9 +40042,9 @@ meth public void invalidateObject(java.lang.Object,boolean)
 meth public void invalidateObject(java.lang.Object,java.lang.Class)
 meth public void invalidateObject(java.lang.Object,java.lang.Class,boolean)
 meth public void invalidateObject(java.util.Vector,java.lang.Class)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void invalidateObject(java.util.Vector,java.lang.Class,boolean)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void invalidateObject(org.eclipse.persistence.sessions.Record,java.lang.Class)
 meth public void invalidateObject(org.eclipse.persistence.sessions.Record,java.lang.Class,boolean)
 meth public void invalidateObjects(java.util.Collection)
@@ -40176,7 +40063,7 @@ meth public void setWrapper(java.lang.Object,java.lang.Class,java.lang.Object)
 meth public void updateWriteLockValue(java.lang.Object,java.lang.Class,java.lang.Object)
 meth public void updateWriteLockValue(java.lang.Object,java.lang.Object)
 meth public void updateWriteLockValue(java.util.Vector,java.lang.Class,java.lang.Object)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void validateCache()
 supr java.lang.Object
 
@@ -40417,7 +40304,7 @@ meth public java.util.List<org.eclipse.persistence.sessions.changesets.ChangeRec
 meth public java.util.Map getAttributesToChanges()
 meth public java.util.Set<java.lang.String> getDeferredSet()
 meth public java.util.Vector getPrimaryKeys()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public org.eclipse.persistence.descriptors.ClassDescriptor getDescriptor()
 meth public org.eclipse.persistence.internal.identitymaps.CacheKey getActiveCacheKey()
 meth public org.eclipse.persistence.internal.sessions.AbstractRecord getProtectedForeignKeys()
@@ -41298,34 +41185,11 @@ supr org.eclipse.persistence.internal.sessions.coordination.RemoteConnection
 hfds wrappedConnection
 
 CLSS public final org.eclipse.persistence.internal.sessions.coordination.corba.sun.CommandDataHelper
-cons public init()
-intf org.omg.CORBA.portable.BoxedValueHelper
-meth public java.io.Serializable read_value(org.omg.CORBA.portable.InputStream)
-meth public java.lang.String get_id()
-meth public static byte[] extract(org.omg.CORBA.Any)
-meth public static byte[] read(org.omg.CORBA.portable.InputStream)
-meth public static java.lang.String id()
-meth public static org.omg.CORBA.TypeCode type()
-meth public static void insert(org.omg.CORBA.Any,byte[])
-meth public static void write(org.omg.CORBA.portable.OutputStream,byte[])
-meth public void write_value(org.omg.CORBA.portable.OutputStream,java.io.Serializable)
-supr java.lang.Object
 hfds __active,__typeCode,_id,_instance
 
 CLSS public final org.eclipse.persistence.internal.sessions.coordination.corba.sun.CommandDataHolder
-cons public init()
-cons public init(byte[])
-fld public byte[] value
-intf org.omg.CORBA.portable.Streamable
-meth public org.omg.CORBA.TypeCode _type()
-meth public void _read(org.omg.CORBA.portable.InputStream)
-meth public void _write(org.omg.CORBA.portable.OutputStream)
-supr java.lang.Object
 
 CLSS public abstract interface org.eclipse.persistence.internal.sessions.coordination.corba.sun.SunCORBAConnection
-intf org.eclipse.persistence.internal.sessions.coordination.corba.sun.SunCORBAConnectionOperations
-intf org.omg.CORBA.Object
-intf org.omg.CORBA.portable.IDLEntity
 
 CLSS public abstract org.eclipse.persistence.internal.sessions.coordination.corba.sun.SunCORBAConnectionHelper
 cons public init()
@@ -41340,40 +41204,16 @@ supr java.lang.Object
 hfds __typeCode,_id
 
 CLSS public final org.eclipse.persistence.internal.sessions.coordination.corba.sun.SunCORBAConnectionHolder
-cons public init()
-cons public init(org.eclipse.persistence.internal.sessions.coordination.corba.sun.SunCORBAConnection)
-fld public org.eclipse.persistence.internal.sessions.coordination.corba.sun.SunCORBAConnection value
-intf org.omg.CORBA.portable.Streamable
-meth public org.omg.CORBA.TypeCode _type()
-meth public void _read(org.omg.CORBA.portable.InputStream)
-meth public void _write(org.omg.CORBA.portable.OutputStream)
-supr java.lang.Object
 
 CLSS public org.eclipse.persistence.internal.sessions.coordination.corba.sun.SunCORBAConnectionImpl
-cons public init(org.eclipse.persistence.sessions.coordination.RemoteCommandManager)
-fld protected org.eclipse.persistence.sessions.coordination.RemoteCommandManager rcm
-intf org.eclipse.persistence.internal.sessions.coordination.corba.CORBAConnection
-meth public byte[] executeCommand(byte[])
-supr org.eclipse.persistence.internal.sessions.coordination.corba.sun._SunCORBAConnectionImplBase
 
 CLSS public abstract interface org.eclipse.persistence.internal.sessions.coordination.corba.sun.SunCORBAConnectionOperations
 meth public abstract byte[] executeCommand(byte[])
 
 CLSS public abstract org.eclipse.persistence.internal.sessions.coordination.corba.sun._SunCORBAConnectionImplBase
-cons public init()
-intf org.eclipse.persistence.internal.sessions.coordination.corba.sun.SunCORBAConnection
-intf org.omg.CORBA.portable.InvokeHandler
-meth public java.lang.String[] _ids()
-meth public org.omg.CORBA.portable.OutputStream _invoke(java.lang.String,org.omg.CORBA.portable.InputStream,org.omg.CORBA.portable.ResponseHandler)
-supr org.omg.CORBA.portable.ObjectImpl
 hfds __ids,_methods
 
 CLSS public org.eclipse.persistence.internal.sessions.coordination.corba.sun._SunCORBAConnectionStub
-cons public init()
-intf org.eclipse.persistence.internal.sessions.coordination.corba.sun.SunCORBAConnection
-meth public byte[] executeCommand(byte[])
-meth public java.lang.String[] _ids()
-supr org.omg.CORBA.portable.ObjectImpl
 hfds __ids
 
 CLSS public org.eclipse.persistence.internal.sessions.coordination.jms.JMSTopicRemoteConnection
@@ -41434,35 +41274,12 @@ supr org.eclipse.persistence.internal.sessions.coordination.RemoteConnection
 hfds connection
 
 CLSS public org.eclipse.persistence.internal.sessions.coordination.rmi._RMIRemoteCommandConnection_Stub
-cons public init()
-intf org.eclipse.persistence.internal.sessions.coordination.rmi.RMIRemoteCommandConnection
-meth public java.lang.Object executeCommand(byte[]) throws java.rmi.RemoteException
-meth public java.lang.Object executeCommand(org.eclipse.persistence.sessions.coordination.Command) throws java.rmi.RemoteException
-meth public java.lang.String[] _ids()
-supr javax.rmi.CORBA.Stub
 hfds _type_ids
 
 CLSS public org.eclipse.persistence.internal.sessions.coordination.rmi.iiop.RMIRemoteCommandConnectionImpl
-cons public init(org.eclipse.persistence.sessions.coordination.RemoteCommandManager) throws java.rmi.RemoteException
-intf org.eclipse.persistence.internal.sessions.coordination.rmi.RMIRemoteCommandConnection
-meth public java.lang.Object executeCommand(byte[]) throws java.rmi.RemoteException
-meth public java.lang.Object executeCommand(org.eclipse.persistence.sessions.coordination.Command) throws java.rmi.RemoteException
-supr javax.rmi.PortableRemoteObject
 hfds rcm
 
 CLSS public org.eclipse.persistence.internal.sessions.coordination.rmi.iiop._RMIRemoteCommandConnectionImpl_Tie
-cons public init()
-intf javax.rmi.CORBA.Tie
-meth public java.lang.String[] _ids()
-meth public java.rmi.Remote getTarget()
-meth public org.omg.CORBA.ORB orb()
-meth public org.omg.CORBA.Object thisObject()
-meth public org.omg.CORBA.portable.OutputStream _invoke(java.lang.String,org.omg.CORBA.portable.InputStream,org.omg.CORBA.portable.ResponseHandler)
-meth public void _set_delegate(org.omg.CORBA.portable.Delegate)
-meth public void deactivate()
-meth public void orb(org.omg.CORBA.ORB)
-meth public void setTarget(java.rmi.Remote)
-supr org.omg.CORBA_2_3.portable.ObjectImpl
 hfds _type_ids,orb,target
 
 CLSS public org.eclipse.persistence.internal.sessions.factories.ComplexPLSQLTypeWrapper
@@ -43197,71 +43014,9 @@ meth public void startDocument(javax.xml.bind.ValidationEventHandler) throws org
 supr org.eclipse.persistence.oxm.IDResolver
 
 CLSS public org.eclipse.persistence.jaxb.JAXBBinder
-cons public init(org.eclipse.persistence.jaxb.JAXBContext,org.eclipse.persistence.oxm.XMLMarshaller,org.eclipse.persistence.oxm.XMLUnmarshaller)
-meth public java.lang.Object getJAXBNode(java.lang.Object)
-meth public java.lang.Object getProperty(java.lang.String) throws javax.xml.bind.PropertyException
-meth public java.lang.Object getXMLNode(java.lang.Object)
-meth public java.lang.Object unmarshal(java.lang.Object) throws javax.xml.bind.JAXBException
-meth public java.lang.Object updateJAXB(java.lang.Object) throws javax.xml.bind.JAXBException
-meth public java.lang.Object updateXML(java.lang.Object)
-meth public java.lang.Object updateXML(java.lang.Object,java.lang.Object)
-meth public javax.xml.bind.JAXBElement unmarshal(java.lang.Object,java.lang.Class) throws javax.xml.bind.JAXBException
-meth public javax.xml.bind.ValidationEventHandler getEventHandler()
-meth public javax.xml.validation.Schema getSchema()
-meth public org.eclipse.persistence.oxm.XMLBinder getXMLBinder()
-meth public void marshal(java.lang.Object,java.lang.Object) throws javax.xml.bind.MarshalException
-meth public void setEventHandler(javax.xml.bind.ValidationEventHandler) throws javax.xml.bind.JAXBException
-meth public void setProperty(java.lang.String,java.lang.Object) throws javax.xml.bind.PropertyException
-meth public void setSchema(javax.xml.validation.Schema)
-supr javax.xml.bind.Binder
 hfds xmlBinder
 
 CLSS public org.eclipse.persistence.jaxb.JAXBContext
-cons protected init()
-cons protected init(org.eclipse.persistence.jaxb.JAXBContext$JAXBContextInput) throws javax.xml.bind.JAXBException
-cons public init(org.eclipse.persistence.oxm.XMLContext)
-cons public init(org.eclipse.persistence.oxm.XMLContext,org.eclipse.persistence.jaxb.compiler.Generator,java.lang.reflect.Type[])
-cons public init(org.eclipse.persistence.oxm.XMLContext,org.eclipse.persistence.jaxb.compiler.Generator,org.eclipse.persistence.jaxb.TypeMappingInfo[])
-fld protected final static javax.xml.bind.ValidationEventHandler DEFAULT_VALIDATION_EVENT_HANDLER
-fld protected org.eclipse.persistence.jaxb.JAXBContext$JAXBContextInput contextInput
-fld protected volatile org.eclipse.persistence.jaxb.JAXBContext$JAXBContextState contextState
-innr protected static JAXBContextState
-innr public abstract static JAXBContextInput
-meth protected javax.xml.bind.JAXBElement createJAXBElement(javax.xml.namespace.QName,java.lang.Class,java.lang.Object)
-meth protected javax.xml.bind.JAXBElement createJAXBElementFromXMLRoot(org.eclipse.persistence.internal.oxm.Root,java.lang.Class)
-meth public <%0 extends java.lang.Object> org.eclipse.persistence.jaxb.JAXBBinder createBinder(java.lang.Class<{%%0}>)
-meth public <%0 extends java.lang.Object> {%%0} createByXPath(java.lang.Object,java.lang.String,org.eclipse.persistence.oxm.NamespaceResolver,java.lang.Class<{%%0}>)
-meth public <%0 extends java.lang.Object> {%%0} getValueByXPath(java.lang.Object,java.lang.String,org.eclipse.persistence.oxm.NamespaceResolver,java.lang.Class<{%%0}>)
-meth public boolean hasSwaRef()
-meth public java.lang.Object createByQualifiedName(java.lang.String,java.lang.String,boolean)
-meth public java.util.Map<java.lang.String,java.lang.Class> getArrayClassesToGeneratedClasses()
-meth public java.util.Map<java.lang.String,java.lang.Class> getClassToGeneratedClasses()
-meth public java.util.Map<java.lang.reflect.Type,java.lang.Class> getCollectionClassesToGeneratedClasses()
-meth public java.util.Map<java.lang.reflect.Type,javax.xml.namespace.QName> getTypeToSchemaType()
-meth public java.util.Map<javax.xml.namespace.QName,java.lang.Class> getQNamesToDeclaredClasses()
-meth public java.util.Map<org.eclipse.persistence.jaxb.TypeMappingInfo,javax.xml.namespace.QName> getTypeMappingInfoToSchemaType()
-meth public javax.xml.stream.XMLInputFactory getXMLInputFactory()
-meth public org.eclipse.persistence.jaxb.BeanValidationHelper getBeanValidationHelper()
-meth public org.eclipse.persistence.jaxb.JAXBBinder createBinder()
-meth public org.eclipse.persistence.jaxb.JAXBIntrospector createJAXBIntrospector()
-meth public org.eclipse.persistence.jaxb.JAXBMarshaller createMarshaller() throws javax.xml.bind.JAXBException
-meth public org.eclipse.persistence.jaxb.JAXBUnmarshaller createUnmarshaller() throws javax.xml.bind.JAXBException
-meth public org.eclipse.persistence.jaxb.JAXBValidator createValidator()
-meth public org.eclipse.persistence.jaxb.ObjectGraph createObjectGraph(java.lang.Class)
-meth public org.eclipse.persistence.jaxb.ObjectGraph createObjectGraph(java.lang.String)
-meth public org.eclipse.persistence.oxm.XMLContext getXMLContext()
-meth public void applyORMMetadata(org.eclipse.persistence.internal.sessions.AbstractSession)
-meth public void generateJsonSchema(javax.xml.bind.SchemaOutputResolver,java.lang.Class)
-meth public void generateSchema(javax.xml.bind.SchemaOutputResolver)
-meth public void generateSchema(javax.xml.bind.SchemaOutputResolver,java.util.Map<javax.xml.namespace.QName,java.lang.reflect.Type>)
-meth public void initTypeToSchemaType()
-meth public void refreshMetadata() throws javax.xml.bind.JAXBException
-meth public void setClassToGeneratedClasses(java.util.HashMap<java.lang.String,java.lang.Class>)
-meth public void setQNameToGeneratedClasses(java.util.HashMap<javax.xml.namespace.QName,java.lang.Class>)
-meth public void setQNamesToDeclaredClasses(java.util.HashMap<javax.xml.namespace.QName,java.lang.Class>)
-meth public void setValueByXPath(java.lang.Object,java.lang.String,org.eclipse.persistence.oxm.NamespaceResolver,java.lang.Object)
-meth public void setXMLContext(org.eclipse.persistence.oxm.XMLContext)
-supr javax.xml.bind.JAXBContext
 hfds PARSER_FEATURES,RI_XML_ACCESSOR_FACTORY_SUPPORT,beanValidationHelper,beanValidationPresent,hasLoggedValidatorInfo,initializedXMLInputFactory,jsonSchemaMarshaller,xmlInputFactory
 hcls ContextPathInput,RootLevelXmlAdapter,TypeMappingInfoInput
 
@@ -43290,11 +43045,11 @@ hfds boundTypes,classToGeneratedClasses,generator,properties,qNameToGeneratedCla
 CLSS public org.eclipse.persistence.jaxb.JAXBContextFactory
 cons public init()
 fld public final static java.lang.String ANNOTATION_HELPER_KEY = "annotationHelper"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String DEFAULT_TARGET_NAMESPACE_KEY = "defaultTargetNamespace"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String ECLIPSELINK_OXM_XML_KEY = "eclipselink-oxm-xml"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String PKG_SEPARATOR = "."
 meth public static java.util.Map<java.lang.String,org.eclipse.persistence.jaxb.xmlmodel.XmlBindings> getXmlBindingsFromProperties(java.util.Map,java.lang.ClassLoader)
 meth public static javax.xml.bind.JAXBContext createContext(java.lang.Class[],java.util.Map) throws javax.xml.bind.JAXBException
@@ -43366,10 +43121,6 @@ meth public static org.eclipse.persistence.jaxb.JAXBUnmarshaller getUnmarshaller
 supr java.lang.Object
 
 CLSS public org.eclipse.persistence.jaxb.JAXBIntrospector
-cons public init(org.eclipse.persistence.oxm.XMLContext)
-meth public boolean isElement(java.lang.Object)
-meth public javax.xml.namespace.QName getElementName(java.lang.Object)
-supr javax.xml.bind.JAXBIntrospector
 hfds context
 
 CLSS public org.eclipse.persistence.jaxb.JAXBMarshalListener
@@ -43384,50 +43135,10 @@ supr java.lang.Object
 hfds classBasedMarshalEvents,jaxbContext,listener,marshaller
 
 CLSS public org.eclipse.persistence.jaxb.JAXBMarshaller
-cons public init(org.eclipse.persistence.oxm.XMLMarshaller,org.eclipse.persistence.jaxb.JAXBContext)
-fld public final static java.lang.String XML_JAVATYPE_ADAPTERS = "xml-javatype-adapters"
-intf javax.xml.bind.Marshaller
-meth public java.lang.Object getProperty(java.lang.String) throws javax.xml.bind.PropertyException
-meth public java.util.Set<org.eclipse.persistence.jaxb.ConstraintViolationWrapper<java.lang.Object>> getConstraintViolations()
-meth public javax.xml.bind.Marshaller$Listener getListener()
-meth public javax.xml.bind.ValidationEventHandler getEventHandler() throws javax.xml.bind.JAXBException
-meth public javax.xml.bind.annotation.adapters.XmlAdapter getAdapter(java.lang.Class)
-meth public javax.xml.bind.attachment.AttachmentMarshaller getAttachmentMarshaller()
-meth public javax.xml.validation.Schema getSchema()
-meth public org.eclipse.persistence.jaxb.JAXBContext getJaxbContext()
-meth public org.eclipse.persistence.oxm.XMLMarshaller getXMLMarshaller()
-meth public org.w3c.dom.Node getNode(java.lang.Object) throws javax.xml.bind.JAXBException
-meth public void marshal(java.lang.Object,java.io.File) throws javax.xml.bind.JAXBException
-meth public void marshal(java.lang.Object,java.io.OutputStream) throws javax.xml.bind.JAXBException
-meth public void marshal(java.lang.Object,java.io.Writer) throws javax.xml.bind.JAXBException
-meth public void marshal(java.lang.Object,javax.xml.stream.XMLEventWriter) throws javax.xml.bind.JAXBException
-meth public void marshal(java.lang.Object,javax.xml.stream.XMLEventWriter,org.eclipse.persistence.jaxb.TypeMappingInfo) throws javax.xml.bind.JAXBException
-meth public void marshal(java.lang.Object,javax.xml.stream.XMLStreamWriter) throws javax.xml.bind.JAXBException
-meth public void marshal(java.lang.Object,javax.xml.stream.XMLStreamWriter,org.eclipse.persistence.jaxb.TypeMappingInfo) throws javax.xml.bind.JAXBException
-meth public void marshal(java.lang.Object,javax.xml.transform.Result) throws javax.xml.bind.JAXBException
-meth public void marshal(java.lang.Object,javax.xml.transform.Result,org.eclipse.persistence.jaxb.TypeMappingInfo) throws javax.xml.bind.JAXBException
-meth public void marshal(java.lang.Object,org.eclipse.persistence.oxm.record.MarshalRecord) throws javax.xml.bind.JAXBException
-meth public void marshal(java.lang.Object,org.eclipse.persistence.oxm.record.MarshalRecord,org.eclipse.persistence.jaxb.TypeMappingInfo) throws javax.xml.bind.JAXBException
-meth public void marshal(java.lang.Object,org.w3c.dom.Node) throws javax.xml.bind.JAXBException
-meth public void marshal(java.lang.Object,org.xml.sax.ContentHandler) throws javax.xml.bind.JAXBException
-meth public void setAdapter(java.lang.Class,javax.xml.bind.annotation.adapters.XmlAdapter)
-meth public void setAdapter(javax.xml.bind.annotation.adapters.XmlAdapter)
-meth public void setAttachmentMarshaller(javax.xml.bind.attachment.AttachmentMarshaller)
-meth public void setEventHandler(javax.xml.bind.ValidationEventHandler) throws javax.xml.bind.JAXBException
-meth public void setListener(javax.xml.bind.Marshaller$Listener)
-meth public void setMarshalCallbacks(java.util.Map)
-meth public void setProperty(java.lang.String,java.lang.Object) throws javax.xml.bind.PropertyException
-meth public void setSchema(javax.xml.validation.Schema)
-supr java.lang.Object
 hfds OBJECT_IDENTITY_CYCLE_DETECTION,SUN_CHARACTER_ESCAPE_HANDLER,SUN_CHARACTER_ESCAPE_HANDLER_MARSHALLER,SUN_INDENT_STRING,SUN_JSE_CHARACTER_ESCAPE_HANDLER,SUN_JSE_CHARACTER_ESCAPE_HANDLER_MARSHALLER,SUN_JSE_INDENT_STRING,SUN_JSE_NAMESPACE_PREFIX_MAPPER,SUN_NAMESPACE_PREFIX_MAPPER,XML_DECLARATION,XML_HEADERS,beanValidationGroups,beanValidationMode,beanValidator,bvNoOptimisation,jaxbContext,prefValidatorFactory,validationEventHandler,xmlMarshaller
 hcls CharacterEscapeHandlerWrapper
 
 CLSS public org.eclipse.persistence.jaxb.JAXBTypeElement
-cons public init(javax.xml.namespace.QName,java.lang.Object,java.lang.Class)
-cons public init(javax.xml.namespace.QName,java.lang.Object,java.lang.reflect.ParameterizedType)
-meth public java.lang.reflect.Type getType()
-meth public void setType(java.lang.reflect.Type)
-supr javax.xml.bind.JAXBElement
 hfds type
 
 CLSS public org.eclipse.persistence.jaxb.JAXBTypesafeEnumConverter
@@ -43456,74 +43167,13 @@ supr java.lang.Object
 hfds classBasedUnmarshalEvents,listener,unmarshaller
 
 CLSS public org.eclipse.persistence.jaxb.JAXBUnmarshaller
-cons public init(org.eclipse.persistence.oxm.XMLUnmarshaller,org.eclipse.persistence.jaxb.JAXBContext)
-fld public final static java.lang.String STAX_SOURCE_CLASS_NAME = "javax.xml.transform.stax.StAXSource"
-fld public final static java.lang.String XML_JAVATYPE_ADAPTERS = "xml-javatype-adapters"
-intf javax.xml.bind.Unmarshaller
-meth public boolean isValidating() throws javax.xml.bind.JAXBException
-meth public java.lang.Object getProperty(java.lang.String) throws javax.xml.bind.PropertyException
-meth public java.lang.Object unmarshal(java.io.File) throws javax.xml.bind.JAXBException
-meth public java.lang.Object unmarshal(java.io.InputStream) throws javax.xml.bind.JAXBException
-meth public java.lang.Object unmarshal(java.io.Reader) throws javax.xml.bind.JAXBException
-meth public java.lang.Object unmarshal(java.net.URL) throws javax.xml.bind.JAXBException
-meth public java.lang.Object unmarshal(javax.xml.stream.XMLEventReader) throws javax.xml.bind.JAXBException
-meth public java.lang.Object unmarshal(javax.xml.stream.XMLStreamReader) throws javax.xml.bind.JAXBException
-meth public java.lang.Object unmarshal(javax.xml.transform.Source) throws javax.xml.bind.JAXBException
-meth public java.lang.Object unmarshal(org.w3c.dom.Node) throws javax.xml.bind.JAXBException
-meth public java.lang.Object unmarshal(org.xml.sax.InputSource) throws javax.xml.bind.JAXBException
-meth public java.util.Set<org.eclipse.persistence.jaxb.ConstraintViolationWrapper<java.lang.Object>> getConstraintViolations()
-meth public javax.xml.bind.JAXBElement unmarshal(javax.xml.stream.XMLEventReader,java.lang.Class) throws javax.xml.bind.JAXBException
-meth public javax.xml.bind.JAXBElement unmarshal(javax.xml.stream.XMLEventReader,java.lang.reflect.Type) throws javax.xml.bind.JAXBException
-meth public javax.xml.bind.JAXBElement unmarshal(javax.xml.stream.XMLEventReader,org.eclipse.persistence.jaxb.TypeMappingInfo) throws javax.xml.bind.JAXBException
-meth public javax.xml.bind.JAXBElement unmarshal(javax.xml.stream.XMLStreamReader,java.lang.Class) throws javax.xml.bind.JAXBException
-meth public javax.xml.bind.JAXBElement unmarshal(javax.xml.stream.XMLStreamReader,java.lang.reflect.Type) throws javax.xml.bind.JAXBException
-meth public javax.xml.bind.JAXBElement unmarshal(javax.xml.stream.XMLStreamReader,org.eclipse.persistence.jaxb.TypeMappingInfo) throws javax.xml.bind.JAXBException
-meth public javax.xml.bind.JAXBElement unmarshal(javax.xml.transform.Source,java.lang.Class) throws javax.xml.bind.JAXBException
-meth public javax.xml.bind.JAXBElement unmarshal(javax.xml.transform.Source,java.lang.reflect.Type) throws javax.xml.bind.JAXBException
-meth public javax.xml.bind.JAXBElement unmarshal(javax.xml.transform.Source,org.eclipse.persistence.jaxb.TypeMappingInfo) throws javax.xml.bind.JAXBException
-meth public javax.xml.bind.JAXBElement unmarshal(org.w3c.dom.Node,java.lang.Class) throws javax.xml.bind.JAXBException
-meth public javax.xml.bind.Unmarshaller$Listener getListener()
-meth public javax.xml.bind.UnmarshallerHandler getUnmarshallerHandler()
-meth public javax.xml.bind.ValidationEventHandler getEventHandler() throws javax.xml.bind.JAXBException
-meth public javax.xml.bind.annotation.adapters.XmlAdapter getAdapter(java.lang.Class)
-meth public javax.xml.bind.attachment.AttachmentUnmarshaller getAttachmentUnmarshaller()
-meth public javax.xml.validation.Schema getSchema()
-meth public org.eclipse.persistence.jaxb.JAXBContext getJaxbContext()
-meth public org.eclipse.persistence.oxm.IDResolver getIDResolver()
-meth public org.eclipse.persistence.oxm.XMLUnmarshaller getXMLUnmarshaller()
-meth public void setAdapter(java.lang.Class,javax.xml.bind.annotation.adapters.XmlAdapter)
-meth public void setAdapter(javax.xml.bind.annotation.adapters.XmlAdapter)
-meth public void setAttachmentUnmarshaller(javax.xml.bind.attachment.AttachmentUnmarshaller)
-meth public void setEventHandler(javax.xml.bind.ValidationEventHandler) throws javax.xml.bind.JAXBException
-meth public void setIDResolver(org.eclipse.persistence.oxm.IDResolver)
-meth public void setListener(javax.xml.bind.Unmarshaller$Listener)
-meth public void setProperty(java.lang.String,java.lang.Object) throws javax.xml.bind.PropertyException
-meth public void setSchema(javax.xml.validation.Schema)
-meth public void setUnmarshalCallbacks(java.util.Map)
-meth public void setValidating(boolean) throws javax.xml.bind.JAXBException
-supr java.lang.Object
 hfds SUN_ID_RESOLVER,SUN_JSE_ID_RESOLVER,beanValidationGroups,beanValidationMode,beanValidator,bvNoOptimisation,jaxbContext,prefValidatorFactory,validationEventHandler,xmlUnmarshaller
 hcls PrimitiveArrayContentHandler,PrimitiveContentHandler
 
 CLSS public org.eclipse.persistence.jaxb.JAXBUnmarshallerHandler
-cons public init(org.eclipse.persistence.jaxb.JAXBUnmarshaller)
-intf javax.xml.bind.UnmarshallerHandler
-meth public java.lang.Object getResult() throws javax.xml.bind.JAXBException
-meth public void endDocument() throws org.xml.sax.SAXException
-meth public void startDocument() throws org.xml.sax.SAXException
-supr org.eclipse.persistence.platform.xml.SAXDocumentBuilder
 hfds endDocumentTriggered,jaxbUnmarshaller
 
 CLSS public org.eclipse.persistence.jaxb.JAXBValidator
-cons public init(org.eclipse.persistence.oxm.XMLValidator)
-intf javax.xml.bind.Validator
-meth public boolean validate(java.lang.Object) throws javax.xml.bind.JAXBException
-meth public boolean validateRoot(java.lang.Object) throws javax.xml.bind.JAXBException
-meth public java.lang.Object getProperty(java.lang.String) throws javax.xml.bind.PropertyException
-meth public javax.xml.bind.ValidationEventHandler getEventHandler() throws javax.xml.bind.JAXBException
-meth public void setEventHandler(javax.xml.bind.ValidationEventHandler) throws javax.xml.bind.JAXBException
-meth public void setProperty(java.lang.String,java.lang.Object) throws javax.xml.bind.PropertyException
-supr java.lang.Object
 hfds validationEventHandler,xmlValidator
 
 CLSS public final org.eclipse.persistence.jaxb.MOXySystemProperties
@@ -44423,12 +44073,6 @@ supr java.lang.Object
 hfds max,min
 
 CLSS public org.eclipse.persistence.jaxb.dynamic.DynamicJAXBContext
-meth public java.lang.Object getEnumConstant(java.lang.String,java.lang.String) throws java.lang.ClassNotFoundException,javax.xml.bind.JAXBException
-meth public org.eclipse.persistence.dynamic.DynamicClassLoader getDynamicClassLoader()
-meth public org.eclipse.persistence.dynamic.DynamicEntity newDynamicEntity(java.lang.String)
-meth public org.eclipse.persistence.dynamic.DynamicEntity newDynamicEntity(org.eclipse.persistence.dynamic.DynamicType)
-meth public org.eclipse.persistence.dynamic.DynamicType getDynamicType(java.lang.String)
-supr org.eclipse.persistence.jaxb.JAXBContext
 hcls DynamicJAXBContextInput,DynamicJAXBContextState,MetadataContextInput,SchemaContextInput,SessionsXmlContextInput
 
 CLSS public org.eclipse.persistence.jaxb.dynamic.DynamicJAXBContextFactory
@@ -45098,9 +44742,6 @@ meth public org.eclipse.persistence.jaxb.javamodel.JavaAnnotation getDeclaredAnn
 supr java.lang.Object
 
 CLSS public abstract org.eclipse.persistence.jaxb.json.JsonSchemaOutputResolver
-cons public init()
-meth public abstract java.lang.Class getRootClass()
-supr javax.xml.bind.SchemaOutputResolver
 
 CLSS public abstract interface org.eclipse.persistence.jaxb.metadata.MetadataSource
 meth public abstract org.eclipse.persistence.jaxb.xmlmodel.XmlBindings getXmlBindings(java.util.Map<java.lang.String,?>,java.lang.ClassLoader)
@@ -55463,7 +55104,7 @@ supr org.eclipse.persistence.jpa.jpql.tools.resolver.ResolverBuilder
 CLSS public org.eclipse.persistence.jpa.jpql.tools.EclipseLinkSemanticValidator
 cons public init(org.eclipse.persistence.jpa.jpql.SemanticValidatorHelper,org.eclipse.persistence.jpa.jpql.EclipseLinkSemanticValidatorExtension)
 cons public init(org.eclipse.persistence.jpa.jpql.tools.JPQLQueryContext)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 cons public init(org.eclipse.persistence.jpa.jpql.tools.JPQLQueryContext,org.eclipse.persistence.jpa.jpql.EclipseLinkSemanticValidatorExtension)
 supr org.eclipse.persistence.jpa.jpql.AbstractEclipseLinkSemanticValidator
 
@@ -60736,7 +60377,7 @@ fld public final static java.lang.String DDL = "ddl"
 fld public final static java.lang.String DMS = "dms"
 fld public final static java.lang.String EJB = "ejb"
 fld public final static java.lang.String EJB_OR_METADATA = "metadata"
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static java.lang.String EVENT = "event"
 fld public final static java.lang.String FINER_LABEL
 fld public final static java.lang.String FINEST_LABEL
@@ -63879,7 +63520,7 @@ meth public org.eclipse.persistence.oxm.XMLMarshalListener getMarshalListener()
 meth public org.eclipse.persistence.oxm.XMLMarshaller clone()
 meth public org.w3c.dom.Document objectToXML(java.lang.Object,org.eclipse.persistence.oxm.XMLDescriptor,org.eclipse.persistence.oxm.record.XMLRecord,boolean,org.eclipse.persistence.oxm.documentpreservation.DocumentPreservationPolicy)
 meth public org.w3c.dom.Document objectToXML(java.lang.Object,org.w3c.dom.Node)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public org.w3c.dom.Document objectToXML(java.lang.Object,org.w3c.dom.Node,org.eclipse.persistence.oxm.XMLDescriptor,org.eclipse.persistence.oxm.record.XMLRecord,boolean,org.eclipse.persistence.oxm.documentpreservation.DocumentPreservationPolicy)
 meth public org.w3c.dom.Document objectToXML(java.lang.Object,org.w3c.dom.Node,org.eclipse.persistence.oxm.documentpreservation.DocumentPreservationPolicy)
 meth public void marshal(java.lang.Object,javax.xml.transform.Result)
@@ -63987,7 +63628,7 @@ intf java.lang.annotation.Annotation
 meth public abstract java.lang.Class<? extends org.eclipse.persistence.descriptors.ClassExtractor> value()
 
 CLSS public abstract interface !annotation org.eclipse.persistence.oxm.annotations.XmlContainerProperty
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
  anno 0 java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy value=RUNTIME)
  anno 0 java.lang.annotation.Target(java.lang.annotation.ElementType[] value=[FIELD, METHOD])
 intf java.lang.annotation.Annotation
@@ -64746,15 +64387,15 @@ meth public java.lang.Object convertDataValueToObjectValue(java.lang.Object,org.
 meth public java.lang.Object convertObjectValueToDataValue(java.lang.Object,org.eclipse.persistence.sessions.Session,org.eclipse.persistence.oxm.XMLMarshaller)
 meth public java.lang.Object valueFromRow(org.eclipse.persistence.internal.sessions.AbstractRecord,org.eclipse.persistence.internal.queries.JoinedAttributeManager,org.eclipse.persistence.queries.ObjectBuildingQuery,org.eclipse.persistence.internal.identitymaps.CacheKey,org.eclipse.persistence.internal.sessions.AbstractSession,boolean,java.lang.Boolean[])
 meth public java.lang.String getContainerAttributeName()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.String getContainerGetMethodName()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.String getContainerSetMethodName()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.String getXPath()
 meth public org.eclipse.persistence.descriptors.ClassDescriptor getReferenceDescriptor(org.eclipse.persistence.oxm.record.DOMRecord)
 meth public org.eclipse.persistence.mappings.AttributeAccessor getContainerAccessor()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public org.eclipse.persistence.oxm.mappings.UnmarshalKeepAsElementPolicy getKeepAsElementPolicy()
 meth public org.eclipse.persistence.oxm.mappings.XMLInverseReferenceMapping getInverseReferenceMapping()
 meth public org.eclipse.persistence.oxm.mappings.nullpolicy.AbstractNullPolicy getNullPolicy()
@@ -64764,13 +64405,13 @@ meth public void initialize(org.eclipse.persistence.internal.sessions.AbstractSe
 meth public void preInitialize(org.eclipse.persistence.internal.sessions.AbstractSession)
 meth public void setAttributeValueInObject(java.lang.Object,java.lang.Object)
 meth public void setContainerAccessor(org.eclipse.persistence.mappings.AttributeAccessor)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void setContainerAttributeName(java.lang.String)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void setContainerGetMethodName(java.lang.String)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void setContainerSetMethodName(java.lang.String)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void setDefaultEmptyContainer(boolean)
 meth public void setIsWriteOnly(boolean)
 meth public void setKeepAsElementPolicy(org.eclipse.persistence.oxm.mappings.UnmarshalKeepAsElementPolicy)
@@ -64842,15 +64483,15 @@ meth public java.lang.Object readFromRowIntoObject(org.eclipse.persistence.inter
 meth public java.lang.Object valueFromRow(java.lang.Object,org.eclipse.persistence.oxm.record.XMLRecord,org.eclipse.persistence.internal.queries.JoinedAttributeManager,org.eclipse.persistence.queries.ObjectBuildingQuery,org.eclipse.persistence.internal.sessions.AbstractSession,boolean)
 meth public java.lang.Object valueFromRow(org.eclipse.persistence.internal.sessions.AbstractRecord,org.eclipse.persistence.internal.queries.JoinedAttributeManager,org.eclipse.persistence.queries.ObjectBuildingQuery,org.eclipse.persistence.internal.identitymaps.CacheKey,org.eclipse.persistence.internal.sessions.AbstractSession,boolean,java.lang.Boolean[])
 meth public java.lang.String getContainerAttributeName()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.String getContainerGetMethodName()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.String getContainerSetMethodName()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.String getXPath()
 meth public org.eclipse.persistence.descriptors.ClassDescriptor getReferenceDescriptor(org.eclipse.persistence.oxm.record.DOMRecord)
 meth public org.eclipse.persistence.mappings.AttributeAccessor getContainerAccessor()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public org.eclipse.persistence.oxm.mappings.UnmarshalKeepAsElementPolicy getKeepAsElementPolicy()
 meth public org.eclipse.persistence.oxm.mappings.XMLInverseReferenceMapping getInverseReferenceMapping()
 meth public org.eclipse.persistence.oxm.mappings.nullpolicy.AbstractNullPolicy getNullPolicy()
@@ -64860,13 +64501,13 @@ meth public void initialize(org.eclipse.persistence.internal.sessions.AbstractSe
 meth public void preInitialize(org.eclipse.persistence.internal.sessions.AbstractSession)
 meth public void setAttributeValueInObject(java.lang.Object,java.lang.Object)
 meth public void setContainerAccessor(org.eclipse.persistence.mappings.AttributeAccessor)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void setContainerAttributeName(java.lang.String)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void setContainerGetMethodName(java.lang.String)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void setContainerSetMethodName(java.lang.String)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void setIsWriteOnly(boolean)
 meth public void setKeepAsElementPolicy(org.eclipse.persistence.oxm.mappings.UnmarshalKeepAsElementPolicy)
 meth public void setNullPolicy(org.eclipse.persistence.oxm.mappings.nullpolicy.AbstractNullPolicy)
@@ -66810,7 +66451,7 @@ meth public java.lang.String getConstraintDeletionString()
 meth public java.lang.String getDropDatabaseSchemaString(java.lang.String)
 meth public java.lang.String getFunctionCallHeader()
 meth public java.lang.String getIdentifierQuoteCharacter()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public java.lang.String getInOutputProcedureToken()
 meth public java.lang.String getProcedureAsString()
 meth public java.lang.String getProcedureBeginString()
@@ -67434,7 +67075,7 @@ meth public void buildOutAssignment(java.lang.StringBuilder,org.eclipse.persiste
 meth public void buildOutDeclare(java.lang.StringBuilder,org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument)
 meth public void buildOutputRow(org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument,org.eclipse.persistence.internal.sessions.AbstractRecord,org.eclipse.persistence.sessions.DatabaseRecord,java.util.List<org.eclipse.persistence.internal.helper.DatabaseField>,java.util.List)
 meth public void logParameter(java.lang.StringBuilder,java.lang.Integer,org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument,org.eclipse.persistence.internal.sessions.AbstractRecord,org.eclipse.persistence.platform.database.DatabasePlatform)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void logParameter(java.lang.StringBuilder,org.eclipse.persistence.internal.databaseaccess.DatasourceCall$ParameterType,org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument,org.eclipse.persistence.internal.sessions.AbstractRecord,org.eclipse.persistence.platform.database.DatabasePlatform)
 meth public void translate(org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument,org.eclipse.persistence.internal.sessions.AbstractRecord,org.eclipse.persistence.internal.sessions.AbstractRecord,java.util.List<org.eclipse.persistence.internal.helper.DatabaseField>,java.util.List<org.eclipse.persistence.internal.helper.DatabaseField>,java.util.List,org.eclipse.persistence.queries.StoredProcedureCall)
 supr java.lang.Enum<org.eclipse.persistence.platform.database.jdbc.JDBCTypes>
@@ -67620,7 +67261,7 @@ meth public void buildOutAssignment(java.lang.StringBuilder,org.eclipse.persiste
 meth public void buildOutDeclare(java.lang.StringBuilder,org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument)
 meth public void buildOutputRow(org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument,org.eclipse.persistence.internal.sessions.AbstractRecord,org.eclipse.persistence.sessions.DatabaseRecord,java.util.List<org.eclipse.persistence.internal.helper.DatabaseField>,java.util.List)
 meth public void logParameter(java.lang.StringBuilder,java.lang.Integer,org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument,org.eclipse.persistence.internal.sessions.AbstractRecord,org.eclipse.persistence.platform.database.DatabasePlatform)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void logParameter(java.lang.StringBuilder,org.eclipse.persistence.internal.databaseaccess.DatasourceCall$ParameterType,org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument,org.eclipse.persistence.internal.sessions.AbstractRecord,org.eclipse.persistence.platform.database.DatabasePlatform)
 meth public void translate(org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument,org.eclipse.persistence.internal.sessions.AbstractRecord,org.eclipse.persistence.internal.sessions.AbstractRecord,java.util.List<org.eclipse.persistence.internal.helper.DatabaseField>,java.util.List<org.eclipse.persistence.internal.helper.DatabaseField>,java.util.List,org.eclipse.persistence.queries.StoredProcedureCall)
 supr java.lang.Enum<org.eclipse.persistence.platform.database.oracle.plsql.OraclePLSQLTypes>
@@ -67762,17 +67403,17 @@ hcls InArgComparer,OutArgComparer,TypeInfo
 CLSS public org.eclipse.persistence.platform.database.oracle.plsql.PLSQLargument
 cons public init()
 cons public init(java.lang.String,int,int,org.eclipse.persistence.internal.helper.DatabaseType)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 cons public init(java.lang.String,int,int,org.eclipse.persistence.internal.helper.DatabaseType,int)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 cons public init(java.lang.String,int,int,org.eclipse.persistence.internal.helper.DatabaseType,int,int)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 cons public init(java.lang.String,int,org.eclipse.persistence.internal.databaseaccess.DatasourceCall$ParameterType,org.eclipse.persistence.internal.helper.DatabaseType)
 cons public init(java.lang.String,int,org.eclipse.persistence.internal.databaseaccess.DatasourceCall$ParameterType,org.eclipse.persistence.internal.helper.DatabaseType,int)
 cons public init(java.lang.String,int,org.eclipse.persistence.internal.databaseaccess.DatasourceCall$ParameterType,org.eclipse.persistence.internal.helper.DatabaseType,int,int)
 fld public boolean cursorOutput
 fld public int direction
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public int inIndex
 fld public int length
 fld public int originalIndex
@@ -68012,7 +67653,7 @@ supr org.eclipse.persistence.platform.server.ServerPlatformBase
 hfds NO_TEMP_CLASS_LOADER
 
 CLSS public org.eclipse.persistence.platform.server.sunas.SunAS9ServerPlatform
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 cons public init(org.eclipse.persistence.sessions.DatabaseSession)
 supr org.eclipse.persistence.platform.server.glassfish.GlassfishPlatform
 
@@ -68364,7 +68005,7 @@ hfds NO,YES,encoding,formatted,fragment,transformer,version
 hcls TransformErrorListener,TransformerFactoryHelper
 
 CLSS public final org.eclipse.persistence.queries.ANTLRQueryBuilder
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 cons public init()
 intf org.eclipse.persistence.queries.JPAQueryBuilder
 meth public org.eclipse.persistence.expressions.Expression buildSelectionCriteria(java.lang.String,java.lang.String,org.eclipse.persistence.internal.sessions.AbstractSession)
@@ -69100,7 +68741,7 @@ meth public boolean shouldLoad()
 meth public java.lang.String onUnfetchedAttribute(org.eclipse.persistence.queries.FetchGroupTracker,java.lang.String)
 meth public java.lang.String onUnfetchedAttributeForSet(org.eclipse.persistence.queries.FetchGroupTracker,java.lang.String)
 meth public java.util.Set<java.lang.String> getAttributes()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public org.eclipse.persistence.internal.queries.EntityFetchGroup getEntityFetchGroup(org.eclipse.persistence.descriptors.FetchGroupManager)
 meth public org.eclipse.persistence.queries.FetchGroup clone()
 meth public org.eclipse.persistence.queries.FetchGroup getGroup(java.lang.String)
@@ -69856,7 +69497,7 @@ meth public java.lang.Object getSelectionObject()
 meth public java.lang.Object registerResultInUnitOfWork(java.lang.Object,org.eclipse.persistence.internal.sessions.UnitOfWorkImpl,org.eclipse.persistence.internal.sessions.AbstractRecord,boolean)
 meth public java.util.Map replaceValueHoldersIn(java.lang.Object,org.eclipse.persistence.internal.sessions.remote.RemoteSessionController)
 meth public java.util.Vector getSelectionKey()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void cacheResult(java.lang.Object)
 meth public void checkCacheByExactPrimaryKey()
 meth public void checkCacheByPrimaryKey()
@@ -69869,11 +69510,11 @@ meth public void loadResultIntoSelectionObject()
 meth public void prepareForExecution()
 meth public void setSelectionId(java.lang.Object)
 meth public void setSelectionKey(java.util.List)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void setSelectionObject(java.lang.Object)
 meth public void setShouldLoadResultIntoSelectionObject(boolean)
 meth public void setSingletonSelectionKey(java.lang.Object)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 supr org.eclipse.persistence.queries.ObjectLevelReadQuery
 
 CLSS public abstract org.eclipse.persistence.queries.ReadQuery
@@ -70089,7 +69730,7 @@ meth public java.util.List<java.lang.String> getNames()
 meth public java.util.Set entrySet()
 meth public java.util.Set keySet()
 meth public java.util.Vector<java.lang.Object> getPrimaryKeyValues()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void clear()
 meth public void putAll(java.util.Map)
 meth public void setResults(java.util.List<java.lang.Object>)
@@ -71429,20 +71070,20 @@ CLSS public abstract interface org.eclipse.persistence.sessions.IdentityMapAcces
 meth public abstract boolean containsObjectInIdentityMap(java.lang.Object)
 meth public abstract boolean containsObjectInIdentityMap(java.lang.Object,java.lang.Class)
 meth public abstract boolean containsObjectInIdentityMap(java.util.Vector,java.lang.Class)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public abstract boolean containsObjectInIdentityMap(org.eclipse.persistence.sessions.Record,java.lang.Class)
 meth public abstract boolean isValid(java.lang.Object)
 meth public abstract boolean isValid(java.lang.Object,java.lang.Class)
 meth public abstract boolean isValid(java.util.Vector,java.lang.Class)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public abstract boolean isValid(org.eclipse.persistence.sessions.Record,java.lang.Class)
 meth public abstract java.lang.Object getFromIdentityMap(java.lang.Object)
 meth public abstract java.lang.Object getFromIdentityMap(java.lang.Object,java.lang.Class)
 meth public abstract java.lang.Object getFromIdentityMap(java.lang.Object,java.lang.Class,boolean)
 meth public abstract java.lang.Object getFromIdentityMap(java.util.Vector,java.lang.Class)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public abstract java.lang.Object getFromIdentityMap(java.util.Vector,java.lang.Class,boolean)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public abstract java.lang.Object getFromIdentityMap(org.eclipse.persistence.expressions.Expression,java.lang.Class,org.eclipse.persistence.sessions.Record)
 meth public abstract java.lang.Object getFromIdentityMap(org.eclipse.persistence.expressions.Expression,java.lang.Class,org.eclipse.persistence.sessions.Record,int)
 meth public abstract java.lang.Object getFromIdentityMap(org.eclipse.persistence.expressions.Expression,java.lang.Class,org.eclipse.persistence.sessions.Record,org.eclipse.persistence.queries.InMemoryQueryIndirectionPolicy)
@@ -71451,21 +71092,21 @@ meth public abstract java.lang.Object getFromIdentityMap(org.eclipse.persistence
 meth public abstract java.lang.Object getWriteLockValue(java.lang.Object)
 meth public abstract java.lang.Object getWriteLockValue(java.lang.Object,java.lang.Class)
 meth public abstract java.lang.Object getWriteLockValue(java.util.Vector,java.lang.Class)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public abstract java.lang.Object putInIdentityMap(java.lang.Object)
 meth public abstract java.lang.Object putInIdentityMap(java.lang.Object,java.lang.Object)
 meth public abstract java.lang.Object putInIdentityMap(java.lang.Object,java.lang.Object,java.lang.Object)
 meth public abstract java.lang.Object putInIdentityMap(java.lang.Object,java.lang.Object,java.lang.Object,long)
 meth public abstract java.lang.Object putInIdentityMap(java.lang.Object,java.util.Vector)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public abstract java.lang.Object putInIdentityMap(java.lang.Object,java.util.Vector,java.lang.Object)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public abstract java.lang.Object putInIdentityMap(java.lang.Object,java.util.Vector,java.lang.Object,long)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public abstract java.lang.Object removeFromIdentityMap(java.lang.Object)
 meth public abstract java.lang.Object removeFromIdentityMap(java.lang.Object,java.lang.Class)
 meth public abstract java.lang.Object removeFromIdentityMap(java.util.Vector,java.lang.Class)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public abstract java.util.Vector getAllFromIdentityMap(org.eclipse.persistence.expressions.Expression,java.lang.Class,org.eclipse.persistence.sessions.Record,int)
 meth public abstract java.util.Vector getAllFromIdentityMap(org.eclipse.persistence.expressions.Expression,java.lang.Class,org.eclipse.persistence.sessions.Record,int,boolean)
 meth public abstract java.util.Vector getAllFromIdentityMap(org.eclipse.persistence.expressions.Expression,java.lang.Class,org.eclipse.persistence.sessions.Record,org.eclipse.persistence.queries.InMemoryQueryIndirectionPolicy)
@@ -71486,9 +71127,9 @@ meth public abstract void invalidateObject(java.lang.Object,boolean)
 meth public abstract void invalidateObject(java.lang.Object,java.lang.Class)
 meth public abstract void invalidateObject(java.lang.Object,java.lang.Class,boolean)
 meth public abstract void invalidateObject(java.util.Vector,java.lang.Class)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public abstract void invalidateObject(java.util.Vector,java.lang.Class,boolean)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public abstract void invalidateObject(org.eclipse.persistence.sessions.Record,java.lang.Class)
 meth public abstract void invalidateObject(org.eclipse.persistence.sessions.Record,java.lang.Class,boolean)
 meth public abstract void invalidateObjects(java.util.Collection)
@@ -71502,7 +71143,7 @@ meth public abstract void printIdentityMaps()
 meth public abstract void updateWriteLockValue(java.lang.Object,java.lang.Class,java.lang.Object)
 meth public abstract void updateWriteLockValue(java.lang.Object,java.lang.Object)
 meth public abstract void updateWriteLockValue(java.util.Vector,java.lang.Class,java.lang.Object)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public abstract void validateCache()
 
 CLSS public org.eclipse.persistence.sessions.JNDIConnector
@@ -71512,7 +71153,7 @@ cons public init(javax.naming.Context,java.lang.String)
 cons public init(javax.sql.DataSource)
 fld protected boolean isCallbackRegistered
 fld protected int lookupType
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld protected java.lang.String name
 fld protected javax.naming.Context context
 fld protected javax.sql.DataSource dataSource
@@ -71625,7 +71266,7 @@ meth public boolean allowNullResultMaxMin()
 meth public boolean allowSQLDeferral()
 meth public boolean allowTablePerMultitenantDDLGeneration()
 meth public boolean getDefaultIsIsolated()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public boolean getDefaultTemporalMutable()
 meth public boolean hasGenericHistorySupport()
 meth public boolean hasIsolatedCacheClassWithoutUOWIsolation()
@@ -71716,7 +71357,7 @@ meth public void setDefaultIdValidation(org.eclipse.persistence.annotations.IdVa
 meth public void setDefaultIdentityMapClass(java.lang.Class)
 meth public void setDefaultIdentityMapSize(int)
 meth public void setDefaultIsIsolated(boolean)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public void setDefaultQueryResultsCachePolicy(org.eclipse.persistence.queries.QueryResultsCachePolicy)
 meth public void setDefaultReadOnlyClasses(java.util.Collection)
 meth public void setDefaultTemporalMutable(boolean)
@@ -71812,7 +71453,7 @@ meth public abstract java.util.Map<java.lang.String,java.util.List<org.eclipse.p
 meth public abstract java.util.Vector executeSQL(java.lang.String)
 meth public abstract java.util.Vector executeSelectingCall(org.eclipse.persistence.queries.Call)
 meth public abstract java.util.Vector keyFromObject(java.lang.Object)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public abstract java.util.Vector readAllObjects(java.lang.Class)
 meth public abstract java.util.Vector readAllObjects(java.lang.Class,org.eclipse.persistence.expressions.Expression)
 meth public abstract java.util.Vector readAllObjects(java.lang.Class,org.eclipse.persistence.queries.Call)
@@ -72172,7 +71813,7 @@ meth public abstract boolean isNestedUnitOfWork()
 meth public abstract boolean isObjectRegistered(java.lang.Object)
 meth public abstract boolean shouldNewObjectsBeCached()
 meth public abstract boolean shouldOrderUpdates()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public abstract boolean shouldPerformDeletesFirst()
 meth public abstract boolean shouldPerformFullValidation()
 meth public abstract boolean shouldPerformNoValidation()
@@ -72223,7 +71864,7 @@ meth public abstract void revertAndResume()
 meth public abstract void setCommitOrder(org.eclipse.persistence.sessions.UnitOfWork$CommitOrderType)
 meth public abstract void setShouldNewObjectsBeCached(boolean)
 meth public abstract void setShouldOrderUpdates(boolean)
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public abstract void setShouldPerformDeletesFirst(boolean)
 meth public abstract void setShouldThrowConformExceptions(int)
 meth public abstract void setValidationLevel(int)
@@ -72372,7 +72013,7 @@ meth public abstract java.lang.String getClassName()
 meth public abstract java.util.List<java.lang.String> getChangedAttributeNames()
 meth public abstract java.util.List<org.eclipse.persistence.sessions.changesets.ChangeRecord> getChanges()
 meth public abstract java.util.Vector getPrimaryKeys()
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 meth public abstract org.eclipse.persistence.sessions.changesets.ChangeRecord getChangesForAttributeNamed(java.lang.String)
 meth public abstract org.eclipse.persistence.sessions.changesets.UnitOfWorkChangeSet getUOWChangeSet()
 meth public abstract void setShouldRecalculateAfterUpdateEvent(boolean)
@@ -72716,7 +72357,7 @@ meth public void setIsRMIOverIIOP(boolean)
 supr org.eclipse.persistence.sessions.coordination.TransportManager
 
 CLSS public abstract interface org.eclipse.persistence.sessions.factories.DescriptorCustomizer
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 intf org.eclipse.persistence.config.DescriptorCustomizer
 
 CLSS public org.eclipse.persistence.sessions.factories.OracleDirectToXMLTypeMappingHelper
@@ -72804,7 +72445,7 @@ meth public void setProject(org.eclipse.persistence.sessions.Project)
 supr java.lang.Object
 
 CLSS public abstract interface org.eclipse.persistence.sessions.factories.SessionCustomizer
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 intf org.eclipse.persistence.config.SessionCustomizer
 
 CLSS public org.eclipse.persistence.sessions.factories.SessionFactory
@@ -73173,51 +72814,8 @@ supr org.eclipse.persistence.internal.sessions.remote.RemoteConnection
 hfds remoteSessionController
 
 CLSS public abstract interface org.eclipse.persistence.sessions.remote.corba.sun.CORBARemoteSessionController
-intf org.eclipse.persistence.sessions.remote.corba.sun.CORBARemoteSessionControllerOperations
-intf org.omg.CORBA.Object
-intf org.omg.CORBA.portable.IDLEntity
 
 CLSS public org.eclipse.persistence.sessions.remote.corba.sun.CORBARemoteSessionControllerDispatcher
-cons public init(org.eclipse.persistence.internal.sessions.AbstractSession)
-cons public init(org.eclipse.persistence.sessions.Session)
-fld protected org.eclipse.persistence.internal.sessions.remote.RemoteSessionController controller
-meth protected org.eclipse.persistence.internal.sessions.remote.RemoteSessionController getController()
-meth protected void setController(org.eclipse.persistence.internal.sessions.remote.RemoteSessionController)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter beginEarlyTransaction()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter beginTransaction()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter commitRootUnitOfWork(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter commitTransaction()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter cursorSelectObjects(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter cursoredStreamClose(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter cursoredStreamNextPage(org.eclipse.persistence.internal.sessions.remote.Transporter,int)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter cursoredStreamSize(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter executeNamedQuery(org.eclipse.persistence.internal.sessions.remote.Transporter,org.eclipse.persistence.internal.sessions.remote.Transporter,org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter executeQuery(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getDefaultReadOnlyClasses()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getDescriptor(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getDescriptorForAlias(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getLogin()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getSequenceNumberNamed(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter initializeIdentityMapsOnServerSession()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter instantiateRemoteValueHolderOnServer(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter processCommand(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter rollbackTransaction()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorAbsolute(org.eclipse.persistence.internal.sessions.remote.Transporter,int)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorAfterLast(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorBeforeFirst(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorClose(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorCurrentIndex(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorFirst(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorIsAfterLast(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorIsBeforeFirst(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorIsFirst(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorIsLast(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorLast(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorNextObject(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorPreviousObject(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorRelative(org.eclipse.persistence.internal.sessions.remote.Transporter,int)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorSize(org.eclipse.persistence.internal.sessions.remote.Transporter)
-supr org.eclipse.persistence.sessions.remote.corba.sun._CORBARemoteSessionControllerImplBase
 
 CLSS public abstract org.eclipse.persistence.sessions.remote.corba.sun.CORBARemoteSessionControllerHelper
 cons public init()
@@ -73232,14 +72830,6 @@ supr java.lang.Object
 hfds __typeCode,_id
 
 CLSS public final org.eclipse.persistence.sessions.remote.corba.sun.CORBARemoteSessionControllerHolder
-cons public init()
-cons public init(org.eclipse.persistence.sessions.remote.corba.sun.CORBARemoteSessionController)
-fld public org.eclipse.persistence.sessions.remote.corba.sun.CORBARemoteSessionController value
-intf org.omg.CORBA.portable.Streamable
-meth public org.omg.CORBA.TypeCode _type()
-meth public void _read(org.omg.CORBA.portable.InputStream)
-meth public void _write(org.omg.CORBA.portable.OutputStream)
-supr java.lang.Object
 
 CLSS public abstract interface org.eclipse.persistence.sessions.remote.corba.sun.CORBARemoteSessionControllerOperations
 meth public abstract org.eclipse.persistence.internal.sessions.remote.Transporter beginEarlyTransaction()
@@ -73278,10 +72868,6 @@ meth public abstract org.eclipse.persistence.internal.sessions.remote.Transporte
 meth public abstract org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorSize(org.eclipse.persistence.internal.sessions.remote.Transporter)
 
 CLSS public org.eclipse.persistence.sessions.remote.corba.sun.TransporterDefaultFactory
-cons public init()
-intf org.omg.CORBA.portable.ValueFactory
-meth public java.io.Serializable read_value(org.omg.CORBA_2_3.portable.InputStream)
-supr java.lang.Object
 
 CLSS public abstract org.eclipse.persistence.sessions.remote.corba.sun.TransporterHelper
 cons public init()
@@ -73295,64 +72881,11 @@ supr java.lang.Object
 hfds __active,__typeCode,_id
 
 CLSS public final org.eclipse.persistence.sessions.remote.corba.sun.TransporterHolder
-cons public init()
-cons public init(org.eclipse.persistence.internal.sessions.remote.Transporter)
-fld public org.eclipse.persistence.internal.sessions.remote.Transporter value
-intf org.omg.CORBA.portable.Streamable
-meth public org.omg.CORBA.TypeCode _type()
-meth public void _read(org.omg.CORBA.portable.InputStream)
-meth public void _write(org.omg.CORBA.portable.OutputStream)
-supr java.lang.Object
 
 CLSS public abstract org.eclipse.persistence.sessions.remote.corba.sun._CORBARemoteSessionControllerImplBase
-cons public init()
-intf org.eclipse.persistence.sessions.remote.corba.sun.CORBARemoteSessionController
-intf org.omg.CORBA.portable.InvokeHandler
-meth public java.lang.String[] _ids()
-meth public org.omg.CORBA.portable.OutputStream _invoke(java.lang.String,org.omg.CORBA.portable.InputStream,org.omg.CORBA.portable.ResponseHandler)
-supr org.omg.CORBA.portable.ObjectImpl
 hfds __ids,_methods
 
 CLSS public org.eclipse.persistence.sessions.remote.corba.sun._CORBARemoteSessionControllerStub
-cons public init()
-cons public init(org.omg.CORBA.portable.Delegate)
-intf org.eclipse.persistence.sessions.remote.corba.sun.CORBARemoteSessionController
-meth public java.lang.String[] _ids()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter beginEarlyTransaction()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter beginTransaction()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter commitRootUnitOfWork(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter commitTransaction()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter cursorSelectObjects(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter cursoredStreamClose(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter cursoredStreamNextPage(org.eclipse.persistence.internal.sessions.remote.Transporter,int)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter cursoredStreamSize(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter executeNamedQuery(org.eclipse.persistence.internal.sessions.remote.Transporter,org.eclipse.persistence.internal.sessions.remote.Transporter,org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter executeQuery(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getDefaultReadOnlyClasses()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getDescriptor(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getDescriptorForAlias(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getLogin()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getSequenceNumberNamed(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter initializeIdentityMapsOnServerSession()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter instantiateRemoteValueHolderOnServer(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter processCommand(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter rollbackTransaction()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorAbsolute(org.eclipse.persistence.internal.sessions.remote.Transporter,int)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorAfterLast(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorBeforeFirst(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorClose(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorCurrentIndex(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorFirst(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorIsAfterLast(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorIsBeforeFirst(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorIsFirst(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorIsLast(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorLast(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorNextObject(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorPreviousObject(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorRelative(org.eclipse.persistence.internal.sessions.remote.Transporter,int)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorSize(org.eclipse.persistence.internal.sessions.remote.Transporter)
-supr org.omg.CORBA.portable.ObjectImpl
 hfds __ids
 
 CLSS public org.eclipse.persistence.sessions.remote.rmi.RMIConnection
@@ -73573,105 +73106,11 @@ meth public abstract org.eclipse.persistence.internal.sessions.remote.Transporte
 meth public abstract org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorSize(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
 
 CLSS public org.eclipse.persistence.sessions.remote.rmi.iiop.RMIRemoteSessionControllerDispatcher
-cons public init(org.eclipse.persistence.internal.sessions.AbstractSession) throws java.rmi.RemoteException
-cons public init(org.eclipse.persistence.sessions.Session) throws java.rmi.RemoteException
-fld protected org.eclipse.persistence.internal.sessions.remote.RemoteSessionController controller
-intf org.eclipse.persistence.sessions.remote.rmi.iiop.RMIRemoteSessionController
-meth protected org.eclipse.persistence.internal.sessions.remote.RemoteSessionController getController()
-meth protected void setController(org.eclipse.persistence.internal.sessions.remote.RemoteSessionController)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter beginEarlyTransaction()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter beginTransaction()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter commitRootUnitOfWork(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter commitTransaction()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter cursorSelectObjects(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter cursoredStreamClose(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter cursoredStreamNextPage(org.eclipse.persistence.internal.sessions.remote.Transporter,int)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter cursoredStreamSize(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter executeNamedQuery(org.eclipse.persistence.internal.sessions.remote.Transporter,org.eclipse.persistence.internal.sessions.remote.Transporter,org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter executeQuery(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getDefaultReadOnlyClasses()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getDescriptor(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getDescriptorForAlias(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getLogin()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getSequenceNumberNamed(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter initializeIdentityMapsOnServerSession()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter instantiateRemoteValueHolderOnServer(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter processCommand(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter rollbackTransaction()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorAbsolute(org.eclipse.persistence.internal.sessions.remote.Transporter,int)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorAfterLast(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorBeforeFirst(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorClose(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorCurrentIndex(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorFirst(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorIsAfterLast(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorIsBeforeFirst(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorIsFirst(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorIsLast(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorLast(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorNextObject(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorPreviousObject(org.eclipse.persistence.internal.sessions.remote.Transporter)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorRelative(org.eclipse.persistence.internal.sessions.remote.Transporter,int)
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorSize(org.eclipse.persistence.internal.sessions.remote.Transporter)
-supr javax.rmi.PortableRemoteObject
 
 CLSS public org.eclipse.persistence.sessions.remote.rmi.iiop._RMIRemoteSessionControllerDispatcher_Tie
-cons public init()
-intf javax.rmi.CORBA.Tie
-meth public java.lang.String[] _ids()
-meth public java.rmi.Remote getTarget()
-meth public org.omg.CORBA.ORB orb()
-meth public org.omg.CORBA.Object thisObject()
-meth public org.omg.CORBA.portable.OutputStream _invoke(java.lang.String,org.omg.CORBA.portable.InputStream,org.omg.CORBA.portable.ResponseHandler)
-meth public static org.eclipse.persistence.internal.sessions.remote.Transporter readTransporter(org.omg.CORBA.portable.InputStream)
-meth public static void writeTransporter(org.eclipse.persistence.internal.sessions.remote.Transporter,org.omg.CORBA.portable.OutputStream)
-meth public void deactivate()
-meth public void orb(org.omg.CORBA.ORB)
-meth public void setTarget(java.rmi.Remote)
-supr org.omg.CORBA_2_3.portable.ObjectImpl
 hfds _type_ids,target
 
 CLSS public org.eclipse.persistence.sessions.remote.rmi.iiop._RMIRemoteSessionController_Stub
-cons public init()
-intf org.eclipse.persistence.sessions.remote.rmi.iiop.RMIRemoteSessionController
-meth public java.lang.String[] _ids()
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter beginEarlyTransaction() throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter beginTransaction() throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter commitRootUnitOfWork(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter commitTransaction() throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter cursorSelectObjects(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter cursoredStreamClose(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter cursoredStreamNextPage(org.eclipse.persistence.internal.sessions.remote.Transporter,int) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter cursoredStreamSize(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter executeNamedQuery(org.eclipse.persistence.internal.sessions.remote.Transporter,org.eclipse.persistence.internal.sessions.remote.Transporter,org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter executeQuery(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getDefaultReadOnlyClasses() throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getDescriptor(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getDescriptorForAlias(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getLogin() throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter getSequenceNumberNamed(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter initializeIdentityMapsOnServerSession() throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter instantiateRemoteValueHolderOnServer(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter processCommand(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter rollbackTransaction() throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorAbsolute(org.eclipse.persistence.internal.sessions.remote.Transporter,int) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorAfterLast(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorBeforeFirst(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorClose(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorCurrentIndex(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorFirst(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorIsAfterLast(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorIsBeforeFirst(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorIsFirst(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorIsLast(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorLast(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorNextObject(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorPreviousObject(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorRelative(org.eclipse.persistence.internal.sessions.remote.Transporter,int) throws java.rmi.RemoteException
-meth public org.eclipse.persistence.internal.sessions.remote.Transporter scrollableCursorSize(org.eclipse.persistence.internal.sessions.remote.Transporter) throws java.rmi.RemoteException
-meth public static org.eclipse.persistence.internal.sessions.remote.Transporter readTransporter(org.omg.CORBA.portable.InputStream)
-meth public static void writeTransporter(org.eclipse.persistence.internal.sessions.remote.Transporter,org.omg.CORBA.portable.OutputStream)
-supr javax.rmi.CORBA.Stub
 hfds _type_ids
 
 CLSS public abstract org.eclipse.persistence.sessions.serializers.AbstractSerializer
@@ -75091,7 +74530,7 @@ meth protected javax.transaction.TransactionManager acquireTransactionManager() 
 supr org.eclipse.persistence.transaction.JTATransactionController
 
 CLSS public org.eclipse.persistence.transaction.sunas.SunAS9TransactionController
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 cons public init()
 supr org.eclipse.persistence.transaction.glassfish.GlassfishTransactionController
 
@@ -75123,76 +74562,6 @@ fld public final static java.lang.String JNDI_TRANSACTION_MANAGER_NAME = "weblog
 meth protected javax.transaction.TransactionManager acquireTransactionManager() throws java.lang.Exception
 supr org.eclipse.persistence.transaction.JTATransactionController
 
-CLSS public abstract interface org.omg.CORBA.Object
-meth public abstract boolean _is_a(java.lang.String)
-meth public abstract boolean _is_equivalent(org.omg.CORBA.Object)
-meth public abstract boolean _non_existent()
-meth public abstract int _hash(int)
-meth public abstract org.omg.CORBA.DomainManager[] _get_domain_managers()
-meth public abstract org.omg.CORBA.Object _duplicate()
-meth public abstract org.omg.CORBA.Object _get_interface_def()
-meth public abstract org.omg.CORBA.Object _set_policy_override(org.omg.CORBA.Policy[],org.omg.CORBA.SetOverrideType)
-meth public abstract org.omg.CORBA.Policy _get_policy(int)
-meth public abstract org.omg.CORBA.Request _create_request(org.omg.CORBA.Context,java.lang.String,org.omg.CORBA.NVList,org.omg.CORBA.NamedValue)
-meth public abstract org.omg.CORBA.Request _create_request(org.omg.CORBA.Context,java.lang.String,org.omg.CORBA.NVList,org.omg.CORBA.NamedValue,org.omg.CORBA.ExceptionList,org.omg.CORBA.ContextList)
-meth public abstract org.omg.CORBA.Request _request(java.lang.String)
-meth public abstract void _release()
-
-CLSS public abstract interface org.omg.CORBA.portable.BoxedValueHelper
-meth public abstract java.io.Serializable read_value(org.omg.CORBA.portable.InputStream)
-meth public abstract java.lang.String get_id()
-meth public abstract void write_value(org.omg.CORBA.portable.OutputStream,java.io.Serializable)
-
-CLSS public abstract interface org.omg.CORBA.portable.IDLEntity
-intf java.io.Serializable
-
-CLSS public abstract interface org.omg.CORBA.portable.InvokeHandler
-meth public abstract org.omg.CORBA.portable.OutputStream _invoke(java.lang.String,org.omg.CORBA.portable.InputStream,org.omg.CORBA.portable.ResponseHandler)
-
-CLSS public abstract org.omg.CORBA.portable.ObjectImpl
-cons public init()
-intf org.omg.CORBA.Object
-meth public abstract java.lang.String[] _ids()
-meth public boolean _is_a(java.lang.String)
-meth public boolean _is_equivalent(org.omg.CORBA.Object)
-meth public boolean _is_local()
-meth public boolean _non_existent()
-meth public boolean equals(java.lang.Object)
-meth public int _hash(int)
-meth public int hashCode()
-meth public java.lang.String toString()
-meth public org.omg.CORBA.DomainManager[] _get_domain_managers()
-meth public org.omg.CORBA.ORB _orb()
-meth public org.omg.CORBA.Object _duplicate()
-meth public org.omg.CORBA.Object _get_interface_def()
-meth public org.omg.CORBA.Object _set_policy_override(org.omg.CORBA.Policy[],org.omg.CORBA.SetOverrideType)
-meth public org.omg.CORBA.Policy _get_policy(int)
-meth public org.omg.CORBA.Request _create_request(org.omg.CORBA.Context,java.lang.String,org.omg.CORBA.NVList,org.omg.CORBA.NamedValue)
-meth public org.omg.CORBA.Request _create_request(org.omg.CORBA.Context,java.lang.String,org.omg.CORBA.NVList,org.omg.CORBA.NamedValue,org.omg.CORBA.ExceptionList,org.omg.CORBA.ContextList)
-meth public org.omg.CORBA.Request _request(java.lang.String)
-meth public org.omg.CORBA.portable.Delegate _get_delegate()
-meth public org.omg.CORBA.portable.InputStream _invoke(org.omg.CORBA.portable.OutputStream) throws org.omg.CORBA.portable.ApplicationException,org.omg.CORBA.portable.RemarshalException
-meth public org.omg.CORBA.portable.OutputStream _request(java.lang.String,boolean)
-meth public org.omg.CORBA.portable.ServantObject _servant_preinvoke(java.lang.String,java.lang.Class)
-meth public void _release()
-meth public void _releaseReply(org.omg.CORBA.portable.InputStream)
-meth public void _servant_postinvoke(org.omg.CORBA.portable.ServantObject)
-meth public void _set_delegate(org.omg.CORBA.portable.Delegate)
-supr java.lang.Object
-
-CLSS public abstract interface org.omg.CORBA.portable.Streamable
-meth public abstract org.omg.CORBA.TypeCode _type()
-meth public abstract void _read(org.omg.CORBA.portable.InputStream)
-meth public abstract void _write(org.omg.CORBA.portable.OutputStream)
-
-CLSS public abstract interface org.omg.CORBA.portable.ValueFactory
-meth public abstract java.io.Serializable read_value(org.omg.CORBA_2_3.portable.InputStream)
-
-CLSS public abstract org.omg.CORBA_2_3.portable.ObjectImpl
-cons public init()
-meth public java.lang.String _get_codebase()
-supr org.omg.CORBA.portable.ObjectImpl
-
 CLSS public abstract interface org.w3c.dom.NodeList
 meth public abstract int getLength()
 meth public abstract org.w3c.dom.Node item(int)
@@ -75223,6 +74592,7 @@ meth public abstract void skippedEntity(java.lang.String) throws org.xml.sax.SAX
 meth public abstract void startDocument() throws org.xml.sax.SAXException
 meth public abstract void startElement(java.lang.String,java.lang.String,java.lang.String,org.xml.sax.Attributes) throws org.xml.sax.SAXException
 meth public abstract void startPrefixMapping(java.lang.String,java.lang.String) throws org.xml.sax.SAXException
+meth public void declaration(java.lang.String,java.lang.String,java.lang.String) throws org.xml.sax.SAXException
 
 CLSS public abstract interface org.xml.sax.EntityResolver
 meth public abstract org.xml.sax.InputSource resolveEntity(java.lang.String,java.lang.String) throws java.io.IOException,org.xml.sax.SAXException
@@ -75237,6 +74607,7 @@ cons public init()
 cons public init(java.io.InputStream)
 cons public init(java.io.Reader)
 cons public init(java.lang.String)
+meth public boolean isEmpty()
 meth public java.io.InputStream getByteStream()
 meth public java.io.Reader getCharacterStream()
 meth public java.lang.String getEncoding()

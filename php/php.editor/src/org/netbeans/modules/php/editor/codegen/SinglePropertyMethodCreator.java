@@ -79,6 +79,9 @@ public interface SinglePropertyMethodCreator<T extends Property> {
         }
 
         private String getOverrideAttribute(MethodElement method) {
+            if (method.isConstructor()) {
+                return CodeUtils.EMPTY_STRING;
+            }
             if (!method.isMagic()
                     && (!method.getType().isTrait() || ElementUtils.isAbstractTraitMethod(method))
                     && cgsInfo.getPhpVersion().hasOverrideAttribute()) {
@@ -188,6 +191,12 @@ public interface SinglePropertyMethodCreator<T extends Property> {
         }
 
         private String getReturnType() {
+            if (cgsInfo.isFluentSetter() && cgsInfo.getPhpVersion().hasStaticReturnType()) {
+                return String.format(": %s ", Type.STATIC); // NOI18N
+            }
+            if (cgsInfo.isFluentSetter() && cgsInfo.getPhpVersion().hasSelfReturnType()) {
+                return String.format(": %s ", Type.SELF); // NOI18N
+            }
             if (!cgsInfo.isFluentSetter() && cgsInfo.getPhpVersion().hasVoidReturnType()) {
                 return String.format(": %s ", Type.VOID); // NOI18N
             }

@@ -27,16 +27,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -133,6 +134,9 @@ implements Cloneable, Stamps.Updater {
             if (!startLevel.isEmpty()) {
                 configMap.put("org.osgi.framework.startlevel.beginning", startLevel); // NOI18N
             }
+            // Do not let felix override the URL handler and keep NetBeans handler
+            // by default
+            configMap.put("felix.service.urlhandlers", "false");
             FrameworkFactory frameworkFactory = lkp.lookup(FrameworkFactory.class);
             if (frameworkFactory == null) {
                 throw new IllegalStateException(
@@ -142,7 +146,6 @@ implements Cloneable, Stamps.Updater {
             }
             framework = frameworkFactory.newFramework(configMap);
             try {
-                System.clearProperty("java.security.manager");
                 framework.init();
                 NetigsoServices ns = new NetigsoServices(this, framework);
             } catch (BundleException ex) {
@@ -291,8 +294,8 @@ implements Cloneable, Stamps.Updater {
                         }
                     }
                     if (exported instanceof String) {
-                        for (String p : exported.toString().split(",")) { // NOI18N
-                            pkgs.add(extractBundleName(p));
+                        for (String p : splitExportPackages(exported.toString())) {
+                            pkgs.add(p);
                         }
                     }
                 } finally {
@@ -800,4 +803,79 @@ implements Cloneable, Stamps.Updater {
     public final byte[] patchBC(ClassLoader l, String className, ProtectionDomain pd, byte[] arr) {
         return patchByteCode(l, className, pd, arr);
     }
+
+    /**
+     * OSGI-Specification declares:
+     *
+     * <pre>
+     * Export-Package  ::= export ( ',' export)*
+     * export          ::= package-names ( ';' parameter )*
+     * package-names   ::= package-name                // See 1.3.2
+     *                   ( ';' package-name )*
+     * </pre>
+     *
+     * @param exportPkg String formatted according to Export-Package
+     * @return list of package-name entries
+     */
+    // Same implementation is used in org.netbeans.core.netigso.Netigso and
+    // org.netbeans.modules.maven.osgi.OSGiJarAccessibilityQueryImpl copied to
+    // not introduce module dependencies. Tests are in Netigso, when updated,
+    // update both places!
+    static List<String> splitExportPackages(String exportPkg) {
+        List<String> exports = new ArrayList<>();
+        StringBuilder buffer = new StringBuilder();
+        boolean inQuotedString = false;
+        for (int i = 0; i < exportPkg.length(); i++) {
+            char nextChar = exportPkg.charAt(i);
+            switch(nextChar) {
+                case '"' -> {
+                    inQuotedString = ! inQuotedString;
+                    buffer.append(nextChar);
+                }
+                case ',' -> {
+                    if (inQuotedString) {
+                        buffer.append(nextChar);
+                    } else {
+                        exports.add(buffer.toString());
+                        buffer.setLength(0);
+                    }
+                }
+                case '\\' -> {
+                    buffer.append(nextChar);
+                    if (inQuotedString) {
+                        if((i + 1) == exportPkg.length()) {
+                            throw new IllegalStateException("Invalid escape sequence");
+                        }
+                        nextChar = exportPkg.charAt(i + 1);
+                        i++;
+                        if (nextChar == '"' || nextChar == '\\') {
+                            buffer.append(nextChar);
+                        } else {
+                            throw new IllegalStateException("Invalid escape sequence");
+                        }
+                    }
+                }
+                default -> buffer.append(nextChar);
+            }
+        }
+        if(! buffer.isEmpty()){
+            exports.add(buffer.toString());
+        }
+        List<String> packageNames = new ArrayList<>();
+        // Each export statement can hold multiple package names separated by
+        // semicolon, so split on semicolon. package-name and parameter are
+        // discerned based on the presence of a equals character. A package-name
+        // must not contain it, a parameter must.
+        for(String export: exports) {
+            for(String packageCandiate: export.split(";")) {
+                // package-name list ends with first parameter
+                if(packageCandiate.contains("=")) {
+                    break;
+                }
+                packageNames.add(packageCandiate);
+            }
+        }
+        return packageNames;
+    }
+
 }

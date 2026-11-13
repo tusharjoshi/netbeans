@@ -30,6 +30,8 @@ import com.sun.source.tree.SwitchTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.Tree.Kind;
 import com.sun.source.tree.VariableTree;
+import com.sun.source.tree.YieldTree;
+import com.sun.source.util.TreePathScanner;
 import com.sun.tools.javac.tree.JCTree;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -59,8 +61,6 @@ import org.openide.util.lookup.ServiceProvider;
  */
 public class SwitchExpressionTest extends TreeRewriteTestBase {
 
-    private static final List<String> EXTRA_OPTIONS = new ArrayList<>();
-
     public SwitchExpressionTest(String testName) {
         super(testName);
     }
@@ -74,9 +74,8 @@ public class SwitchExpressionTest extends TreeRewriteTestBase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        sourceLevel = "1.13";
+        sourceLevel = "17";
         JavacParser.DISABLE_SOURCE_LEVEL_DOWNGRADE = true;
-        EXTRA_OPTIONS.add("--enable-preview");
     }
 
     @Override
@@ -86,37 +85,7 @@ public class SwitchExpressionTest extends TreeRewriteTestBase {
 
     }
 
-    @ServiceProvider(service = CompilerOptionsQueryImplementation.class, position = 100)
-    public static class TestCompilerOptionsQueryImplementation implements CompilerOptionsQueryImplementation {
-
-        @Override
-        public CompilerOptionsQueryImplementation.Result getOptions(FileObject file) {
-            return new CompilerOptionsQueryImplementation.Result() {
-                @Override
-                public List<? extends String> getArguments() {
-                    return EXTRA_OPTIONS;
-                }
-
-                @Override
-                public void addChangeListener(ChangeListener listener) {
-                }
-
-                @Override
-                public void removeChangeListener(ChangeListener listener) {
-                }
-            };
-        }
-
-    }
-
     public void testSwitchExpression() throws Exception {
-        try {
-            SourceVersion.valueOf("RELEASE_13");
-        } catch (IllegalArgumentException ex) {
-            //OK, skip test
-            return ;
-        }
-
         String code = "package test; \n"
                 + "public class Test {\n"
                 + "     private void test(int p) {\n"
@@ -222,4 +191,172 @@ public class SwitchExpressionTest extends TreeRewriteTestBase {
         js.runModificationTask(task).commit();
     }
 
+    public void testYield1() throws Exception {
+        String code = """
+                      package test;
+                      public class Test {
+                           private int test(String str) {
+                               return switch (str) {
+                                   case "":
+                                       yield "Hello";
+                                   default -> "";
+                               }
+                           }
+                      }
+                      """;
+        String golden = """
+                        package test;
+                        public class Test {
+                             private int test(String str) {
+                                 return switch (str) {
+                                     case "":
+                                         yield str;
+                                     default -> "";
+                                 }
+                             }
+                        }
+                        """;
+
+        prepareTest("Test", code);
+
+        JavaSource js = getJavaSource();
+        assertNotNull(js);
+
+        Task<WorkingCopy> task = new Task<WorkingCopy>() {
+
+            public void run(WorkingCopy workingCopy) throws IOException {
+                workingCopy.toPhase(JavaSource.Phase.RESOLVED);
+                CompilationUnitTree cut = workingCopy.getCompilationUnit();
+                TreeMaker make = workingCopy.getTreeMaker();
+                new TreePathScanner<Void, Void>() {
+                    @Override
+                    public Void visitYield(YieldTree node, Void p) {
+                        workingCopy.rewrite(node.getValue(), make.Identifier("str"));
+                        return super.visitYield(node, p);
+                    }
+                }.scan(cut, null);
+            }
+        };
+
+        js.runModificationTask(task).commit();
+
+        String res = TestUtilities.copyFileToString(getTestFile());
+        //System.err.println(res);
+        assertEquals(golden, res);
+
+    }
+
+    public void testAnythingToBlock() throws Exception {
+        String code = """
+                      package test; 
+                      public class Test {
+                           private void test(int p) {
+                               var v = switch (p) {
+                                   case 1 -> p = 0;
+                                   default -> throw IllegalStateException();
+                               }
+                           }
+                      }
+                      """;
+        String golden = """
+                        package test; 
+                        public class Test {
+                             private void test(int p) {
+                                 var v = switch (p) {
+                                     case 1 -> {
+                                     }
+                                     default -> {
+                                     }
+                                 }
+                             }
+                        }
+                        """;
+
+        prepareTest("Test", code);
+
+
+        JavaSource js = getJavaSource();
+        assertNotNull(js);
+
+        Task<WorkingCopy> task = new Task<WorkingCopy>() {
+
+            public void run(WorkingCopy workingCopy) throws IOException {
+                workingCopy.toPhase(JavaSource.Phase.RESOLVED);
+
+                TreeMaker make = workingCopy.getTreeMaker();
+
+                new TreePathScanner<>() {
+                    @Override
+                    public Object visitCase(CaseTree node, Object p) {
+                        workingCopy.rewrite(node, make.CasePatterns(node.getLabels(), make.Block(List.of(), false)));
+                        return super.visitCase(node, p);
+                    }
+                }.scan(workingCopy.getCompilationUnit(), null);
+            }
+
+        };
+
+        js.runModificationTask(task).commit();
+        String res = TestUtilities.copyFileToString(getTestFile());
+        //System.err.println(res);
+        assertEquals(golden, res);
+
+    }
+
+    public void testBlockToAnything() throws Exception {
+        String code = """
+                      package test; 
+                      public class Test {
+                           private void test(int p) {
+                               var v = switch (p) {
+                                   case 1 -> {}
+                                   default -> { throw IllegalStateException(); }
+                               }
+                           }
+                      }
+                      """;
+        String golden = """
+                        package test; 
+                        public class Test {
+                             private void test(int p) {
+                                 var v = switch (p) {
+                                     case 1 -> 0;
+                                     default -> throw IllegalStateException();
+                                 }
+                             }
+                        }
+                        """;
+
+        prepareTest("Test", code);
+
+
+        JavaSource js = getJavaSource();
+        assertNotNull(js);
+
+        Task<WorkingCopy> task = new Task<WorkingCopy>() {
+
+            public void run(WorkingCopy workingCopy) throws IOException {
+                workingCopy.toPhase(JavaSource.Phase.RESOLVED);
+
+                TreeMaker make = workingCopy.getTreeMaker();
+
+                new TreePathScanner<>() {
+                    @Override
+                    public Object visitCase(CaseTree node, Object p) {
+                        BlockTree bt = (BlockTree) node.getBody();
+                        Tree newBody = bt.getStatements().isEmpty() ? make.Literal(0)
+                                                                    : bt.getStatements().get(0);
+                        workingCopy.rewrite(node, make.CasePatterns(node.getLabels(), newBody));
+                        return super.visitCase(node, p);
+                    }
+                }.scan(workingCopy.getCompilationUnit(), null);
+            }
+
+        };
+
+        js.runModificationTask(task).commit();
+        String res = TestUtilities.copyFileToString(getTestFile());
+        //System.err.println(res);
+        assertEquals(golden, res);
+    }
 }

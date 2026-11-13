@@ -1,5 +1,5 @@
 #Signature file v4.1
-#Version 3.33
+#Version 3.43
 
 CLSS public abstract interface java.io.Serializable
 
@@ -15,6 +15,7 @@ CLSS public java.lang.Object
 cons public init()
 meth protected java.lang.Object clone() throws java.lang.CloneNotSupportedException
 meth protected void finalize() throws java.lang.Throwable
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="9")
 meth public boolean equals(java.lang.Object)
 meth public final java.lang.Class<?> getClass()
 meth public final void notify()
@@ -79,7 +80,7 @@ CLSS public java.util.EventObject
 cons public init(java.lang.Object)
 fld protected java.lang.Object source
 intf java.io.Serializable
-meth public java.lang.Object getSource()
+meth public org.netbeans.api.debugger.jpda.JPDABreakpoint getSource()
 meth public java.lang.String toString()
 supr java.lang.Object
 
@@ -213,13 +214,13 @@ hfds throwable
 
 CLSS public org.netbeans.api.debugger.jpda.ExceptionBreakpoint
 fld public final static int TYPE_EXCEPTION_CATCHED = 1
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static int TYPE_EXCEPTION_CATCHED_UNCATCHED = 3
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static int TYPE_EXCEPTION_CAUGHT = 1
 fld public final static int TYPE_EXCEPTION_CAUGHT_UNCAUGHT = 3
 fld public final static int TYPE_EXCEPTION_UNCATCHED = 2
- anno 0 java.lang.Deprecated()
+ anno 0 java.lang.Deprecated(boolean forRemoval=false, java.lang.String since="")
 fld public final static int TYPE_EXCEPTION_UNCAUGHT = 2
 fld public final static java.lang.String PROP_CATCH_TYPE = "catchType"
 fld public final static java.lang.String PROP_CLASS_EXCLUSION_FILTERS = "classExclusionFilters"
@@ -496,8 +497,10 @@ supr org.netbeans.api.debugger.jpda.AbstractDICookie
 hfds args,launchingConnector,mainClassName,suspend
 
 CLSS public org.netbeans.api.debugger.jpda.LineBreakpoint
+fld public final static int LAMBDA_INDEX_STOP_OUTSIDE = -1
 fld public final static java.lang.String PROP_CONDITION = "condition"
 fld public final static java.lang.String PROP_INSTANCE_FILTERS = "instanceFilters"
+fld public final static java.lang.String PROP_LAMBDA_INDEXES = "lambdaIndexes"
 fld public final static java.lang.String PROP_LINE_NUMBER = "lineNumber"
 fld public final static java.lang.String PROP_PREFERRED_CLASS_NAME = "classNamePreferred"
 fld public final static java.lang.String PROP_SOURCE_NAME = "sourceName"
@@ -506,6 +509,7 @@ fld public final static java.lang.String PROP_STRATUM = "stratum"
 fld public final static java.lang.String PROP_THREAD_FILTERS = "threadFilters"
 fld public final static java.lang.String PROP_URL = "url"
 meth public int getLineNumber()
+meth public int[] getLambdaIndexes()
 meth public java.lang.String getCondition()
 meth public java.lang.String getPreferredClassName()
 meth public java.lang.String getSourceName()
@@ -518,6 +522,7 @@ meth public org.netbeans.api.debugger.jpda.ObjectVariable[] getInstanceFilters(o
 meth public static org.netbeans.api.debugger.jpda.LineBreakpoint create(java.lang.String,int)
 meth public void setCondition(java.lang.String)
 meth public void setInstanceFilters(org.netbeans.api.debugger.jpda.JPDADebugger,org.netbeans.api.debugger.jpda.ObjectVariable[])
+meth public void setLambdaIndexes(int[])
 meth public void setLineNumber(int)
 meth public void setPreferredClassName(java.lang.String)
 meth public void setSourceName(java.lang.String)
@@ -526,7 +531,7 @@ meth public void setStratum(java.lang.String)
 meth public void setThreadFilters(org.netbeans.api.debugger.jpda.JPDADebugger,org.netbeans.api.debugger.jpda.JPDAThread[])
 meth public void setURL(java.lang.String)
 supr org.netbeans.api.debugger.jpda.JPDABreakpoint
-hfds LOG,className,condition,instanceFilters,lineNumber,sourceName,sourcePath,stratum,threadFilters,url
+hfds LOG,className,condition,instanceFilters,lambdaIndexes,lineNumber,sourceName,sourcePath,stratum,threadFilters,url
 hcls LineBreakpointImpl
 
 CLSS public final org.netbeans.api.debugger.jpda.ListeningDICookie

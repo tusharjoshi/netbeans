@@ -2618,6 +2618,359 @@ public class IntroduceHintTest extends NbTestCase {
                        1, 0);
     }
     
+    public void testLocalType1() throws Exception {
+        sourceLevel = "17";
+        performCheckFixesTest(
+                """
+                package test;
+                public class Test {
+                    public static void test() {
+                        record R(int i) {}
+                        |new R(0)|;
+                    }
+                }
+                """,
+                "[IntroduceFix:r:1:CREATE_VARIABLE]",
+                "[IntroduceField:r:1:true:false:[3, 3]]");
+    }
+
+    public void testLocalType2() throws Exception {
+        sourceLevel = "17";
+        performCheckFixesTest(
+                """
+                package test;
+                public class Test {
+                    public static void test() {
+                        record R(int i) {}
+                        R r = |new R(0)|;
+                    }
+                }
+                """,
+                "[IntroduceFix:r1:1:CREATE_VARIABLE]",
+                "[IntroduceField:r:1:true:false:[3, 3]]");
+    }
+
+    public void testIntroduceVariableLocalType() throws Exception {
+        sourceLevel = "17";
+        performFixTest("""
+                       package test;
+                       public class Test {
+                           public static void test() {
+                               record R(int i) {}
+                               |new R(0)|;
+                           }
+                       }
+                       """,
+                       """
+                       package test;
+                       public class Test {
+                           public static void test() {
+                               record R(int i) {}
+                               R name = new R(0);
+                           }
+                       }
+                       """.replaceAll("[ \t\n]+", " "),
+                       new DialogDisplayerImpl("name", false, false, true),
+                       2, 0);
+    }
+
+    public void testIntroduceFieldLocalType() throws Exception {
+        sourceLevel = "17";
+        performFixTest("""
+                       package test;
+                       public class Test {
+                           public static void test() {
+                               record R(int i) {}
+                               |new R(0)|;
+                           }
+                       }
+                       """,
+                       """
+                       package test;
+                       public class Test {
+                           private static Record name;
+                           public static void test() {
+                               record R(int i) {}
+                               name = new R(0);
+                           }
+                       }
+                       """.replaceAll("[ \t\n]+", " "),
+                       new DialogDisplayerImpl("name", false, false, true),
+                       2, 1);
+    }
+
+    public void testYield1() throws Exception {
+        sourceLevel = "17";
+        performFixTest("""
+                       package test;
+                       public class Test {
+                           private int convert(int a) {
+                               return switch (a) {
+                                   case 0 -> {
+                                       int i = 0;
+                                       |System.err.println(i);
+                                       int j = 0;
+                                       yield i + j;|
+                                   }
+                                   default -> -1;
+                               };
+                           }
+                       }
+                       """,
+                       """
+                       package test;
+                       public class Test {
+                           private int convert(int a) {
+                               return switch (a) {
+                                   case 0 -> {
+                                       int i = 0;
+                                       yield name(i);
+                                   }
+                                   default -> -1;
+                               };
+                           }
+                           private int name(int i) {
+                               System.err.println(i);
+                               int j = 0;
+                               return i + j;
+                           }
+                       }
+                       """,
+                       new DialogDisplayerImpl3("name", null, true),
+                       1, 0);
+    }
+
+    public void testYield2() throws Exception {
+        sourceLevel = "17";
+        performFixTest("""
+                       package test;
+                       public class Test {
+                           private Object convert(int a) {
+                               return switch (a) {
+                                   case 0 -> {
+                                       int i = 0;
+                                       |System.err.println(i);
+                                       if (i == 0) {
+                                           yield "";
+                                       } else {
+                                           yield 1;
+                                       }|
+                                   }
+                                   default -> -1;
+                               };
+                           }
+                       }
+                       """,
+                       """
+                       package test;
+                       public class Test {
+                           private Object convert(int a) {
+                               return switch (a) {
+                                   case 0 -> {
+                                       int i = 0;
+                                       yield name(i);
+                                   }
+                                   default -> -1;
+                               };
+                           }
+                           private Object name(int i) {
+                               System.err.println(i);
+                               if (i == 0) {
+                                   return "";
+                               } else {
+                                   return 1;
+                               }
+                           }
+                       }
+                       """,
+                       new DialogDisplayerImpl3("name", null, true),
+                       1, 0);
+    }
+
+    public void testYield3() throws Exception {
+        sourceLevel = "17";
+        performFixTest("""
+                       package test;
+                       public class Test {
+                           private Object convert(int a) {
+                               return switch (a) {
+                                   case 0 -> {
+                                       int i = 0;
+                                       |System.err.println(i);
+                                       if (i <= 0) {
+                                           if (i == 0) {
+                                               yield "";
+                                           } else {
+                                               System.err.println("wrong");
+                                               yield "";
+                                           }
+                                       }|
+                                       yield 1;
+                                   }
+                                   default -> -1;
+                               };
+                           }
+                       }
+                       """,
+                       """
+                       package test;
+                       public class Test {
+                           private Object convert(int a) {
+                               return switch (a) {
+                                   case 0 -> {
+                                       int i = 0;
+                                       if (name(i))
+                                           yield "";
+                                       yield 1;
+                                   }
+                                   default -> -1;
+                               };
+                           }
+                           private boolean name(int i) {
+                               System.err.println(i);
+                               if (i <= 0) {
+                                   if (i == 0) {
+                                       return true;
+                                   } else {
+                                       System.err.println("wrong");
+                                       return true;
+                                   }
+                               }
+                               return false;
+                           }
+                       }
+                       """,
+                       new DialogDisplayerImpl3("name", null, true),
+                       1, 0);
+    }
+
+    public void testDifferentReturnValues() throws Exception {
+        sourceLevel = "17";
+        performErrorMessageTest("""
+                                package test;
+                                public class Test {
+                                    public static String test(boolean a, boolean b) {
+                                        |if (a) {
+                                            return "a";
+                                        } else if (b) {
+                                            return "b";
+                                        }|
+                                        return "c";
+                                    }
+                                }
+                                """,
+                                IntroduceKind.CREATE_METHOD,
+                                "ERR_Different_Return_Values");
+    }
+
+    public void testDifferentYieldValues() throws Exception {
+        sourceLevel = "17";
+        performErrorMessageTest("""
+                                package test;
+                                public class Test {
+                                    public static String test(boolean a, boolean b) {
+                                        return switch (0) {
+                                            default -> {
+                                                |if (a) {
+                                                    yield "a";
+                                                } else if (b) {
+                                                    yield "b";
+                                                }|
+                                                yield "c";
+                                            }
+                                        };
+                                    }
+                                }
+                                """,
+                                IntroduceKind.CREATE_METHOD,
+                                "ERR_Different_Yield_Values");
+    }
+
+    public void testYieldFullyInside() throws Exception {
+        sourceLevel = "17";
+        performFixTest("""
+                       package test;
+                       public class Test {
+                           public static String test(boolean a, boolean b) {
+                               |return switch (0) {
+                                   default -> {
+                                       if (a) {
+                                           yield "a";
+                                       } else if (b) {
+                                           yield "b";
+                                       }
+                                       yield "c";
+                                   }
+                               };|
+                           }
+                       }
+                       """,
+                       """
+                       package test;
+                       public class Test {
+                           public static String test(boolean a, boolean b) {
+                               return name(a, b);
+                           }
+                           private static String name(boolean a, boolean b) {
+                               return switch (0) {
+                                   default -> {
+                                       if (a) {
+                                           yield "a";
+                                       } else if (b) {
+                                           yield "b";
+                                       }
+                                       yield "c";
+                                   }
+                               };
+                           }
+                       }
+                       """,
+                       new DialogDisplayerImpl3("name", null, true),
+                       1, 0);
+    }
+
+    public void testReturnRefersToMovedVariable() throws Exception {
+        sourceLevel = "17";
+        performErrorMessageTest(
+                       """
+                       package test;
+                       public class Test {
+                           public static String test(boolean a, boolean b) {
+                               |if (true) {
+                                   String j = "a";
+                                   return j;
+                               }|
+                               return "c";
+                           }
+                       }
+                       """,
+                       IntroduceKind.CREATE_METHOD,
+                       "ERR_Too_Many_Different_Exits");
+    }
+
+    public void testYieldRefersToMovedVariable() throws Exception {
+        sourceLevel = "17";
+        performErrorMessageTest(
+                       """
+                       package test;
+                       public class Test {
+                           public static String test(boolean a, boolean b) {
+                               return switch (0) {
+                                   default -> {
+                                       |if (true) {
+                                           String j = "a";
+                                           yield j;
+                                       }|
+                                       yield "c";
+                                   }
+                               };
+                           }
+                       }
+                       """,
+                       IntroduceKind.CREATE_METHOD,
+                       "ERR_Too_Many_Different_Exits");
+    }
+
     protected void prepareTest(String code) throws Exception {
         clearWorkDir();
 

@@ -142,8 +142,8 @@ public final class MavenEmbedder {
         settingsDecrypter = plexus.lookup(SettingsDecrypter.class);
         
         VersionResolver vr = plexus.lookup(VersionResolver.class);
-        if (vr instanceof NbVersionResolver2) {
-            versionResolver = (NbVersionResolver2)vr;
+        if (vr instanceof NbVersionResolver2 vr2) {
+            versionResolver = vr2;
         } else {
             versionResolver = null;
         }
@@ -200,7 +200,8 @@ public final class MavenEmbedder {
             return testSettings; // could instead make public void setSettings(Settings settingsOverride)
         }
         File settingsXml = embedderConfiguration.getSettingsXml();
-        long newSettingsTimestamp = settingsXml.hashCode() ^ settingsXml.lastModified() ^ SettingsXmlConfigurationProcessor.DEFAULT_USER_SETTINGS_FILE.lastModified();
+        File userSettingsXml = embedderConfiguration.getUserSettingsXml();
+        long newSettingsTimestamp = settingsXml.hashCode() ^ settingsXml.lastModified() ^ userSettingsXml.lastModified();
         // could be included but currently constant: hashCode() of those files; getSystemProperties.hashCode()
         if (settings != null && settingsTimestamp == newSettingsTimestamp) {
             LOG.log(Level.FINER, "settings.xml cache hit for {0}", this);
@@ -209,7 +210,7 @@ public final class MavenEmbedder {
         LOG.log(Level.FINE, "settings.xml cache miss for {0}", this);
         SettingsBuildingRequest req = new DefaultSettingsBuildingRequest();
         req.setGlobalSettingsFile(settingsXml);
-        req.setUserSettingsFile(SettingsXmlConfigurationProcessor.DEFAULT_USER_SETTINGS_FILE);
+        req.setUserSettingsFile(userSettingsXml);
         req.setSystemProperties(getSystemProperties());
         req.setUserProperties(embedderConfiguration.getUserProperties());
         try {
@@ -326,10 +327,10 @@ public final class MavenEmbedder {
 //                        }
 //                    }
 //                } else {
-////                        for (File f : poms) {
+// //                        for (File f : poms) {
 //                        DefaultMavenExecutionResult r = new DefaultMavenExecutionResult();
 //                        results.put(pom, r.addException(ex));                
-////                        } 
+// //                        } 
 //                }
 //            }
 //        }
@@ -386,7 +387,7 @@ public final class MavenEmbedder {
      * @throws ArtifactNotFoundException 
      * @deprecated the Maven API used swallows certain {@link ArtifactNotFoundException} and does not report properly to the caller. Use {@link #resolveArtifact} instead.
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public void resolve(Artifact sources, List<ArtifactRepository> remoteRepositories, ArtifactRepository localRepository) throws ArtifactResolutionException, ArtifactNotFoundException {
         setUpLegacySupport();
         ArtifactResolutionRequest req = new ArtifactResolutionRequest();
@@ -448,13 +449,12 @@ public final class MavenEmbedder {
      * In particular beware that groupId and/or version may be null if inherited from a parent; use {@link Model#getParent} to resolve.
      * Internally calls <code>executeModelBuilder</code> so if you need to call both just use the execute method.
      * @param pom a POM to inspect
-     * @param embedder an embedder to use
      * @return a list of models, starting with the specified POM, going through any parents, finishing with the Maven superpom (with a null artifactId)
      * @throws ModelBuildingException if the POM or parents could not even be parsed; warnings are not reported
      */
     public List<Model> createModelLineage(File pom) throws ModelBuildingException {
         ModelBuildingResult res = executeModelBuilder(pom);
-        List<Model> toRet = new ArrayList<Model>();
+        List<Model> toRet = new ArrayList<>();
 
         for (String id : res.getModelIds()) {
             Model m = res.getRawModel(id);
@@ -550,12 +550,12 @@ public final class MavenEmbedder {
 
         LifecycleMapping lifecycleMapping = lookupComponent(LifecycleMapping.class);
         if (lifecycleMapping != null) {
-            Set<String> phases = new TreeSet<String>();
+            Set<String> phases = new TreeSet<>();
             Map<String, Lifecycle> lifecycles = lifecycleMapping.getLifecycles();
             for (Lifecycle lifecycle : lifecycles.values()) {
                 phases.addAll(lifecycle.getPhases().keySet());
             }
-            return new ArrayList<String>(phases);
+            return new ArrayList<>(phases);
         }
 
         return Collections.<String>emptyList();
@@ -587,8 +587,9 @@ public final class MavenEmbedder {
         if (settingsXml !=null && settingsXml.exists()) {
             req.setGlobalSettingsFile(settingsXml);
         }
-        if (SettingsXmlConfigurationProcessor.DEFAULT_USER_SETTINGS_FILE != null && SettingsXmlConfigurationProcessor.DEFAULT_USER_SETTINGS_FILE.exists()) {
-          req.setUserSettingsFile(SettingsXmlConfigurationProcessor.DEFAULT_USER_SETTINGS_FILE);
+        File userSettingsXml = embedderConfiguration.getUserSettingsXml();
+        if (userSettingsXml != null && userSettingsXml.exists()) {
+            req.setUserSettingsFile(userSettingsXml);
         }
         
         req.setSystemProperties(getSystemProperties());

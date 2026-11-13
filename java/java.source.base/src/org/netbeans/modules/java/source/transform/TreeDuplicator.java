@@ -72,7 +72,6 @@ import com.sun.source.tree.PrimitiveTypeTree;
 import com.sun.source.tree.ProvidesTree;
 import com.sun.source.tree.RequiresTree;
 import com.sun.source.tree.ReturnTree;
-import com.sun.source.tree.StringTemplateTree;
 import com.sun.source.tree.SwitchExpressionTree;
 import com.sun.source.tree.SwitchTree;
 import com.sun.source.tree.SynchronizedTree;
@@ -85,6 +84,7 @@ import com.sun.source.tree.TypeParameterTree;
 import com.sun.source.tree.UnaryTree;
 import com.sun.source.tree.UnionTypeTree;
 import com.sun.source.tree.UsesTree;
+import com.sun.source.tree.VarTypeTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.tree.WhileLoopTree;
 import com.sun.source.tree.WildcardTree;
@@ -216,7 +216,8 @@ public class TreeDuplicator implements TreeVisitor<Tree, Void> {
     @Override
     public Tree visitClass(ClassTree tree, Void p) {
         ClassTree n = make.Class(tree.getModifiers(), tree.getSimpleName(), tree.getTypeParameters(),
-                                     tree.getExtendsClause(), tree.getImplementsClause(), tree.getMembers());
+                                     tree.getExtendsClause(), tree.getImplementsClause(),
+                                     tree.getPermitsClause(), tree.getMembers());
         model.setElement(n, model.getElement(tree));
         model.setType(n, model.getType(tree));
         comments.copyComments(tree, n);
@@ -584,6 +585,15 @@ public class TreeDuplicator implements TreeVisitor<Tree, Void> {
     }
 
     @Override
+    public Tree visitVarType(VarTypeTree tree, Void p) {
+        VarTypeTree n = make.VarType();
+        model.setType(n, model.getType(tree));
+        comments.copyComments(tree, n);
+        model.setPos(n, model.getPos(tree));
+        return n;
+    }
+
+    @Override
     public Tree visitWhileLoop(WhileLoopTree tree, Void p) {
         WhileLoopTree n = make.WhileLoop(tree.getCondition(), tree.getStatement());
         model.setType(n, model.getType(tree));
@@ -712,15 +722,6 @@ public class TreeDuplicator implements TreeVisitor<Tree, Void> {
     @Override
     public Tree visitAnyPattern(AnyPatternTree tree, Void p) {
         return make.AnyPattern();
-    }
-
-    @Override
-    public Tree visitStringTemplate(StringTemplateTree tree, Void p) {
-        StringTemplateTree n = make.StringTemplate(tree.getProcessor(), tree.getFragments(), tree.getExpressions());
-        model.setType(n, model.getType(tree));
-        comments.copyComments(tree, n);
-        model.setPos(n, model.getPos(tree));
-        return n;
     }
 
     @Override

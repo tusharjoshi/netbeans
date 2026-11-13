@@ -147,7 +147,7 @@ public class TokenList {
             return ;
         }
 
-        long end = sourcePositions.getEndPosition(info.getCompilationUnit(), t);
+        long end = sourcePositions.getEndPosition(t);
 
         if (end == (-1))
             return ;
@@ -281,8 +281,8 @@ public class TokenList {
                     return ;
                 }
                 
-                ts.move((int)sourcePositions.getStartPosition(info.getCompilationUnit(), tree));
-                int end = (int)sourcePositions.getEndPosition(info.getCompilationUnit(), tree);
+                ts.move((int)sourcePositions.getStartPosition(tree));
+                int end = (int)sourcePositions.getEndPosition(tree);
                 
                 List<Token> tokens = null;
                 while(ts.moveNext() && ts.offset() <= end) {
@@ -316,7 +316,7 @@ public class TokenList {
                 }
                 
                 if (!tArgs.isEmpty()) {
-                    int offset = (int) info.getTrees().getSourcePositions().getStartPosition(info.getCompilationUnit(), tArgs.get(0));
+                    int offset = (int) info.getTrees().getSourcePositions().getStartPosition(tArgs.get(0));
                     
                     offset = info.getSnapshot().getOriginalOffset(offset);
                     
@@ -365,17 +365,28 @@ public class TokenList {
     }
 
     public void resetToIndex(int index) {
-        if (ts == null) {
-            return ;
-        }
+        doc.render(() -> {
+            if (cancel.get()) {
+                return ;
+            }
 
-        ts.moveIndex(index);
-        ts.moveNext();
+            if (ts == null) {
+                return ;
+            }
+
+            if (!ts.isValid()) {
+                cancel.set(true);
+                return ;
+            }
+
+            ts.moveIndex(index);
+            ts.moveNext();
+        });
     }
 
     private static List<TokenSequence<?>> embeddedTokenSequences(TokenHierarchy<Document> th, int offset) {
         TokenSequence<?> embedded = th.tokenSequence();
-        List<TokenSequence<?>> sequences = new ArrayList<TokenSequence<?>>();
+        List<TokenSequence<?>> sequences = new ArrayList<>();
 
         do {
             TokenSequence<?> seq = embedded;

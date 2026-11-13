@@ -41,6 +41,7 @@ import java.util.logging.Level;
 
 import javax.lang.model.element.Element;                                                                                                                                                                                       
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
@@ -322,6 +323,14 @@ public final class TreePathHandle {
             case RECORD:
                 //TODO: record component
                 return true;
+            case PARAMETER:
+                //only method and constructor parameters supported (not lambda):
+                if (el.getEnclosingElement().getKind() == ElementKind.METHOD ||
+                    el.getEnclosingElement().getKind() == ElementKind.CONSTRUCTOR) {
+                    return ((ExecutableElement) el.getEnclosingElement()).getParameters().contains(el);
+                } else {
+                    return false;
+                }
             default:
                 return false;
         }
@@ -391,7 +400,7 @@ public final class TreePathHandle {
             this.enclosingElement = element;
             this.correspondingEl = correspondingEl;
             if (kindPath != null) {
-                this.kind = kindPath.kindPath.get(0);
+                this.kind = kindPath.kindPath.getFirst();
             } else {
                 if (correspondingEl != null) {
                     ElementKind k = correspondingEl.getKind();

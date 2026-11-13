@@ -49,7 +49,8 @@ import org.netbeans.api.java.source.support.ErrorAwareTreeScanner;
 import com.sun.tools.javac.api.JavacTaskImpl;
 import com.sun.tools.javac.api.JavacTool;
 import com.sun.tools.javac.api.JavacTrees;
-import com.sun.tools.javac.main.JavaCompiler;
+import com.sun.tools.javac.code.Flags;
+import com.sun.tools.javac.tree.JCTree.JCClassDecl;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -67,15 +68,14 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 
-import com.sun.tools.javac.parser.ParserFactory;
-import com.sun.tools.javac.util.Log;
-import java.util.ArrayList;
 import java.util.Arrays;
 import javax.lang.model.element.Modifier;
 import org.netbeans.api.java.lexer.JavaTokenId;
 import org.netbeans.api.java.source.CodeStyle;
 import org.netbeans.api.lexer.TokenHierarchy;
 import org.netbeans.api.lexer.TokenSequence;
+import org.netbeans.lib.nbjavac.services.NBParserFactory;
+import org.netbeans.lib.nbjavac.services.NBTreeMaker;
 import org.netbeans.modules.editor.indent.api.IndentUtils;
 import org.netbeans.modules.editor.indent.spi.Context;
 import org.netbeans.modules.editor.indent.spi.Context.Region;
@@ -86,7 +86,6 @@ import org.netbeans.modules.java.source.TreeUtilitiesAccessor;
 import org.netbeans.modules.java.source.parsing.FileObjects;
 import org.netbeans.modules.java.source.parsing.JavacParser;
 import org.netbeans.modules.java.source.parsing.ParsingUtils;
-import org.netbeans.modules.java.source.parsing.PrefetchableJavaFileObject;
 import org.netbeans.modules.parsing.impl.Utilities;
 import org.openide.filesystems.FileObject;
 
@@ -255,13 +254,14 @@ public class Reindenter implements IndentTask {
             ClassLoader origCL = Thread.currentThread().getContextClassLoader();
             try {
                 Thread.currentThread().setContextClassLoader(Reindenter.class.getClassLoader());
+                com.sun.tools.javac.util.Context ctx = new com.sun.tools.javac.util.Context();
+                NBParserFactory.preRegister(ctx);
+                NBTreeMaker.preRegister(ctx);
                 JavacTaskImpl javacTask = (JavacTaskImpl)JavacTool.create().getTask(null, null, new DiagnosticListener<JavaFileObject>() {
                     @Override
                     public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
                     }
-                }, Collections.singletonList("-proc:none"), null, Collections.<JavaFileObject>emptySet()); //NOI18N
-                com.sun.tools.javac.util.Context ctx = javacTask.getContext();
-                JavaCompiler.instance(ctx).genEndPos = true;
+                }, Collections.singletonList("-proc:none"), null, Collections.<JavaFileObject>emptySet(), ctx); //NOI18N
                 text = context.document().getText(currentEmbeddingStartOffset, currentEmbeddingLength);
                 if (JavacParser.MIME_TYPE.equals(context.mimePath())) {
                     FileObject fo = Utilities.getFileObject(context.document());
@@ -274,13 +274,12 @@ public class Reindenter implements IndentTask {
                     parsedTree = TreeUtilitiesAccessor.getInstance().parseStatement(javacTask, "{" + text + "}", psp);
                     sp = new SourcePositions() {
                         @Override
-                        public long getStartPosition(CompilationUnitTree file, Tree tree) {
-                            return currentEmbeddingStartOffset + psp[0].getStartPosition(file, tree) - 1;
+                        public long getStartPosition(Tree tree) {
+                            return currentEmbeddingStartOffset + psp[0].getStartPosition(tree) - 1;
                         }
-
                         @Override
-                        public long getEndPosition(CompilationUnitTree file, Tree tree) {
-                            return currentEmbeddingStartOffset + psp[0].getEndPosition(file, tree) - 1;
+                        public long getEndPosition(Tree tree) {
+                            return currentEmbeddingStartOffset + psp[0].getEndPosition(tree) - 1;
                         }
                     };
                 }
@@ -333,7 +332,7 @@ public class Reindenter implements IndentTask {
                 } else {
                     Tree t = null;
                     for (Tree member : ((ModuleTree)last).getDirectives()) {
-                        if (sp.getEndPosition(cut, member) > startOffset) {
+                        if (getEndPosition(member) > startOffset) {
                             break;
                         }
                         t = member;
@@ -1006,11 +1005,21 @@ public class Reindenter implements IndentTask {
     }
 
     private int getStartPosition(Tree last) {
-        return (int) sp.getStartPosition(cut, last);
+        return (int) sp.getStartPosition(last);
     }
 
     private int getEndPosition(Tree last) {
-        return (int) sp.getEndPosition(cut, last);
+        int result = (int) sp.getEndPosition(last);
+
+        if (result == -1) {
+            //see JDK-8364015:
+            if (last instanceof JCClassDecl clazz &&
+                (clazz.mods.flags & Flags.IMPLICIT_CLASS) != 0) {
+                return getEndPosition(cut);
+            }
+        }
+
+        return result;
     }
 
     private LinkedList<? extends Tree> getPath(final int startOffset) {

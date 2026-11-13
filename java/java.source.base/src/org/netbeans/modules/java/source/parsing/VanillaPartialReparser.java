@@ -38,13 +38,10 @@ import com.sun.tools.javac.comp.AttrContext;
 import com.sun.tools.javac.comp.Enter;
 import com.sun.tools.javac.comp.Env;
 import com.sun.tools.javac.comp.Flow;
-import com.sun.tools.javac.comp.TypeEnter;
 import com.sun.tools.javac.parser.LazyDocCommentTable;
 import com.sun.tools.javac.parser.Scanner;
 import com.sun.tools.javac.parser.ScannerFactory;
-import com.sun.tools.javac.tree.EndPosTable;
 import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.tree.JCTree.JCCompilationUnit;
 import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
@@ -55,7 +52,6 @@ import com.sun.tools.javac.util.Options;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
@@ -65,7 +61,6 @@ import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,7 +72,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.lang.model.SourceVersion;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
@@ -110,21 +104,17 @@ import org.openide.util.lookup.ServiceProvider;
  */
 @ServiceProvider(service = PartialReparser.class, position = 200)
 public class VanillaPartialReparser implements PartialReparser {
+
+    // level FINE and lower enables partial reparse verification and source dumps
     private static final Logger LOGGER = Logger.getLogger(VanillaPartialReparser.class.getName());
-    private final Method unenter;
+
     private final Field lazyDocCommentsTable;
     private final Field parserDocComments;
     private final Method lineMapBuild;
     private final boolean allowPartialReparse;
 
+    @SuppressWarnings("LocalVariableHidesMemberVariable")
     public VanillaPartialReparser() {
-        Method unenter;
-        try {
-            unenter = Enter.class.getDeclaredMethod("unenter", JCCompilationUnit.class, JCTree.class);
-        } catch (NoSuchMethodException ex) {
-            unenter = null;
-        }
-        this.unenter = unenter;
         Field lazyDocCommentsTable;
         try {
             lazyDocCommentsTable = LazyDocCommentTable.class.getDeclaredField("table");
@@ -150,20 +140,13 @@ public class VanillaPartialReparser implements PartialReparser {
             lineMapBuild = null;
         }
         this.lineMapBuild = lineMapBuild;
-        allowPartialReparse = unenter != null && lazyDocCommentsTable != null &&
-                              parserDocComments != null && lineMapBuild != null;
+        allowPartialReparse = lazyDocCommentsTable != null && parserDocComments != null && lineMapBuild != null;
         if (!allowPartialReparse) {
-            try {
-                SourceVersion sv16 = SourceVersion.valueOf("RELEASE_16");
-                if (SourceVersion.latest().compareTo(sv16) >= 0) {
-                    LOGGER.warning("Partial reparse disabled!");
-                }
-            } catch (IllegalArgumentException ignore) {}
+            LOGGER.warning("Partial reparser disabled!");
         }
     }
 
     @Override
-    @SuppressWarnings({"AssertWithSideEffects", "NestedAssignment"})
     public boolean reparseMethod (final CompilationInfoImpl ci,
             final Snapshot snapshot,
             final MethodTree orig,
@@ -201,8 +184,8 @@ public class VanillaPartialReparser implements PartialReparser {
 //                return false;
 //            }
             final JavacTrees jt = JavacTrees.instance(task);
-            final int origStartPos = (int) jt.getSourcePositions().getStartPosition(cu, orig.getBody());
-            final int origEndPos = (int) jt.getSourcePositions().getEndPosition(cu, orig.getBody());
+            final int origStartPos = (int) jt.getSourcePositions().getStartPosition(orig.getBody());
+            final int origEndPos = (int) jt.getSourcePositions().getEndPosition(orig.getBody());
             if (origStartPos < 0) {
                 LOGGER.log(Level.WARNING, "Javac returned startpos: {0} < 0", new Object[]{origStartPos});  //NOI18N
                 return false;
@@ -232,12 +215,10 @@ public class VanillaPartialReparser implements PartialReparser {
                 JCTree.JCBlock block;
                 try {
                     DiagnosticListener dl = ci.getDiagnosticListener();
-                    assert dl instanceof CompilationInfoImpl.DiagnosticListenerImpl;
                     ((CompilationInfoImpl.DiagnosticListenerImpl)dl).startPartialReparse(origStartPos, origEndPos);
                     long start = System.currentTimeMillis();
                     Map<JCTree, Object> docComments = new HashMap<>();
                     block = reparseMethodBody(ctx, cu, orig, newBody + " ", docComments);
-                    final EndPosTable endPos = ((JCTree.JCCompilationUnit)cu).endPositions;
                     LOGGER.log(Level.FINER, "Reparsed method in: {0}", fo);     //NOI18N
                     if (block == null) {
                         LOGGER.log(
@@ -246,7 +227,7 @@ public class VanillaPartialReparser implements PartialReparser {
                             newBody);
                         return false;
                     }
-                    final int newEndPos = (int) jt.getSourcePositions().getEndPosition(cu, block);
+                    final int newEndPos = (int) jt.getSourcePositions().getEndPosition(block);
                     if (newEndPos != origStartPos + newBody.length()) {
                         return false;
                     }
@@ -267,11 +248,9 @@ public class VanillaPartialReparser implements PartialReparser {
                         JavacParser.logTime (fo,Phase.PARSED,(end-start));
                     }
                     final int delta = newEndPos - origEndPos;
-                    final TranslatePositionsVisitor tpv = new TranslatePositionsVisitor(orig, endPos, delta);
+                    final TranslatePositionsVisitor tpv = new TranslatePositionsVisitor(orig, delta);
                     tpv.scan(cu, null);
-                    if (unenter != null) {
-                        unenter.invoke(Enter.instance(ctx), cu, ((JCTree.JCMethodDecl)orig).body);
-                    }
+                    Enter.instance(ctx).unenter((JCTree.JCCompilationUnit) cu, ((JCTree.JCMethodDecl)orig).body);
                     ((JCTree.JCMethodDecl)orig).body = block;
                     if (Phase.RESOLVED.compareTo(currentPhase)<=0) {
                         start = System.currentTimeMillis();
@@ -326,15 +305,10 @@ public class VanillaPartialReparser implements PartialReparser {
 //            //Needs full reparse
 //            return false;
         } catch (Throwable t) {
-            if (t instanceof ThreadDeath) {
-                throw (ThreadDeath) t;
-            }
-            boolean enableDumpSource = false;
-            assert enableDumpSource = true; // Only dump sources with assertions enabled
-            if (enableDumpSource) {
+            LOGGER.log(Level.FINE, "partial reparse failed", t);
+            if (LOGGER.isLoggable(Level.FINE)) {
                 JavacParser.dumpSource(ci, t);
             }
-            t.printStackTrace();
             return false;
         }
         return true;
@@ -350,7 +324,7 @@ public class VanillaPartialReparser implements PartialReparser {
         }
         body[startPos + newBodyText.length()] = '\u0000';
         CharBuffer buf = CharBuffer.wrap(body, 0, body.length - 1);
-        com.sun.tools.javac.parser.JavacParser parser = newParser(ctx, buf, ((JCTree.JCBlock)methodToReparse.getBody()).pos, ((JCTree.JCCompilationUnit)topLevel).endPositions);
+        com.sun.tools.javac.parser.JavacParser parser = newParser(ctx, buf, ((JCTree.JCBlock)methodToReparse.getBody()).pos);
         final JCTree.JCStatement statement = parser.parseStatement();
         if (statement.getKind() == Tree.Kind.BLOCK) {
             if (docComments != null) {
@@ -361,54 +335,16 @@ public class VanillaPartialReparser implements PartialReparser {
         return null;
     }
 
-    private com.sun.tools.javac.parser.JavacParser newParser(Context context, CharSequence input, int startPos, final EndPosTable endPos) {
+    private com.sun.tools.javac.parser.JavacParser newParser(Context context, CharSequence input, int startPos) {
         NBParserFactory parserFactory = (NBParserFactory) NBParserFactory.instance(context); //TODO: eliminate the cast
         ScannerFactory scannerFactory = ScannerFactory.instance(context);
         CancelService cancelService = CancelService.instance(context);
         Scanner lexer = scannerFactory.newScanner(input, true);
 //        lexer.seek(startPos);
-        if (endPos instanceof NBParserFactory.NBJavacParser.EndPosTableImpl) {
-            ((NBParserFactory.NBJavacParser.EndPosTableImpl)endPos).resetErrorEndPos();
-        }
-        return new NBParserFactory.NBJavacParser(parserFactory, lexer, true, false, true, false, cancelService) {
-            @Override protected com.sun.tools.javac.parser.JavacParser.AbstractEndPosTable newEndPosTable(boolean keepEndPositions) {
-                return new com.sun.tools.javac.parser.JavacParser.AbstractEndPosTable(this) {
-
-                    @Override
-                    public void storeEnd(JCTree tree, int endpos) {
-                        ((NBParserFactory.NBJavacParser.EndPosTableImpl)endPos).storeEnd(tree, endpos);
-                    }
-
-                    @Override
-                    protected <T extends JCTree> T to(T t) {
-                        storeEnd(t, token.endPos);
-                        return t;
-                    }
-
-                    @Override
-                    protected <T extends JCTree> T toP(T t) {
-                        storeEnd(t, S.prevToken().endPos);
-                        return t;
-                    }
-
-                    @Override
-                    public int getEndPos(JCTree tree) {
-                        return endPos.getEndPos(tree);
-                    }
-
-                    @Override
-                    public int replaceTree(JCTree oldtree, JCTree newtree) {
-                        return endPos.replaceTree(oldtree, newtree);
-                    }
-
-                    @Override
-                    public void setErrorEndPos(int errPos) {
-                        super.setErrorEndPos(errPos);
-                        ((NBParserFactory.NBJavacParser.EndPosTableImpl)endPos).setErrorEndPos(errPos);
-                    }
-                };
-            }
-        };
+//        if (endPos instanceof NBParserFactory.NBJavacParser.EndPosTableImpl table) {
+//            table.resetErrorEndPos();
+//        }
+        return new NBParserFactory.NBJavacParser(parserFactory, lexer, true, false, false, cancelService);
     }
 
     public BlockTree reattrMethodBody(Context context, Scope scope, MethodTree methodToReparse, BlockTree block) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
@@ -417,7 +353,6 @@ public class VanillaPartialReparser implements PartialReparser {
         JCTree.JCMethodDecl tree = (JCTree.JCMethodDecl) methodToReparse;
         final Names names = Names.instance(context);
         final Symtab syms = Symtab.instance(context);
-        final TypeEnter typeEnter = TypeEnter.instance(context);
         final Log log = Log.instance(context);
         final TreeMaker make = TreeMaker.instance(context);
         final Env<AttrContext> env = ((JavacScope) scope).getEnv();//this is a copy anyway...
@@ -435,7 +370,7 @@ public class VanillaPartialReparser implements PartialReparser {
                 // in enum constructors, except in the compiler
                 // generated one.
                 log.error(tree.body.stats.head.pos(),
-                          new JCDiagnostic.Error("compiler",
+                          new JCDiagnostic.Error(Set.of(), "compiler",
                                     "call.to.super.not.allowed.in.enum.ctor",
                                     env.enclClass.sym));
                     }
@@ -470,7 +405,7 @@ public class VanillaPartialReparser implements PartialReparser {
 
                 if (info != null && info.getChangedTree() != null) {
                     CompilationInfoImpl reparsedInfoImpl = CompilationInfoAccessor.getInstance().getCompilationInfoImpl(info);
-                    JavacParser verifyParser = new JavacParser(Collections.singletonList(info.getSnapshot()), true);
+                    JavacParser verifyParser = new JavacParser(List.of(info.getSnapshot()), true);
                     parser.set(verifyParser);
                     if (cancel.get()) {
                         return ;
@@ -485,7 +420,7 @@ public class VanillaPartialReparser implements PartialReparser {
                     verifyCompilationInfos(reparsedInfoImpl, verifyInfoImpl);
                 }
             } catch (IOException | ParseException ex) {
-                LOGGER.log(Level.FINE, null, ex);
+                LOGGER.log(Level.WARNING, "verification failed", ex);
             } finally {
                 parser.set(null);
             }
@@ -515,7 +450,7 @@ public class VanillaPartialReparser implements PartialReparser {
             String failInfo = "";
             //move to phase, and verify
             if (verifyInfo.toPhase(reparsed.getPhase()) != reparsed.getPhase()) {
-                failInfo += "Expected phase: " + reparsed.getPhase() + ", actual phase: " + verifyInfo.getPhase();
+                failInfo += "Expected phase: " + reparsed.getPhase() + "\n  Actual phase: " + verifyInfo.getPhase();
             }
             if (cancel.get()) return ;
             //verify diagnostics:
@@ -524,7 +459,7 @@ public class VanillaPartialReparser implements PartialReparser {
             Set<String> verifyDiags = (Set<String>) verifyInfo.getDiagnostics().stream().map(this::diagnosticToString).collect(Collectors.toSet());
             if (cancel.get()) return ;
             if (!Objects.equals(reparsedDiags, verifyDiags)) {
-                failInfo += "Expected diags: " + reparsedDiags + ", actual diags: " + verifyDiags;
+                failInfo += "Expected diags: " + reparsedDiags + "\n  Actual diags: " + verifyDiags;
             }
             if (cancel.get()) return ;
             String reparsedTree = treeToString(reparsed, reparsed.getCompilationUnit());
@@ -532,27 +467,26 @@ public class VanillaPartialReparser implements PartialReparser {
             String verifyTree = treeToString(verifyInfo, verifyInfo.getCompilationUnit());
             if (cancel.get()) return ;
             if (!Objects.equals(reparsedTree, verifyTree)) {
-                failInfo += "Expected tree: " + reparsedTree + "\n" + "  actual tree: " + verifyTree;
+                failInfo += "Expected tree: " + reparsedTree + "\n  Actual tree: " + verifyTree;
             }
             if (!failInfo.isEmpty() && !cancel.get()) {
                 Utilities.revalidate(reparsed.getFileObject());
                 File dumpFile = JavacParser.createDumpFile(reparsed);
                 if (dumpFile != null) {
-                    try (OutputStream os = new FileOutputStream(dumpFile);
-                         PrintWriter writer = new PrintWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8))) {   //NOI18N
+                    try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(dumpFile), StandardCharsets.UTF_8))) {
                         writer.println("Incorrectly reparsed file: " + reparsed.getFileObject().toURI());
                         Snapshot original = reparsed.getPartialReparseLastGoodSnapshot();
                         if (original != null) {
                             writer.println("----- Original text: ---------------------------------------------");
                             writer.println(original.getText());
-                        };
+                        }
                         writer.println("----- Updated text: ---------------------------------------------");
                         writer.println(reparsed.getSnapshot().getText());
                         writer.println("----- Errors: ---------------------------------------------");
                         writer.println(failInfo);
                     }
                 }
-                LOGGER.log(Level.INFO, "Incorrect partial reparse detected, dump filed: " + dumpFile);
+                LOGGER.log(Level.WARNING, "Incorrect partial reparse detected, dump filed: {0}", dumpFile);
             } else {
                 reparsed.setPartialReparseLastGoodSnapshot(reparsed.getSnapshot());
             }
@@ -580,8 +514,8 @@ public class VanillaPartialReparser implements PartialReparser {
                     } else {
                         TreePath tp = new TreePath(getCurrentPath(), tree);
                         dump.append(tree.getKind()).append(":");
-                        dump.append(Trees.instance(info.getJavacTask()).getSourcePositions().getStartPosition(tp.getCompilationUnit(), tree)).append(":");
-                        dump.append(Trees.instance(info.getJavacTask()).getSourcePositions().getEndPosition(tp.getCompilationUnit(), tree)).append(":");
+                        dump.append(Trees.instance(info.getJavacTask()).getSourcePositions().getStartPosition(tree)).append(":");
+                        dump.append(Trees.instance(info.getJavacTask()).getSourcePositions().getEndPosition(tree)).append(":");
                         dump.append(String.valueOf(Trees.instance(info.getJavacTask()).getElement(tp))).append(":");
                         dump.append(normalizeCapture(String.valueOf(Trees.instance(info.getJavacTask()).getTypeMirror(tp)))).append(":");
                         dump.append(",");
@@ -608,15 +542,9 @@ public class VanillaPartialReparser implements PartialReparser {
         public static final class FactoryImpl extends TaskFactory {
 
             @Override
-            @SuppressWarnings({"AssertWithSideEffects", "NestedAssignment"})
             public Collection<? extends SchedulerTask> create(Snapshot snapshot) {
-                boolean enableVerifier = false;
-                assert enableVerifier = true;  // Only enable verifier if assertions are enabled
-                if (enableVerifier) {
-                    return Collections.singletonList(new VerifyPartialReparse());
-                } else {
-                    return Collections.emptyList();
-                }
+                // verifier is only enabled on FINE and lower levels
+                return LOGGER.isLoggable(Level.FINE) ? List.of(new VerifyPartialReparse()) : List.of();
             }
 
         }

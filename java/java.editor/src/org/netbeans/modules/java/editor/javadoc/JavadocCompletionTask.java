@@ -64,6 +64,7 @@ import javax.lang.model.util.Types;
 import javax.swing.text.Document;
 import org.netbeans.api.annotations.common.NonNull;
 import org.netbeans.api.annotations.common.NullAllowed;
+import org.netbeans.api.java.lexer.JavaTokenId;
 import org.netbeans.api.java.lexer.JavadocTokenId;
 import org.netbeans.api.java.source.ClassIndex;
 import org.netbeans.api.java.source.ClasspathInfo;
@@ -84,6 +85,7 @@ import org.netbeans.modules.parsing.api.ResultIterator;
 import org.netbeans.modules.parsing.api.Source;
 import org.netbeans.modules.parsing.api.UserTask;
 import org.netbeans.modules.parsing.spi.Parser;
+import org.openide.util.Pair;
 
 public class JavadocCompletionTask<T> extends UserTask {
 
@@ -188,16 +190,20 @@ public class JavadocCompletionTask<T> extends UserTask {
             return;
         }
         jdts.move(this.caretOffset);
+        JavadocTokenId javadocId;
         if (!jdts.moveNext() && !jdts.movePrevious()) {
             // XXX solve /***/
             // provide block tags, inline tags, html
-            return;
+            // XXX: for Markdown, continuing
+            javadocId = JavadocTokenId.OTHER_TEXT;
+        } else {
+            if (this.caretOffset - jdts.offset() == 0) {
+                // if position in token == 0 resolve CC according to previous token
+                jdts.movePrevious();
+            }
+            javadocId = jdts.token().id();
         }
-        if (this.caretOffset - jdts.offset() == 0) {
-            // if position in token == 0 resolve CC according to previous token
-            jdts.movePrevious();
-        }
-        switch (jdts.token().id()) {
+        switch (javadocId) {
             case TAG:
                 resolveTagToken(jdctx);
                 break;
@@ -238,7 +244,7 @@ public class JavadocCompletionTask<T> extends UserTask {
         int pos;
         String prefix;
         if (tag != null) {
-            pos = (int) jdctx.positions.getStartPosition(jdctx.javac.getCompilationUnit(), jdctx.comment, tag.getLeaf());
+            pos = (int) jdctx.positions.getStartPosition(jdctx.comment, tag.getLeaf());
             prefix = JavadocCompletionUtils.getCharSequence(jdctx.doc, pos, caretOffset).toString();
         } else {
             prefix = ""; // NOI18N
@@ -252,7 +258,7 @@ public class JavadocCompletionTask<T> extends UserTask {
         int pos;
         String prefix;
         if (tag != null) {
-            pos = (int) jdctx.positions.getStartPosition(jdctx.javac.getCompilationUnit(), jdctx.comment, tag.getLeaf()) + 1;
+            pos = (int) jdctx.positions.getStartPosition(jdctx.comment, tag.getLeaf()) + 1;
             prefix = JavadocCompletionUtils.getCharSequence(jdctx.doc, pos, caretOffset).toString();
             anchorOffset = pos;
         } else {
@@ -265,7 +271,9 @@ public class JavadocCompletionTask<T> extends UserTask {
 
     private int skipWhitespacesBackwards(final JavadocContext jdctx, final int offset) {
         if (jdctx.jdts.move(offset) == 0 || !jdctx.jdts.moveNext()) {
-            jdctx.jdts.movePrevious();
+            if (!jdctx.jdts.movePrevious()) {
+                return offset;
+            }
         }
         do {
             Token t = jdctx.jdts.token();
@@ -289,12 +297,12 @@ public class JavadocCompletionTask<T> extends UserTask {
         new DocTreePathScanner<Void, Void>() {
             @Override
             public Void scan(DocTree node, Void p) {
-                long endPos = jdctx.positions.getEndPosition(jdctx.javac.getCompilationUnit(), jdctx.comment, node);
-                long startPos = jdctx.positions.getStartPosition(jdctx.javac.getCompilationUnit(), jdctx.comment, node);
+                long endPos = jdctx.positions.getEndPosition(jdctx.comment, node);
+                long startPos = jdctx.positions.getStartPosition(jdctx.comment, node);
                 if (node.getKind() == Kind.ERRONEOUS && getCurrentPath() != null) {
                     String text = jdctx.javac.getText().substring((int) startPos, (int) endPos);
                     if (text.length() > 0 && text.charAt(0) == '{' && text.charAt(text.length() - 1) != '}') {
-                        endPos = jdctx.positions.getEndPosition(jdctx.javac.getCompilationUnit(), jdctx.comment, getCurrentPath().getLeaf());
+                        endPos = jdctx.positions.getEndPosition(jdctx.comment, getCurrentPath().getLeaf());
                     }
                 }
                 if (node != null && startPos <= normalizedOffset && endPos >= normalizedOffset) {
@@ -395,7 +403,7 @@ public class JavadocCompletionTask<T> extends UserTask {
     private void insideSeeTag(DocTreePath tag, JavadocContext jdctx) {
         TokenSequence<JavadocTokenId> jdts = jdctx.jdts;
         assert jdts.token() != null;
-        int start = (int) jdctx.positions.getStartPosition(jdctx.javac.getCompilationUnit(), jdctx.comment, tag.getLeaf());
+        int start = (int) jdctx.positions.getStartPosition(jdctx.comment, tag.getLeaf());
         boolean isThrowsKind = JavadocCompletionUtils.normalizedKind(tag.getLeaf()) == DocTree.Kind.THROWS;
         if (isThrowsKind && !(EXECUTABLE.contains(jdctx.commentFor.getKind()))) {
             // illegal tag in this context
@@ -415,17 +423,17 @@ public class JavadocCompletionTask<T> extends UserTask {
             int pos = caretOffset - jdts.offset();
             CharSequence cs = jdts.token().text();
             cs = pos < cs.length() ? cs.subSequence(0, pos) : cs;
-            if (JavadocCompletionUtils.isWhiteSpace(cs) || JavadocCompletionUtils.isLineBreak(jdts.token(), pos)) {
+            if (JavadocCompletionUtils.isWhiteSpace(cs) || JavadocCompletionUtils.isLineBreak(jdts, pos)) {
                 noPrefix = true;
             } else {
                 // broken syntax
                 return;
             }
-        } else if (!(JavadocCompletionUtils.isWhiteSpace(jdts.token()) || JavadocCompletionUtils.isLineBreak(jdts.token()))) {
+        } else if (!(JavadocCompletionUtils.isWhiteSpace(jdts.token()) || JavadocCompletionUtils.isLineBreak(jdts))) {
             // not java reference
             return;
         } else if (jdts.moveNext()) {
-            int end = (int) jdctx.positions.getEndPosition(jdctx.javac.getCompilationUnit(), jdctx.comment, tag.getLeaf());
+            int end = (int) jdctx.positions.getEndPosition(jdctx.comment, tag.getLeaf());
             insideReference(JavadocCompletionUtils.normalizedKind(tag.getLeaf()), jdts.offset(), end, jdctx);
         }
         if (noPrefix) {
@@ -442,8 +450,8 @@ public class JavadocCompletionTask<T> extends UserTask {
     private void insideReference(DocTreePath tag, JavadocContext jdctx) {
         ReferenceTree ref = (ReferenceTree) tag.getLeaf();
         DocTree.Kind kind = tag.getParentPath().getLeaf().getKind();
-        int start = (int) jdctx.positions.getStartPosition(jdctx.javac.getCompilationUnit(), jdctx.comment, ref);
-        int end = (int) jdctx.positions.getEndPosition(jdctx.javac.getCompilationUnit(), jdctx.comment, ref);
+        int start = (int) jdctx.positions.getStartPosition(jdctx.comment, ref);
+        int end = (int) jdctx.positions.getEndPosition(jdctx.comment, ref);
         insideReference(kind, start, end, jdctx);
     }
 
@@ -505,7 +513,7 @@ public class JavadocCompletionTask<T> extends UserTask {
     private void insideParamTag(DocTreePath tag, JavadocContext jdctx) {
         TokenSequence<JavadocTokenId> jdts = jdctx.jdts;
         assert jdts.token() != null;
-        int start = (int) jdctx.positions.getStartPosition(jdctx.javac.getCompilationUnit(), jdctx.comment, tag.getLeaf());
+        int start = (int) jdctx.positions.getStartPosition(jdctx.comment, tag.getLeaf());
         jdts.move(start);
         // @param
         if (!jdts.moveNext() || caretOffset <= jdts.offset() + jdts.token().length()) {
@@ -519,7 +527,7 @@ public class JavadocCompletionTask<T> extends UserTask {
             int pos = caretOffset - jdts.offset();
             CharSequence cs = jdts.token().text();
             cs = pos < cs.length() ? cs.subSequence(0, pos) : cs;
-            if (JavadocCompletionUtils.isWhiteSpace(cs) || JavadocCompletionUtils.isLineBreak(jdts.token(), pos)) {
+            if (JavadocCompletionUtils.isWhiteSpace(cs) || JavadocCompletionUtils.isLineBreak(jdts, pos)) {
                 // none prefix
                 anchorOffset = caretOffset;
                 completeParamName(tag, "", caretOffset, jdctx); // NOI18N
@@ -1226,15 +1234,14 @@ public class JavadocCompletionTask<T> extends UserTask {
 
     void resolveOtherText(JavadocContext jdctx, TokenSequence<JavadocTokenId> jdts) {
         Token<JavadocTokenId> token = jdts.token();
-        assert token != null;
-        assert token.id() == JavadocTokenId.OTHER_TEXT;
-        CharSequence text = token.text();
-        int pos = caretOffset - jdts.offset();
-        DocTreePath tag = getTag(jdctx, caretOffset);
+        assert token == null || token.id() == JavadocTokenId.OTHER_TEXT;
+        CharSequence text = token == null ? "" : token.text();
+        int pos = token == null ? 0 : caretOffset - jdts.offset();
+        DocTreePath tag = token == null ? null : getTag(jdctx, caretOffset);
 
         if (pos > 0 && pos <= text.length() && text.charAt(pos - 1) == '{') {
             if (tag != null && !JavadocCompletionUtils.isBlockTag(tag)) {
-                int start = (int) jdctx.positions.getStartPosition(jdctx.javac.getCompilationUnit(), jdctx.comment, tag.getLeaf());
+                int start = (int) jdctx.positions.getStartPosition(jdctx.comment, tag.getLeaf());
                 if (start + 1 != caretOffset) {
                     return;
                 }
@@ -1244,16 +1251,16 @@ public class JavadocCompletionTask<T> extends UserTask {
         }
         if (tag != null) {
             insideTag(tag, jdctx);
-            if (JavadocCompletionUtils.isBlockTag(tag) && JavadocCompletionUtils.isLineBreak(token, pos)) {
+            if (JavadocCompletionUtils.isBlockTag(tag) && JavadocCompletionUtils.isLineBreak(jdts, pos)) {
                 resolveBlockTag(null, jdctx);
             }
-        } else if (JavadocCompletionUtils.isLineBreak(token, pos)) {
+        } else if (JavadocCompletionUtils.isLineBreak(jdts, pos)) {
             resolveBlockTag(null, jdctx);
         }
     }
 
     void insideSnippet(DocTreePath tag, JavadocContext jdctx) {
-        int startPos = (int) jdctx.positions.getStartPosition(jdctx.javac.getCompilationUnit(), jdctx.comment, tag.getLeaf());
+        int startPos = (int) jdctx.positions.getStartPosition(jdctx.comment, tag.getLeaf());
         String subStr = JavadocCompletionUtils.getCharSequence(jdctx.doc, startPos, caretOffset).toString();
         int index = subStr.lastIndexOf("\n");
         String markupLine = JavadocCompletionUtils.getCharSequence(jdctx.doc, (index + startPos), caretOffset).toString();
@@ -1336,6 +1343,7 @@ public class JavadocCompletionTask<T> extends UserTask {
         private DocCommentTree comment;
         private DocSourcePositions positions;
         private TokenSequence<JavadocTokenId> jdts;
+        private TokenSequence<JavaTokenId> javats;
         private Document doc;
         private ReferencesCount count;
         private TreePath javadocFor;

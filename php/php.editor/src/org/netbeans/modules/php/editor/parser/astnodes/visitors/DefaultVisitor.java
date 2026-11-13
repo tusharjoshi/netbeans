@@ -38,9 +38,11 @@ import org.netbeans.modules.php.editor.parser.astnodes.CastExpression;
 import org.netbeans.modules.php.editor.parser.astnodes.CatchClause;
 import org.netbeans.modules.php.editor.parser.astnodes.ClassDeclaration;
 import org.netbeans.modules.php.editor.parser.astnodes.ClassInstanceCreation;
+import org.netbeans.modules.php.editor.parser.astnodes.ClassInstanceCreationVariable;
 import org.netbeans.modules.php.editor.parser.astnodes.ClassName;
 import org.netbeans.modules.php.editor.parser.astnodes.CloneExpression;
 import org.netbeans.modules.php.editor.parser.astnodes.Comment;
+import org.netbeans.modules.php.editor.parser.astnodes.CompositionExpression;
 import org.netbeans.modules.php.editor.parser.astnodes.ConditionalExpression;
 import org.netbeans.modules.php.editor.parser.astnodes.ConstantDeclaration;
 import org.netbeans.modules.php.editor.parser.astnodes.ConstantVariable;
@@ -101,6 +103,7 @@ import org.netbeans.modules.php.editor.parser.astnodes.ParenthesisExpression;
 import org.netbeans.modules.php.editor.parser.astnodes.PostfixExpression;
 import org.netbeans.modules.php.editor.parser.astnodes.PrefixExpression;
 import org.netbeans.modules.php.editor.parser.astnodes.Program;
+import org.netbeans.modules.php.editor.parser.astnodes.PropertyHookDeclaration;
 import org.netbeans.modules.php.editor.parser.astnodes.Quote;
 import org.netbeans.modules.php.editor.parser.astnodes.Reference;
 import org.netbeans.modules.php.editor.parser.astnodes.ReflectionVariable;
@@ -264,6 +267,11 @@ public class DefaultVisitor implements Visitor {
     }
 
     @Override
+    public void visit(ClassInstanceCreationVariable node) {
+        scan(node.getName());
+    }
+
+    @Override
     public void visit(ClassName node) {
         scan(node.getName());
     }
@@ -280,6 +288,12 @@ public class DefaultVisitor implements Visitor {
     @Override
     public void visit(ConstantVariable constantVariable) {
         scan(constantVariable.getName());
+    }
+    
+    @Override
+    public void visit(CompositionExpression node) {
+        scan(node.getLeft());
+        scan(node.getRight());
     }
 
     @Override
@@ -378,6 +392,7 @@ public class DefaultVisitor implements Visitor {
         scan(node.getParameterType());
         scan(node.getParameterName());
         scan(node.getDefaultValue());
+        scan(node.getPropertyHooks());
     }
 
     @Override
@@ -519,6 +534,14 @@ public class DefaultVisitor implements Visitor {
     }
 
     @Override
+    public void visit(PropertyHookDeclaration propertyHook) {
+        scan(propertyHook.getAttributes());
+        scan(propertyHook.getName());
+        scan(propertyHook.getFormalParameters());
+        scan(propertyHook.getBody());
+    }
+
+    @Override
     public void visit(Quote node) {
         scan(node.getExpressions());
     }
@@ -546,6 +569,7 @@ public class DefaultVisitor implements Visitor {
     public void visit(SingleFieldDeclaration node) {
         scan(node.getName());
         scan(node.getValue());
+        scan(node.getPropertyHooks());
     }
 
     @Override

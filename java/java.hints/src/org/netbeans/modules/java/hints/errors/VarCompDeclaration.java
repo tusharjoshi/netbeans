@@ -56,7 +56,7 @@ public class VarCompDeclaration implements ErrorRule<Void> {
     @Override
     public List<Fix> run(CompilationInfo info, String diagnosticKey, int offset, TreePath treePath, Data<Void> data) {
 
-        Tree.Kind parentKind = treePath.getParentPath().getLeaf().getKind();
+        Tree.Kind parentKind = treePath.getParentPath().getParentPath().getLeaf().getKind();
         if (parentKind != Tree.Kind.BLOCK && parentKind != Tree.Kind.CASE) {
             return null;
         }
@@ -85,12 +85,10 @@ public class VarCompDeclaration implements ErrorRule<Void> {
     private static final class FixImpl extends JavaFix {
 
         CompilationInfo info;
-        TreePath path;
 
         public FixImpl(CompilationInfo info, TreePath path) {
             super(info, path);
             this.info = info;
-            this.path = path;
         }
 
         @Override
@@ -104,7 +102,7 @@ public class VarCompDeclaration implements ErrorRule<Void> {
 
         @Override
         protected void performRewrite(TransformationContext ctx) throws Exception {
-            TreePath statementPath = ctx.getPath();
+            TreePath statementPath = ctx.getPath().getParentPath();
             Tree parent = statementPath.getParentPath().getLeaf();
             List<? extends StatementTree> statements = null;
             switch (parent.getKind()) {

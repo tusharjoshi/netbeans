@@ -96,7 +96,6 @@ import org.netbeans.modules.java.source.save.DiffUtilities;
 import org.netbeans.modules.java.source.save.ElementOverlay;
 import org.netbeans.modules.java.source.save.ElementOverlay.FQNComputer;
 import org.netbeans.modules.java.source.transform.ImmutableDocTreeTranslator;
-import org.netbeans.modules.java.source.transform.ImmutableTreeTranslator;
 import org.netbeans.modules.java.source.transform.TreeDuplicator;
 import org.netbeans.modules.parsing.api.Source;
 import org.netbeans.modules.parsing.impl.SourceAccessor;
@@ -105,6 +104,7 @@ import org.openide.filesystems.FileUtil;
 import org.openide.util.NbBundle;
 import org.openide.util.BaseUtilities;
 import org.openide.util.Lookup;
+import org.openide.util.Pair;
 
 /**XXX: extends CompilationController now, finish method delegation
  *
@@ -333,13 +333,8 @@ public class WorkingCopy extends CompilationController {
             return;
         }
         
-        Map<DocTree, DocTree> changesMap = docChanges.get(tree);
-        if(changesMap == null) {
-            changesMap = new IdentityHashMap<DocTree, DocTree>();
-            docChanges.put(tree, changesMap);
-        }
-        
-        changesMap.put(oldTree, newTree);
+        docChanges.computeIfAbsent(tree, k -> new IdentityHashMap<DocTree, DocTree>())
+                  .put(oldTree, newTree);
     }
               
     /**
@@ -461,7 +456,7 @@ public class WorkingCopy extends CompilationController {
      */
     synchronized void associateTree(Tree nue, Tree original, boolean force) {
         if (rewriteHints == null) {
-            rewriteHints = new HashMap<Tree, Tree>(7);
+            rewriteHints = HashMap.newHashMap(7);
         }
         
         if (original == null) {
@@ -483,36 +478,7 @@ public class WorkingCopy extends CompilationController {
         return ((JCTree.JCCompilationUnit) topLevel).sourcefile.getCharContent(true).toString();
     }
     
-    class Translator extends ImmutableTreeTranslator {
-        private Map<Tree, Tree> changeMap;
-
-        public Translator() {
-            super(WorkingCopy.this);
-        }
-
-        Tree translate(Tree tree, Map<Tree, Tree> changeMap) {
-            this.changeMap = new HashMap<Tree, Tree>(changeMap);
-            return translate(tree);
-        }
-
-        @Override
-        public Tree translate(Tree tree) {
-            assert changeMap != null;
-            if (tree == null) {
-                return null;
-            }
-            Tree repl = changeMap.remove(tree);
-            Tree newRepl;
-            if (repl != null) {
-                newRepl = translate(repl);
-            } else {
-                newRepl = super.translate(tree);
-            }
-            return newRepl;
-        }
-    }
-            
-    private static boolean REWRITE_WHOLE_FILE = Boolean.getBoolean(WorkingCopy.class.getName() + ".rewrite-whole-file");
+    private static final boolean REWRITE_WHOLE_FILE = Boolean.getBoolean(WorkingCopy.class.getName() + ".rewrite-whole-file");
 
     private void addSyntheticTrees(DiffContext diffContext, Tree node) {
         if (node == null) return ;
@@ -587,7 +553,8 @@ public class WorkingCopy extends CompilationController {
                     if (node == null) return null;
                     boolean oldSynthetic = synthetic;
                     try {
-                        synthetic |= getTreeUtilities().isSynthetic(diffContext.origUnit, node);
+                        synthetic |= getTreeUtilities().isSynthetic(diffContext.origUnit, node) ||
+                                     diffContext.syntheticTrees.contains(node);
                         if (!synthetic) {
                             oldTrees.add(node);
                         }
@@ -696,7 +663,7 @@ public class WorkingCopy extends CompilationController {
                                     getCurrentPath(), tree)).size() > 1) {
                             // start of a variable, which is a part of a variable group
                             variableParent = getCurrentPath();
-                            lastVar = group.get(group.size() - 1) == tree;
+                            lastVar = group.getLast() == tree;
                         } else if (variableParent != null && getCurrentPath().getLeaf().getKind() == Tree.Kind.VARIABLE) {
                             VariableTree vt = (VariableTree)getCurrentPath().getLeaf();
                             beginVariableDeclarator = vt.getModifiers() == tree || vt.getType() == tree;
@@ -715,9 +682,7 @@ public class WorkingCopy extends CompilationController {
                                 }
                             }
                             pathsToRewrite.add(currentParent);
-                            if (!parent2Rewrites.containsKey(currentParent)) {
-                                parent2Rewrites.put(currentParent, new IdentityHashMap<Tree, Tree>());
-                            }
+                            parent2Rewrites.computeIfAbsent(currentParent, k -> new IdentityHashMap<Tree, Tree>());
                         }
                         Tree rev = changes.get(tree);
                         Tree hint = resolveRewriteHint(tree);
@@ -763,7 +728,8 @@ public class WorkingCopy extends CompilationController {
                 @Override
                 public Void visitClass(ClassTree node, Void p) {
                     String parent = fqn.getFQN();
-                    fqn.enterClass(node);
+                    fqn.enterClass(node,
+                                   parentIsNewClass(getCurrentPath()));
                     overlay.registerClass(parent, fqn.getFQN(), node, rewriteTarget.contains(node));
                     super.visitClass(node, p);
                     fqn.leaveClass();
@@ -784,10 +750,13 @@ public class WorkingCopy extends CompilationController {
         
         boolean importsFilled = false;
         for (final TreePath path : pathsToRewrite) {
-            List<ClassTree> classes = new ArrayList<ClassTree>();
+            List<Pair<ClassTree, Boolean>> classes = new ArrayList<>();
 
             if (path.getParentPath() != null) {
-                for (Tree t : path.getParentPath()) {
+                TreePath currentPath = path.getParentPath();
+                while (currentPath != null) {
+                    Tree t = currentPath.getLeaf();
+
                     if (t.getKind() == Kind.COMPILATION_UNIT && !importsFilled) {
                         CompilationUnitTree cutt = (CompilationUnitTree) t;
                         ia.setCompilationUnit(cutt);
@@ -796,8 +765,10 @@ public class WorkingCopy extends CompilationController {
                         importsFilled = true;
                     }
                     if (TreeUtilities.CLASS_TREE_KINDS.contains(t.getKind())) {
-                        classes.add((ClassTree) t);
+                        classes.add(Pair.of((ClassTree) t, parentIsNewClass(currentPath)));
                     }
+
+                    currentPath = currentPath.getParentPath();
                 }
             } else if (path.getLeaf().getKind() == Kind.COMPILATION_UNIT && parent2Rewrites.get(path).size() == 1) { // XXX: not true if there are doc changes.
                 //short-circuit import-only changes:
@@ -817,11 +788,11 @@ public class WorkingCopy extends CompilationController {
                 }
             }
 
-            Collections.reverse(classes);
+            classes = classes.reversed();
             
-            for (ClassTree ct : classes) {
-                ia.classEntered(ct);
-                ia.enterVisibleThroughClasses(ct);
+            for (Pair<ClassTree, Boolean> ct : classes) {
+                ia.classEntered(ct.first(), ct.second());
+                ia.enterVisibleThroughClasses(ct.first());
             }
             final Map<Tree, Tree> rewrites = parent2Rewrites.get(path);
             
@@ -831,7 +802,7 @@ public class WorkingCopy extends CompilationController {
                 private final TreeVisitor<Tree, Void> duplicator = new TreeDuplicator(getContext());
 
                 @Override
-                public Tree translate(Tree tree) {
+                public Tree translate(Tree tree, Object p) {
                     if(docChanges.containsKey(tree)) {
                         Tree newTree = null;
                         if(!map.containsKey(tree)) {
@@ -863,9 +834,9 @@ public class WorkingCopy extends CompilationController {
 
                     Tree t;
                     if (translated != null) {
-                        t = translate(translated);
+                        t = translate(translated, p);
                     } else {
-                        t = super.translate(tree);
+                        t = super.translate(tree, p);
                     }
                     if (tree2Doc != null && tree != t && tree2Doc.containsKey(tree)) {
                         tree2Doc.put(t, tree2Doc.remove(tree));
@@ -889,13 +860,14 @@ public class WorkingCopy extends CompilationController {
             };
             Context c = impl.getJavacTask().getContext();
             itt.attach(c, ia, tree2Tag);
-            final Tree brandNew = itt.translate(path.getLeaf());
+            final Tree brandNew = itt.translate(path.getLeaf(),
+                                                path.getParentPath() != null ? path.getParentPath().getLeaf() : null);
 
             //tagging debug
             //System.err.println("brandNew=" + brandNew);
             new CommentReplicator(presentInResult.keySet()).process(diffContext.origUnit);
             addCommentsToContext(diffContext);
-            for (ClassTree ct : classes) {
+            for (Pair<ClassTree, Boolean> ct : classes) {
                 ia.classLeft();
             }
             
@@ -1004,7 +976,7 @@ public class WorkingCopy extends CompilationController {
     }
     
     private void addCommentsToContext(DiffContext context) {
-        Map<Integer, Comment> m = new HashMap<>(usedComments.size());
+        Map<Integer, Comment> m = HashMap.newHashMap(usedComments.size());
         for (Comment c : usedComments) {
             m.put(c.pos(), c);
         }
@@ -1159,12 +1131,6 @@ public class WorkingCopy extends CompilationController {
         }
     }
     
-    private static class CopyEntry {
-        private RelativePosition pos;
-        private Tree commentSource;
-        private boolean copyNonEmpty;
-    }
-    
     private Tree resolveRewriteHint(Tree orig) {
         Tree last;
         Tree target = null;
@@ -1235,23 +1201,16 @@ public class WorkingCopy extends CompilationController {
         } else if (cut.getTypeDecls().isEmpty()) {
             kind = null;
         } else {
-            switch (cut.getTypeDecls().get(0).getKind()) {
-                case CLASS:
-                    kind = ElementKind.CLASS;
-                    break;
-                case INTERFACE:
-                    kind = ElementKind.INTERFACE;
-                    break;
-                case ANNOTATION_TYPE:
-                    kind = ElementKind.ANNOTATION_TYPE;
-                    break;
-                case ENUM:
-                    kind = ElementKind.ENUM;
-                    break;
-                default:
-                    Logger.getLogger(WorkingCopy.class.getName()).log(Level.SEVERE, "Cannot resolve template for {0}", cut.getTypeDecls().get(0).getKind());
-                    kind = null;
-            }
+            kind = switch (cut.getTypeDecls().getFirst().getKind()) {
+                case CLASS -> ElementKind.CLASS;
+                case INTERFACE -> ElementKind.INTERFACE;
+                case ANNOTATION_TYPE -> ElementKind.ANNOTATION_TYPE;
+                case ENUM -> ElementKind.ENUM;
+                default -> {
+                    Logger.getLogger(WorkingCopy.class.getName()).log(Level.SEVERE, "Cannot resolve template for {0}", cut.getTypeDecls().getFirst().getKind());
+                    yield null;
+                }
+            };
         }
         FileObject template = FileUtil.getConfigFile(template(kind));
         return doCreateFromTemplate(template, cut.getSourceFile());
@@ -1301,11 +1260,12 @@ public class WorkingCopy extends CompilationController {
                 fqn.setCompilationUnit(t);
                 overlay.registerPackage(fqn.getFQN());
 
-                new ErrorAwareTreeScanner<Void, Void>() {
+                new ErrorAwareTreePathScanner<Void, Void>() {
                     @Override
                     public Void visitClass(ClassTree node, Void p) {
                         String parent = fqn.getFQN();
-                        fqn.enterClass(node);
+                        fqn.enterClass(node,
+                                       parentIsNewClass(getCurrentPath()));
                         overlay.registerClass(parent, fqn.getFQN(), node, true);
                         super.visitClass(node, p);
                         fqn.leaveClass();
@@ -1340,5 +1300,9 @@ public class WorkingCopy extends CompilationController {
         externalChanges.put(unitTree.getSourceFile(), unitTree);
         return;
     }
-    
+
+    private boolean parentIsNewClass(TreePath tp) {
+        return tp.getParentPath() != null &&
+               tp.getParentPath().getLeaf().getKind() == Kind.NEW_CLASS;
+    }
 }

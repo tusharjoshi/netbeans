@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
@@ -51,13 +52,13 @@ import org.openide.filesystems.URLMapper;
 import org.openide.util.NbBundle;
 import org.openide.util.NbPreferences;
 import org.openide.util.Utilities;
-import org.openide.util.WeakSet;
 
 /**
  * a netbeans settings for global options that cannot be put into the settings file.
  * @author mkleint
  */
 public final class MavenSettings  {
+    private static final String PREFERENCES_PATH = "org/netbeans/modules/maven"; // NOI18N
     //same prop constant in Embedderfactory.java    
     private static final String PROP_DEFAULT_OPTIONS = "defaultOptions"; // NOI18N
     private static final String PROP_SOURCE_DOWNLOAD = "sourceDownload"; //NOI18N
@@ -91,7 +92,7 @@ public final class MavenSettings  {
 
     private static final MavenSettings INSTANCE = new MavenSettings();
     
-    private final Set<PropertyChangeListener> listeners = new WeakSet<>();
+    private final Set<PropertyChangeListener> listeners = Collections.newSetFromMap(new WeakHashMap<>());
     
     /**
      * Specifies how should be proxies handled by default, if no setting is given.
@@ -160,6 +161,10 @@ public final class MavenSettings  {
     private Preferences getPreferences() {
         return NbPreferences.forModule(MavenSettings.class);
     }
+
+    private Preferences getSharedPreferences() {
+        return NbPreferences.root().node(PREFERENCES_PATH);
+    }
     
     private String putProperty(String key, String value) {
         String retval = getProperty(key);
@@ -176,6 +181,11 @@ public final class MavenSettings  {
     }    
     
     private MavenSettings() {
+        getSharedPreferences().addPreferenceChangeListener(evt -> {
+            if (EmbedderFactory.PROP_USER_SETTINGS_XML.equals(evt.getKey())) {
+                firePropertyChange(evt.getKey(), null, evt.getNewValue());
+            }
+        });
         //import from older versions
         String defOpts = getPreferences().get(PROP_DEFAULT_OPTIONS, null);
         if (defOpts == null) {
@@ -255,6 +265,15 @@ public final class MavenSettings  {
         }        
     }
     
+    public String getUserSettingsXml() {
+        return EmbedderFactory.getUserSettingsXmlFile().getAbsolutePath();
+    }
+
+    public void setUserSettingsXml(String path) {
+        File file = (path == null || path.trim().isEmpty()) ? null : new File(path.trim());
+        EmbedderFactory.setUserSettingsXmlFile(file);
+    }
+
     public boolean isVMOptionsWrap() {
         return getPreferences().getBoolean(PROP_VM_OPTIONS_WRAP, true);
     }
@@ -269,12 +288,16 @@ public final class MavenSettings  {
 
     public void setDefaultJdk(String jdk) {
         getPreferences().put(PROP_DEFAULT_JDK, jdk);
+        firePropertyChange(PROP_DEFAULT_JDK, null, jdk);
+    }
+
+    private void firePropertyChange(String propertyName, Object oldValue, Object newValue) {
         PropertyChangeListener[] arr;
         synchronized (listeners) {
             arr = listeners.toArray(new PropertyChangeListener[0]);
         }
         for (PropertyChangeListener l : arr) {
-            l.propertyChange(new PropertyChangeEvent(this, PROP_DEFAULT_JDK, null, jdk));
+            l.propertyChange(new PropertyChangeEvent(this, propertyName, oldValue, newValue));
         }
     }
 

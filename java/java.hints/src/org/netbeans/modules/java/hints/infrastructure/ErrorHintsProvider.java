@@ -51,6 +51,7 @@ import javax.swing.text.Position.Bias;
 import javax.swing.text.StyledDocument;
 import javax.tools.Diagnostic;
 import org.netbeans.api.editor.document.EditorDocumentUtils;
+import org.netbeans.api.editor.document.LineDocumentUtils;
 import org.netbeans.api.java.lexer.JavaTokenId;
 import org.netbeans.api.java.source.CompilationInfo;
 import org.netbeans.api.java.source.JavaParserResultTask;
@@ -108,7 +109,7 @@ public final class ErrorHintsProvider extends JavaParserResultTask {
         errorKind2Severity.put(Diagnostic.Kind.ERROR, Severity.ERROR);
         errorKind2Severity.put(Diagnostic.Kind.MANDATORY_WARNING, Severity.WARNING);
         errorKind2Severity.put(Diagnostic.Kind.WARNING, Severity.WARNING);
-        errorKind2Severity.put(Diagnostic.Kind.NOTE, Severity.WARNING);
+        errorKind2Severity.put(Diagnostic.Kind.NOTE, Severity.HINT);
         errorKind2Severity.put(Diagnostic.Kind.OTHER, Severity.WARNING);
     }
 
@@ -189,8 +190,8 @@ public final class ErrorHintsProvider extends JavaParserResultTask {
 
         if (forPosition != null) {
             try {
-                int posRowStart = org.netbeans.editor.Utilities.getRowStart((NbEditorDocument) doc, forPosition);
-                int errRowStart = org.netbeans.editor.Utilities.getRowStart((NbEditorDocument) doc, range[0].getOffset());
+                int posRowStart = LineDocumentUtils.getLineStartOffset((NbEditorDocument) doc, forPosition);
+                int errRowStart = LineDocumentUtils.getLineStartOffset((NbEditorDocument) doc, range[0].getOffset());
                 if (posRowStart != errRowStart) {
                     return null;
                 }
@@ -443,8 +444,8 @@ public final class ErrorHintsProvider extends JavaParserResultTask {
                     a = mit.getArguments().get(index[0]);
                 }
 
-                int start = (int) info.getTrees().getSourcePositions().getStartPosition(info.getCompilationUnit(), a);
-                int end = (int) info.getTrees().getSourcePositions().getEndPosition(info.getCompilationUnit(), a);
+                int start = (int) info.getTrees().getSourcePositions().getStartPosition(a);
+                int end = (int) info.getTrees().getSourcePositions().getEndPosition(a);
             
                 return new int[] {start, end};
             }
@@ -642,8 +643,8 @@ public final class ErrorHintsProvider extends JavaParserResultTask {
                     Tree firstNonClass = topLevelClass.getMembers().stream().filter(t -> !TreeUtilities.CLASS_TREE_KINDS.contains(t.getKind())).filter(t -> !info.getTreeUtilities().isSynthetic(new TreePath(topLevelClassTP, t))).findFirst().orElse(null);
 
                     if (firstNonClass != null) {
-                        soff = (int) info.getTrees().getSourcePositions().getStartPosition(info.getCompilationUnit(), firstNonClass);
-                        endOffset = (int) info.getTrees().getSourcePositions().getEndPosition(info.getCompilationUnit(), firstNonClass);
+                        soff = (int) info.getTrees().getSourcePositions().getStartPosition(firstNonClass);
+                        endOffset = (int) info.getTrees().getSourcePositions().getEndPosition(firstNonClass);
                     }
                 }
             }

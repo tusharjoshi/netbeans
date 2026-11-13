@@ -40,7 +40,9 @@ import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.PlexusContainerException;
 import org.netbeans.api.project.Project;
 import org.netbeans.modules.maven.NbMavenProjectImpl;
+import org.netbeans.modules.maven.api.Constants;
 import org.netbeans.modules.maven.api.NbMavenProject;
+import org.netbeans.modules.maven.api.PluginPropertyUtils;
 import org.netbeans.modules.maven.embedder.DependencyTreeFactory;
 import org.netbeans.modules.maven.embedder.EmbedderFactory;
 import org.netbeans.modules.maven.embedder.MavenEmbedder;
@@ -64,6 +66,9 @@ import org.openide.util.NbBundle;
  */
 @ProjectServiceProvider(service = ProjectDependenciesImplementation.class, projectType="org-netbeans-modules-maven")
 public class MavenDependenciesImplementation implements ProjectDependenciesImplementation {
+    private static final String ELEMENT_PATH = "path"; // NOI18N
+    private static final String ELEMENT_PROCESSOR_PATHS = "annotationProcessorPaths"; // NOI18N
+
     private static final Logger LOG = Logger.getLogger(MavenDependenciesImplementation.class.getName());
     
     private final Project project;
@@ -140,12 +145,16 @@ public class MavenDependenciesImplementation implements ProjectDependenciesImple
     
     private ArtifactSpec mavenToArtifactSpec(Artifact a) {
         FileObject f = a.getFile() == null ? null : FileUtil.toFileObject(a.getFile());
+        String v = a.getVersion();
+        if ("".equals(v)) { // NOI18N
+            v = null;
+        }
         if (a.isSnapshot()) {
             return ArtifactSpec.createSnapshotSpec(a.getGroupId(), a.getArtifactId(), 
-                    a.getType(), a.getClassifier(), a.getVersion(), a.isOptional(), f, a);
+                    a.getType(), a.getClassifier(), v, a.isOptional(), f, a);
         } else {
             return ArtifactSpec.createVersionSpec(a.getGroupId(), a.getArtifactId(), 
-                    a.getType(), a.getClassifier(), a.getVersion(), a.isOptional(), f, a);
+                    a.getType(), a.getClassifier(), v, a.isOptional(), f, a);
         }
     }
     
@@ -188,6 +197,16 @@ public class MavenDependenciesImplementation implements ProjectDependenciesImple
             }
             Dependency dep = Dependency.create(a, s, Collections.emptyList(), d);
             children.add(dep);
+        }
+        PluginPropertyUtils.PluginConfigPathParams params = new PluginPropertyUtils.PluginConfigPathParams(
+            Constants.GROUP_APACHE_PLUGINS, Constants.PLUGIN_COMPILER, ELEMENT_PROCESSOR_PATHS, ELEMENT_PATH);
+        List<Artifact> arts = PluginPropertyUtils.getPluginPathProperty(project, params, false, null);
+        if (arts != null) {
+            for (Artifact a : arts) {
+                ArtifactSpec ann = mavenToArtifactSpec(a);
+                Dependency annDep = Dependency.create(ann, Scopes.PROCESS, Collections.emptyList(), ann);
+                children.add(annDep);
+            }
         }
 
         ArtifactSpec prjSpec = mavenToArtifactSpec(proj.getArtifact());
@@ -277,7 +296,22 @@ public class MavenDependenciesImplementation implements ProjectDependenciesImple
                     (filter == null || filter.accept(s, a));
             }
         };
+        
         Converter c = new Converter(compositeFiter);
+
+        // TODO: temporary hack: one has to explicitly ask for PROCESS, to avoid implications from RUNTIME scope at the moment
+        if (scopes.contains(Scopes.PROCESS)) {
+            PluginPropertyUtils.PluginConfigPathParams params = new PluginPropertyUtils.PluginConfigPathParams(
+                Constants.GROUP_APACHE_PLUGINS, Constants.PLUGIN_COMPILER, "annotationProcessorPaths", "path" // NOI18N
+            );
+            // TODO: process transitive dependencies as proper children
+            List<Artifact> arts = PluginPropertyUtils.getPluginPathProperty(project, params, true, null);
+            if (arts == null) {
+                arts = Collections.emptyList();
+            }
+            c.annotationProcessors = arts;
+        }
+        
         Dependency root = c.convertDependencies(n);
         return new MavenDependencyResult(nbMavenProject.getMavenProject(), root, new ArrayList<>(scopes), c.broken, 
                 project, nbMavenProject);
@@ -320,6 +354,7 @@ public class MavenDependenciesImplementation implements ProjectDependenciesImple
         final Map<String, List<org.apache.maven.shared.dependency.tree.DependencyNode>> realNodes = new HashMap<>();
         final Dependency.Filter filter;
         final Set<ArtifactSpec> broken = new HashSet<>();
+        List<Artifact> annotationProcessors = Collections.emptyList();
 
         public Converter(Dependency.Filter filter) {
             this.filter = filter;
@@ -344,13 +379,20 @@ public class MavenDependenciesImplementation implements ProjectDependenciesImple
 
         private Dependency convertDependencies(org.apache.maven.shared.dependency.tree.DependencyNode n) {
             findRealNodes(n);
-            return convert2(true, n);
+            return convert2(true, n, new HashSet<>());
         }
 
 
-        private Dependency convert2(boolean root, org.apache.maven.shared.dependency.tree.DependencyNode n) {
+        private Dependency convert2(boolean root, org.apache.maven.shared.dependency.tree.DependencyNode n, Set<ArtifactSpec> visited) {
             List<Dependency> ch = new ArrayList<>();
-
+            
+            ArtifactSpec currentArtifact = mavenToArtifactSpec(n.getArtifact());
+            
+            if (!visited.add(currentArtifact)) {
+                // Cycle detected
+                return null;
+            }
+            
             List<org.apache.maven.shared.dependency.tree.DependencyNode> children = n.getChildren();
             org.apache.maven.artifact.Artifact thisArtifact = n.getArtifact();
             org.apache.maven.artifact.Artifact relatedArtifact = n.getRelatedArtifact();
@@ -361,7 +403,7 @@ public class MavenDependenciesImplementation implements ProjectDependenciesImple
                     // TODO: unless the client specifies NOT to eliminate duplicates from the tree,
                     // we need to include the duplicate including the children, to form a correct full dependency tree. 
                     if (relatedArtifact != null) {
-                        children = realNodes.get(getFullArtifactId(n.getRelatedArtifact()));
+                        children = realNodes.get(getFullArtifactId(relatedArtifact));
                     }
                     if (children == null) {
                         children = realNodes.getOrDefault(n.getArtifact().getId(), n.getChildren());
@@ -392,28 +434,35 @@ public class MavenDependenciesImplementation implements ProjectDependenciesImple
                     }
             }
 
-            for (org.apache.maven.shared.dependency.tree.DependencyNode c : children) {
-                Dependency cd = convert2(false, c);
-                if (cd != null) {
-                    ch.add(cd);
+            try {
+                if (root && !annotationProcessors.isEmpty()) {
+                    for (Artifact a : annotationProcessors) {
+                        ArtifactSpec annoSpec = mavenToArtifactSpec(a);
+                        ch.add(Dependency.create(annoSpec, Scopes.PROCESS, Collections.emptyList(), annoSpec));
+                    }
                 }
-            }
-            ArtifactSpec aspec;
-            String cs = thisArtifact.getClassifier();
-            if ("".equals(cs)) {
-                cs = null;
-            }
-            aspec = mavenToArtifactSpec(thisArtifact);
-            if (aspec.getLocalFile() == null) {
-                broken.add(aspec);
-            }
-            Scope s = scope(thisArtifact);
 
-            if (!root && !filter.accept(s, aspec)) {
-                return null;
-            }
+                for (org.apache.maven.shared.dependency.tree.DependencyNode c : children) {
+                    Dependency cd = convert2(false, c, visited);
+                    if (cd != null) {
+                        ch.add(cd);
+                    }
+                }
+                ArtifactSpec aspec;
+                aspec = mavenToArtifactSpec(thisArtifact);
+                if (aspec.getLocalFile() == null) {
+                    broken.add(aspec);
+                }
+                Scope s = scope(thisArtifact);
 
-            return Dependency.create(aspec, s, ch, n);
+                if (!root && !filter.accept(s, aspec)) {
+                    return null;
+                }
+
+                return Dependency.create(aspec, s, ch, n);
+            } finally {
+                visited.remove(currentArtifact);
+            }
         }
     }
     

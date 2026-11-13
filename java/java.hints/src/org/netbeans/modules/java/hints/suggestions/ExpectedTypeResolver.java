@@ -73,7 +73,6 @@ import com.sun.source.tree.ProvidesTree;
 import com.sun.source.tree.RequiresTree;
 import com.sun.source.tree.ReturnTree;
 import com.sun.source.tree.Scope;
-import com.sun.source.tree.StringTemplateTree;
 import com.sun.source.tree.SwitchExpressionTree;
 import com.sun.source.tree.SwitchTree;
 import com.sun.source.tree.SynchronizedTree;
@@ -86,6 +85,7 @@ import com.sun.source.tree.TypeParameterTree;
 import com.sun.source.tree.UnaryTree;
 import com.sun.source.tree.UnionTypeTree;
 import com.sun.source.tree.UsesTree;
+import com.sun.source.tree.VarTypeTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.tree.WhileLoopTree;
 import com.sun.source.tree.WildcardTree;
@@ -315,6 +315,11 @@ public class ExpectedTypeResolver implements TreeVisitor<List<? extends TypeMirr
     }
 
     @Override
+    public List<? extends TypeMirror> visitVarType(VarTypeTree node, Object p) {
+        return null;
+    }
+
+    @Override
     public List<? extends TypeMirror> visitDoWhileLoop(DoWhileLoopTree node, Object p) {
         if (theExpression == null) {
             initExpression(node.getCondition());
@@ -420,17 +425,17 @@ public class ExpectedTypeResolver implements TreeVisitor<List<? extends TypeMirr
                 Scope s = info.getTrees().getScope(getCurrentPath());
                 SourcePositions pos = info.getTrees().getSourcePositions();
                 StringBuilder sb = new StringBuilder();
-                int posFirst = (int)pos.getStartPosition(info.getCompilationUnit(), theExpression.getLeaf());
-                int posSecond = (int)pos.getStartPosition(info.getCompilationUnit(), otherExpression);
+                int posFirst = (int)pos.getStartPosition(theExpression.getLeaf());
+                int posSecond = (int)pos.getStartPosition(otherExpression);
                 
                 if (posFirst < 0 || posSecond < 0) {
                     // LOMBOK
                     return null;
                 }
                 String first = info.getText().substring(posFirst, 
-                        (int)pos.getEndPosition(info.getCompilationUnit(), theExpression.getLeaf()));
+                        (int)pos.getEndPosition(theExpression.getLeaf()));
                 String second = info.getText().substring(posSecond, 
-                        (int)pos.getEndPosition(info.getCompilationUnit(), otherExpression));
+                        (int)pos.getEndPosition(otherExpression));
                 sb.append(first).append("+").append(second);
                 ExpressionTree expr = info.getTreeUtilities().parseExpression(sb.toString(), new SourcePositions[1]);
                 TypeMirror targetType = purify(info, info.getTreeUtilities().attributeTree(expr, s));
@@ -1429,12 +1434,6 @@ public class ExpectedTypeResolver implements TreeVisitor<List<? extends TypeMirr
 
     @Override
     public List<? extends TypeMirror> visitDeconstructionPattern(DeconstructionPatternTree node, Object p) {
-        return null;
-    }
-
-    @Override
-    public List<? extends TypeMirror> visitStringTemplate(StringTemplateTree stt, Object p) {
-        //TODO:
         return null;
     }
 

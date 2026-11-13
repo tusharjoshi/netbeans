@@ -107,8 +107,8 @@ public final class ChangeType implements ErrorRule<Void> {
             if (scope.getKind() == Kind.VARIABLE) {
                 if (((VariableTree) scope).getInitializer() != null) {
                     ExpressionTree init = ((VariableTree) scope).getInitializer();
-                    int start = (int) info.getTrees().getSourcePositions().getStartPosition(info.getCompilationUnit(), init);
-                    int end = (int) info.getTrees().getSourcePositions().getEndPosition(info.getCompilationUnit(), init);
+                    int start = (int) info.getTrees().getSourcePositions().getStartPosition(init);
+                    int end = (int) info.getTrees().getSourcePositions().getEndPosition(init);
                     String initCode = info.getText().substring(start, end);
                     ExpressionTree newInit = info.getTreeUtilities().parseVariableInitializer(initCode, new SourcePositions[1]);
                     Scope resolutionScope = info.getTrees().getScope(path);
@@ -168,7 +168,7 @@ public final class ChangeType implements ErrorRule<Void> {
                     return null;
                 }
                 //anonymous class?
-                expressionType[0] = org.netbeans.modules.java.hints.errors.Utilities.convertIfAnonymous(expressionType[0]);
+                expressionType[0] = org.netbeans.modules.java.hints.errors.Utilities.convertIfAnonymous(expressionType[0], true);
 
                 result.add(new ChangeTypeFix(info, treePath,
                         ((VariableTree) leaf[0]).getName().toString(), 

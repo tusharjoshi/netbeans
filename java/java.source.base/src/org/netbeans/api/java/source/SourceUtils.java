@@ -62,6 +62,10 @@ import com.sun.tools.javac.comp.Check;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree.JCCompilationUnit;
 import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.Log;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.function.Predicate;
 import javax.lang.model.util.ElementScanner14;
 
@@ -111,6 +115,7 @@ import org.netbeans.modules.parsing.api.UserTask;
 import org.netbeans.modules.parsing.api.indexing.IndexingManager;
 import org.netbeans.modules.parsing.spi.indexing.support.QuerySupport;
 import org.netbeans.spi.java.classpath.support.ClassPathSupport;
+import org.netbeans.spi.project.NestedClass;
 
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
@@ -172,16 +177,23 @@ public class SourceUtils {
 
     public static boolean checkTypesAssignable(CompilationInfo info, TypeMirror from, TypeMirror to) {
         Context c = ((JavacTaskImpl) info.impl.getJavacTask()).getContext();
-        if (from.getKind() == TypeKind.TYPEVAR) {
-            Types types = Types.instance(c);
-            TypeVar t = types.substBound((TypeVar)from, com.sun.tools.javac.util.List.of((Type)from), com.sun.tools.javac.util.List.of(types.boxedTypeOrType((Type)to)));
-            return info.getTypes().isAssignable(t.getUpperBound(), to)
-                    || info.getTypes().isAssignable(to, t.getUpperBound());
+        Log log = Log.instance(c);
+        //TODO: need to throw away all warnings, as a) reporting the warnings is wrong anyway; b) the default handler may crash; are there more places that require similar handling?
+        Log.DiagnosticHandler discardHandler = log.new DiscardDiagnosticHandler();
+        try {
+            if (from.getKind() == TypeKind.TYPEVAR) {
+                Types types = Types.instance(c);
+                TypeVar t = types.substBound((TypeVar)from, com.sun.tools.javac.util.List.of((Type)from), com.sun.tools.javac.util.List.of(types.boxedTypeOrType((Type)to)));
+                return info.getTypes().isAssignable(t.getUpperBound(), to)
+                        || info.getTypes().isAssignable(to, t.getUpperBound());
+            }
+            if (from.getKind() == TypeKind.WILDCARD) {
+                from = Types.instance(c).wildUpperBound((Type)from);
+            }
+            return Check.instance(c).checkType(null, (Type)from, (Type)to).getKind() != TypeKind.ERROR;
+        } finally {
+            log.popDiagnosticHandler(discardHandler);
         }
-        if (from.getKind() == TypeKind.WILDCARD) {
-            from = Types.instance(c).wildUpperBound((Type)from);
-        }
-        return Check.instance(c).checkType(null, (Type)from, (Type)to).getKind() != TypeKind.ERROR;
     }
 
     public static TypeMirror getBound(WildcardType wildcardType) {
@@ -599,7 +611,7 @@ public class SourceUtils {
         ClassPath sourcePath = ClassPathSupport.createClassPath(sourceRoots);
         LinkedList<FileObject> folders = new LinkedList<>(sourcePath.findAllResources(pkgName));
         if (isPkg) {
-            return folders.isEmpty() ? binary : folders.get(0);
+            return folders.isEmpty() ? binary : folders.getFirst();
         }
         final boolean caseSensitive = isCaseSensitive ();
         final List<String> fnames = new ArrayList<>();
@@ -609,7 +621,7 @@ public class SourceUtils {
         }
         folders.addFirst(binary);
         if (fnames.size() == 1) {
-            FileObject match = findMatchingChild(fnames.get(0), folders, caseSensitive);
+            FileObject match = findMatchingChild(fnames.getFirst(), folders, caseSensitive);
             if (match != null) {
                 return match;
             }
@@ -1034,7 +1046,8 @@ public class SourceUtils {
         Source source = Source.instance(ctx);
         Preview preview = Preview.instance(ctx);
 
-        if (source.compareTo(Source.JDK21) < 0 || !preview.isEnabled()) {
+        // old launch protocol before JDK 25
+        if (source.compareTo(Source.JDK21) < 0 || (source.compareTo(Source.JDK25) < 0 && !preview.isEnabled())) {
             long flags = ((Symbol.MethodSymbol)method).flags();
 
             if (((flags & Flags.PUBLIC) == 0) || ((flags & Flags.STATIC) == 0)) {
@@ -1043,7 +1056,7 @@ public class SourceUtils {
             return !method.getParameters().isEmpty();
         }
 
-        //new launch prototocol from JEP 445:
+        // new launch prototocol from JEP 512:
         int currentMethodPriority = mainMethodPriority(method);
         int highestPriority = Integer.MAX_VALUE;
 
@@ -1074,7 +1087,7 @@ public class SourceUtils {
         if (params.size() > 1) {
             return false;
         } else if (params.size() == 1) {
-            TypeMirror param = params.get(0).asType();
+            TypeMirror param = params.getFirst().asType();
             if (param.getKind() != TypeKind.ARRAY) {
                 return false;
             }
@@ -1320,7 +1333,7 @@ public class SourceUtils {
                     if (TreeUtilities.CLASS_TREE_KINDS.contains(parent.getLeaf().getKind())) {
                         boolean isStatic = ((VariableTree)path.getLeaf()).getModifiers().getFlags().contains(Modifier.STATIC);
                         for(Tree member : ((ClassTree)parent.getLeaf()).getMembers()) {
-                            if (member.getKind() == Tree.Kind.VARIABLE && sourcePositions.getStartPosition(path.getCompilationUnit(), member) >= pos &&
+                            if (member.getKind() == Tree.Kind.VARIABLE && sourcePositions.getStartPosition(member) >= pos &&
                                     (isStatic || !((VariableTree)member).getModifiers().getFlags().contains(Modifier.STATIC))) {
                                 el = trees.getElement(new TreePath(parent, member));
                                 if (el != null) {
@@ -1332,7 +1345,7 @@ public class SourceUtils {
                     break;
                 case ENHANCED_FOR_LOOP:
                     EnhancedForLoopTree efl = (EnhancedForLoopTree)path.getLeaf();
-                    if (sourcePositions.getEndPosition(path.getCompilationUnit(), efl.getExpression()) >= pos) {
+                    if (sourcePositions.getEndPosition(efl.getExpression()) >= pos) {
                         el = trees.getElement(new TreePath(path, efl.getVariable()));
                         if (el != null) {
                             refs.add(el);
@@ -1426,7 +1439,7 @@ public class SourceUtils {
     @NonNull
     private static Set<URL> mapToURLs(
         @NonNull final Collection<? extends FileObject> fos) {
-        final Set<URL> res = new HashSet<>(fos.size());
+        final Set<URL> res = HashSet.newHashSet(fos.size());
         for (FileObject fo : fos) {
             res.add(fo.toURL());
         }
@@ -1467,5 +1480,63 @@ public class SourceUtils {
             throw new IllegalStateException("Must invoke before running toPhase!");
         }
         cc.addForceSource(file);
+    }
+
+    /**
+     * Computes class name for the corresponding input source file.
+     *
+     * @param info the ClasspathInfo used to resolve
+     * @param relativePath input source file path relative to the corresponding source root
+     * @param nestedClass nested class which name is searched
+     * @return class name for the corresponding input source file
+     * @since 2.74
+     */
+    public static String classNameFor(ClasspathInfo info, String relativePath, NestedClass nestedClass) {
+        ClassPath cachedCP = ClasspathInfoAccessor.getINSTANCE().getCachedClassPath(info, PathKind.COMPILE);
+        int idx = relativePath.indexOf('.');
+        String rel = idx < 0 ? relativePath : relativePath.substring(0, idx);
+        String className = rel.replace('/', '.');
+        int lastDotIndex = className.lastIndexOf('.');
+        String fqnForNestedClass = null;
+        String topLevelClass = null;
+        if (nestedClass != null) {
+            String packageName;
+            if(lastDotIndex >= 0) {
+                packageName = className.substring(0, lastDotIndex);
+            } else {
+                packageName = "";
+            }
+            fqnForNestedClass = nestedClass.getFQN(packageName, "$");
+            topLevelClass = packageName + ( packageName.isBlank() ? "" : "." ) + nestedClass.getTopLevelClassName();
+        }
+        // This is really an ugly hack. It is pure luck, that the cache directory
+        // is placed on the CP, nothing guarantes that or at least that is non
+        // obvious. This also makes it hard/impossible to test.
+        FileObject rsFile = cachedCP.findResource(rel + '.' + FileObjects.RS);
+        if (rsFile != null) {
+            List<String> lines = new ArrayList<>();
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(rsFile.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = in.readLine()) != null) {
+                    if (topLevelClass == null && className.equals(line)) {
+                        return className;
+                    } else if (topLevelClass != null && topLevelClass.equals(line)) {
+                        // The "RS" Index holds only toplevel classes, so we
+                        // assume, that if the toplevel is found here, the FQN
+                        // based on NestedClass is also present
+                        return fqnForNestedClass;
+                    }
+                    lines.add(line);
+                }
+            } catch (IOException ioe) {}
+            if (!lines.isEmpty()) {
+                return lines.getFirst();
+            }
+        }
+        if(fqnForNestedClass != null) {
+            return fqnForNestedClass;
+        } else {
+            return className;
+        }
     }
 }

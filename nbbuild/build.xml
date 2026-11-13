@@ -59,7 +59,7 @@
 
     <property name="build.ant.classes.dir" location="${nb.build.dir}/antclasses"/>
     <mkdir dir="${build.ant.classes.dir}"/>
-    <javac srcdir="antsrc" destdir="${build.ant.classes.dir}" deprecation="true" debug="${build.compiler.debug}" source="1.8" target="1.8">
+    <javac srcdir="antsrc" destdir="${build.ant.classes.dir}" deprecation="true" debug="${build.compiler.debug}" release="${bootstrap.jdk.release}">
         <classpath>
             <pathelement location="${ant.core.lib}"/>
         </classpath>
@@ -99,7 +99,7 @@
         <include name="nbbuild/external/jsoup*.jar"/>
       </fileset>
     </path>
-    <javac srcdir="antsrc" destdir="${build.ant.classes.dir}" deprecation="true" debug="${build.compiler.debug}" source="1.8" target="1.8">
+    <javac srcdir="antsrc" destdir="${build.ant.classes.dir}" deprecation="true" debug="${build.compiler.debug}" release="${bootstrap.jdk.release}">
       <classpath refid="bootstrap-cp"/>
       <compilerarg line="-Xlint -Xlint:-serial"/>
     </javac>
@@ -370,6 +370,7 @@ metabuild.hash=${metabuild.hash}</echo>
         keystore="${jnlp.signjar.keystore}"
         storepass="${jnlp.signjar.password}"
         dname="${jnlp.signjar.vendor}"
+        keyalg="DSA"
     />
   </target>
 
@@ -385,12 +386,7 @@ metabuild.hash=${metabuild.hash}</echo>
       <mkdir dir="${jnlp.dest.dir}" />
       <makeurl property="jnlp.codebase" file="${jnlp.dest.dir}"/> <!-- fallback value unless otherwise configured -->
       <property name="jnlp.fail.on.error" value="true"/>
-      <pathconvert property="jnlp.modules.fullpath">
-          <path>
-              <dirset dir="${nb_all}" includes="${config.jnlp.stable}"/>
-          </path>
-          <mapper type="identity"/>
-      </pathconvert>
+      <resolvelist name="alljnlpmodules" path="jnlp.modules.fullpath" dir="${nb_all}" list="${nb.clusters.list}" modules="${config.jnlp.stable}"/>
       <sortsuitemodules unsortedmodules="${jnlp.modules.fullpath}" sortedmodulesproperty="jnlp.modules.sorted"/>
       <subant-junit target="jnlp" failonerror="${jnlp.fail.on.error}" report="${nb.build.dir}/build-all-jnlp.xml">
           <buildpath path="${jnlp.modules.sorted}"/>
@@ -460,14 +456,13 @@ metabuild.hash=${metabuild.hash}</echo>
       <include name="${nb.cluster.platform.dir}/lib/nbexec" />
     </fixcrlf>
   </target>
-  
   <target name="-download-nb-windows-launchers" depends="init,-check-nb-cluster" if="has.nb.cluster">
     <downloadbinaries cache="${binaries.cache}" server="${binaries.server}" repos="${binaries.repos}">
         <manifest dir="${nb_all}" includes="nb/ide.launcher/external/binaries-list"/>
     </downloadbinaries>
 
     <mkdir dir="${netbeans.dest.dir}/bin" />
-    <unzip src="../nb/ide.launcher/external/launcher-external-binaries-1-94a19f0.zip" dest="${netbeans.dest.dir}/bin">
+    <unzip src="../nb/ide.launcher/external/launcher-external-binaries-4-8e2bc77e581e.zip" dest="${netbeans.dest.dir}/bin">
         <patternset>
             <include name="netbeans*.exe"/>
         </patternset>
@@ -1367,9 +1362,9 @@ It is possible to use -Ddebug.port=3234 -Ddebug.pause=y to start the system in d
             <element name="test" implicit="true"/>
             <sequential>
                 <mkdir dir="${nb.build.dir}/test/unit/classes"/>
-                <javac srcdir="test/unit/src" destdir="${nb.build.dir}/test/unit/classes" debug="true" source="1.8">
+                <javac srcdir="test/unit/src" destdir="${nb.build.dir}/test/unit/classes" debug="true" release="${bootstrap.jdk.release}">
                     <classpath path="${test.unit.cp}"/>
-                    <compilerarg line="-Xlint -Xlint:-serial"/>
+                    <compilerarg line="-Xlint -Xlint:-serial -proc:full"/>
                 </javac>
                 <copy todir="${nb.build.dir}/test/unit/classes">
                     <fileset dir="test/unit/src" excludes="**/*.java"/>
@@ -1741,6 +1736,7 @@ It is possible to use -Ddebug.port=3234 -Ddebug.pause=y to start the system in d
       <zipfileset file="${nb.build.dir}/LICENSE" />
       <zipfileset dir="${nb.build.dir}/licenses" includes="**" prefix="licenses" /> 
       <zipfileset file="${source.zip.readme}" fullpath="README.md" erroronmissingarchive="false" />
+      <zipfileset file="${nb_all}/PACKAGING.md" erroronmissingarchive="false" />
       <zipfileset file="${nb_all}/nbbuild/build/gitinfo.properties" fullpath="nbbuild/gitinfo.properties" erroronmissingarchive="false" />
       <zipfileset file="${nb_all}/nbbuild/build/netbeansrelease.json" fullpath="nbbuild/netbeansrelease.json" erroronmissingarchive="false" />
     </zip>
@@ -2185,7 +2181,7 @@ It is possible to use -Ddebug.port=3234 -Ddebug.pause=y to start the system in d
         
         <taskdef uri="antlib:org.apache.rat.anttasks" resource="org/apache/rat/anttasks/antlib.xml">
             <classpath>
-                <pathelement location="external/apache-rat-0.15.jar"/>
+                <pathelement location="external/apache-rat-0.18.jar"/>
             </classpath>
         </taskdef>
         
@@ -2196,28 +2192,27 @@ It is possible to use -Ddebug.port=3234 -Ddebug.pause=y to start the system in d
             <excludesfile name="build/rat-exclusions-licenseinfo.txt" />
         </fileset>
         
-        <rat:report xmlns:rat="antlib:org.apache.rat.anttasks" reportfile="build/rat-report.txt">
-            <rat:fullTextMatcher licenseFamilyCategory="AL" licenseFamilyName="Apache License 2.0 Short header">
-                Licensed to the Apache Software Foundation (ASF) under one or more contributor 
-                license agreements; and to You under the Apache License, Version 2.0.
-            </rat:fullTextMatcher>
-            <rat:approvedLicense familyName="Apache License 2.0 Short header"/>
-
+        <rat:report xmlns:rat="antlib:org.apache.rat.anttasks" outputStyle="xml" outputfile="${nb.build.dir}/rat-report.xml">
             <resources refid="rat.files" />
         </rat:report>
-        <rat:report xmlns:rat="antlib:org.apache.rat.anttasks" format="xml" reportfile="build/rat-report.xml">
-            <rat:fullTextMatcher licenseFamilyCategory="AL" licenseFamilyName="Apache License 2.0 Short header">
-                Licensed to the Apache Software Foundation (ASF) under one or more contributor
-                license agreements; and to You under the Apache License, Version 2.0.
-            </rat:fullTextMatcher>
-            <rat:approvedLicense familyName="Apache License 2.0 Short header"/>
 
-            <resources refid="rat.files" />
-        </rat:report>
+        <!-- reduce size of file by removing full path -->
+        <taskdef name="ratrelativize" classname="org.netbeans.nbbuild.RatRelativize" classpath="${build.ant.classes.dir}"/>
+        <ratrelativize file="${nb.build.dir}/rat-report.xml" />
+
+        <xslt in="${nb.build.dir}/rat-report.xml" out="${nb.build.dir}/rat-report.txt">
+            <style>
+                <javaresource name="org/apache/rat/plain-rat.xsl">
+                    <classpath>
+                        <pathelement location="external/apache-rat-0.18.jar"/>
+                    </classpath>
+                </javaresource>
+            </style>
+        </xslt>
         <taskdef name="rattotest" classname="org.netbeans.nbbuild.RatReportTask" classpath="${build.ant.classes.dir}"/>
         <loadproperties srcFile="cluster.properties" />
         <property name="rat-report.haltonfailure" value="false" />
-        <rattotest source="build/rat-report.xml" report="${nb.build.dir}/rat/" haltonfailure="${rat-report.haltonfailure}" />
+        <rattotest source="${nb.build.dir}/rat-report.xml" report="${nb.build.dir}/rat/" haltonfailure="${rat-report.haltonfailure}" />
         
         <reportFromLicenseinfo nball=".." report="${nb.build.dir}/rat-appendix.txt" />
     </target>

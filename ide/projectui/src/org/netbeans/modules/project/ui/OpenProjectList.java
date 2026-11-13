@@ -27,7 +27,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.URL;
-import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -56,6 +55,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.prefs.Preferences;
 import javax.swing.Icon;
 import org.netbeans.api.annotations.common.NonNull;
 import org.netbeans.api.annotations.common.NullAllowed;
@@ -68,7 +68,6 @@ import org.netbeans.api.project.ProjectUtils;
 import org.netbeans.api.project.ui.ProjectGroup;
 import org.netbeans.api.project.ui.ProjectGroupChangeEvent;
 import org.netbeans.api.project.ui.ProjectGroupChangeListener;
-import static org.netbeans.modules.project.ui.Bundle.*;
 import org.netbeans.modules.project.ui.api.UnloadedProjectInformation;
 import org.netbeans.modules.project.ui.groups.Group;
 import org.netbeans.modules.project.uiapi.ProjectOpenedTrampoline;
@@ -109,6 +108,8 @@ import org.openide.util.lookup.Lookups;
 import org.openide.util.lookup.ProxyLookup;
 import org.openide.windows.WindowManager;
 
+import static org.netbeans.modules.project.ui.Bundle.*;
+
 /**
  * List of projects open in the GUI.
  * @author Petr Hrebejk
@@ -120,11 +121,7 @@ public final class OpenProjectList {
      * otherwise we get a deadlock fairly fast 
      */
     static final Mutex MUTEX = new Mutex();
-    
-    public static Comparator<Project> projectByDisplayName() {
-        return new ProjectByDisplayNameComparator();
-    }
-    
+
     // Property names
     public static final String PROPERTY_OPEN_PROJECTS = "OpenProjects";
     public static final String PROPERTY_WILL_OPEN_PROJECTS = "willOpenProjects"; // NOI18N
@@ -219,6 +216,10 @@ public final class OpenProjectList {
         getDefault().LOAD.waitFinished(0);
     }
 
+    public static Comparator<? super Project> projectByPath() {
+        return PROJECT_BY_PATH_COMPARATOR;
+    }
+
     static void preferredProject(final Project lazyP) {
         if (lazyP != null) {
             OPENING_RP.post(new Runnable() {
@@ -234,12 +235,9 @@ public final class OpenProjectList {
     }
 
     final Project unwrapProject(Project wrap) {
-        Project[] now = getOpenProjects();
-
         if (wrap instanceof LazyProject) {
-            LazyProject lp = (LazyProject)wrap;
-            for (Project p : now) {
-                if (lp.getProjectDirectory().equals(p.getProjectDirectory())) {
+            for (Project p : getOpenProjects()) {
+                if (wrap.getProjectDirectory().equals(p.getProjectDirectory())) {
                     return p;
                 }
             }
@@ -381,7 +379,7 @@ public final class OpenProjectList {
                     action = 2;
                     try {
                         progress.start();
-                        loadOnBackground();
+                        loadInBackground();
                     } finally {
                         progress.finish();
                     }
@@ -430,13 +428,35 @@ public final class OpenProjectList {
             }
             });
             
-            INSTANCE.pchSupport.firePropertyChange(PROPERTY_OPEN_PROJECTS, new Project[0], lazilyOpenedProjects.toArray(new Project[0]));
+            Project[] opened = lazilyOpenedProjects.toArray(Project[]::new);
+            INSTANCE.pchSupport.firePropertyChange(PROPERTY_OPEN_PROJECTS, new Project[0], opened);
             Project main = INSTANCE.mainProject;
             if (main != null) { // else PROPERTY_MAIN_PROJECT would be fired spuriously
                 INSTANCE.pchSupport.firePropertyChange(PROPERTY_MAIN_PROJECT, null, main);
             }
 
+            if (checkFirstRun() && opened.length > 0) {
+                OPENING_RP.execute(() -> {
+                    for (Project p : opened) {
+                        Project del = p.getLookup().lookup(Project.class);
+                        ProjectUtilities.openProjectFiles(del == null ? p : del);
+                    }
+                });
+            }
+
             log(Level.FINER, "updateGlobalState, done, notified"); // NOI18N
+        }
+
+        private boolean checkFirstRun() {
+            Preferences prefs = OpenProjectListSettings.getInstance().getPreferences();
+            String prefKey = "projectListVersion"; // NOI18N
+            String build = System.getProperty("netbeans.buildnumber", "0"); // NOI18N
+            if (!prefs.get(prefKey, "").equals(build)) {
+                prefs.put(prefKey, build);
+                return true;
+            } else {
+                return false;
+            }
         }
 
         boolean closeBeforeOpen(final Project[] arr) {
@@ -461,14 +481,14 @@ public final class OpenProjectList {
             "#NOI18N",
             "LOAD_PROJECTS_ON_START=true"
         })
-        private void loadOnBackground() {
+        private void loadInBackground() {
             lazilyOpenedProjects = new ArrayList<>();
             final boolean loadProjectsOnStart = "true".equals(Bundle.LOAD_PROJECTS_ON_START());
             List<URL> urls = loadProjectsOnStart ?
                     OpenProjectListSettings.getInstance().getOpenProjectsURLs() :
                     Collections.emptyList();
             final List<Project> initial = new ArrayList<>();
-            final LinkedList<Project> projects = URLs2Projects(urls);
+            final Collection<Project> projects = URLs2Projects(urls);
             OpenProjectList.MUTEX.writeAccess(new Mutex.Action<Void>() {
                 public @Override Void run() {
                     toOpenProjects.addAll(projects);
@@ -520,7 +540,7 @@ public final class OpenProjectList {
                         log(Level.WARNING, "broken node for {0}", t);
                     }
                     log(Level.FINE, "property change notified {0}", p); // NOI18N
-                    ///same as in doOpenProject() but here for initially opened projects
+                    //same as in doOpenProject() but here for initially opened projects
                     p.getProjectDirectory().addFileChangeListener(INSTANCE.deleteListener);
                     p.getProjectDirectory().addFileChangeListener(INSTANCE.nbprojectDeleteListener);
                 } else {
@@ -1236,7 +1256,7 @@ public final class OpenProjectList {
                 //a bit on magic here. We want to do the goup document persistence before notifyClosed in hope of the 
                 // ant projects saving their project data before being closed. (ant ptojects call saveProjct() in the openclose hook.
                 // the caller of this method calls saveAllProjectt() later. 
-                Group.onShutdown(new HashSet<Project>(INSTANCE.openProjects));
+                Group.onShutdown(new LinkedHashSet<>(INSTANCE.openProjects));
                 for (Project p : INSTANCE.openProjects) {                    
                     notifyClosed(p);                    
                 }
@@ -1272,46 +1292,27 @@ public final class OpenProjectList {
     
     // Private methods ---------------------------------------------------------
     
-    private static LinkedList<Project> URLs2Projects( Collection<URL> URLs ) {
-        LinkedList<Project> result = new LinkedList<Project>();
-            
-        for(URL url: URLs) {
-            FileObject dir = URLMapper.findFileObject( url );
-            if ( dir != null && dir.isFolder() ) {
+    private static Set<Project> URLs2Projects(Collection<URL> urls) {
+        Set<Project> result = new LinkedHashSet<>();
+
+        for (URL url : urls) {
+            FileObject dir = URLMapper.findFileObject(url);
+            if (dir != null && dir.isFolder()) {
                 try {
-                    Project p = ProjectManager.getDefault().findProject( dir );
-                    if ( p != null && !result.contains(p)) { //#238093, #238811 if multiple entries point to the same project we end up with the same instance multiple times in the linked list. That's wrong.
-                        result.add( p );
+                    Project p = ProjectManager.getDefault().findProject(dir);
+                    if (p != null && !result.contains(p)) { //#238093, #238811 if multiple entries point to the same project we end up with the same instance multiple times in the linked list. That's wrong.
+                        result.add(p);
                     }
-                }       
-                catch ( Throwable t ) {
+                } catch (Throwable t) {
                     //something bad happened during loading the project.
                     //log the problem, but allow the other projects to be load
-                    //see issue #65900
-                    if (t instanceof ThreadDeath) {
-                        throw (ThreadDeath) t;
-                    }
-                    
+                    //see issue #65900                   
                     ErrorManager.getDefault().notify(ErrorManager.INFORMATIONAL, t);
                 }
             }
         }
-        
         return result;
     }
-    
-    private static List<URL> projects2URLs( Collection<Project> projects ) {
-        ArrayList<URL> URLs = new ArrayList<URL>( projects.size() );
-        for(Project p: projects) {
-                URL root = p.getProjectDirectory().toURL();
-                if ( root != null ) {
-                    URLs.add( root );
-                }
-        }        
-        
-        return URLs;
-    }
-    
     
     private static boolean notifyOpened(Project p) {
         boolean ok = true;
@@ -1379,6 +1380,7 @@ public final class OpenProjectList {
             public @Override Boolean run() {
             log(Level.FINER, "already opened: {0} ", openProjects);
             for (Project existing : openProjects) {
+                // TODO An old hack due to broken equals() contract; see https://bz.apache.org/netbeans/show_bug.cgi?id=156536
                 if (p.equals(existing) || existing.equals(p)) {
                     alreadyOpen.set(true);
                     return false;
@@ -1919,49 +1921,35 @@ public final class OpenProjectList {
         
     }
     
-    private static class ProjectByDisplayNameComparator implements Comparator<Project> {
-        
-        private static final Comparator<Object> COLLATOR = Collator.getInstance();
+    /// ensures that child dirs follow right after the parent
+    private static final Comparator<String> PATH_COMPONENT_COMPARATOR = (p1, p2) -> {
+        String[] comp1 = p1.split("/");
+        String[] comp2 = p2.split("/");
+        int min = Math.min(comp1.length, comp2.length);
+        for (int i = 0; i < min; i++) {
+            int c = comp1[i].compareTo(comp2[i]);
+            if (c != 0) {
+                return c;
+            }
+        }
+        return Integer.compare(comp1.length, comp2.length);
+    };
 
-        // memoize results since it could be called >1 time per project:
-        private final Map<Project,String> names = new HashMap<Project,String>();
-        private String getDisplayName(Project p) {
-            String n = names.get(p);
-            if (n == null) {
-                n = ProjectUtils.getInformation(p).getDisplayName();
-                names.put(p, n);
-            }
-            return n;
+    private static final Comparator<Project> PROJECT_BY_PATH_COMPARATOR = (p1, p2) -> {
+        if (p1 == null && p2 == null) {
+            return 0;
         }
-        
-        @Override
-        public int compare(Project p1, Project p2) {
-//            Uncoment to make the main project be the first one
-//            but then needs to listen to main project change
-//            if ( OpenProjectList.getDefault().isMainProject( p1 ) ) {
-//                return -1;
-//            }
-//            
-//            if ( OpenProjectList.getDefault().isMainProject( p2 ) ) {
-//                return 1;
-//            }
-            
-            String n1 = getDisplayName(p1);
-            String n2 = getDisplayName(p2);
-            if (n1 != null && n2 != null) {
-                return COLLATOR.compare(n1, n2);
-            } else if (n1 == null && n2 != null) {
-                log(Level.WARNING, p1 + ": ProjectInformation.getDisplayName() should not return null!");
-                return -1;
-            } else if (n1 != null && n2 == null) {
-                log(Level.WARNING, p2 + ": ProjectInformation.getDisplayName() should not return null!");
-                return 1;
-            }
-            return 0; // both null
-            
+        if (p1 == null) {
+            return -1;
         }
-        
-    }
+        if (p2 == null) {
+            return 1;
+        }
+        return PATH_COMPONENT_COMPARATOR.compare(
+            p1.getProjectDirectory().getPath(), // String normalized with '/' separator
+            p2.getProjectDirectory().getPath()
+        );
+    };
     
     private final class NbProjectDeletionListener extends FileChangeAdapter {
         

@@ -574,7 +574,7 @@ public final class AddDriverDialog extends javax.swing.JPanel {
                     try (JarFile jf = new JarFile(file)) {
                         Enumeration<JarEntry> entries = jf.entries();
                         while (entries.hasMoreElements()) {
-                            JarEntry entry = (JarEntry) entries.nextElement();
+                            JarEntry entry = entries.nextElement();
                             String className = entry.getName();
                             if (className.endsWith(".class")) { // NOI18N
                                 className = className.replace('/', '.');
@@ -621,7 +621,7 @@ public final class AddDriverDialog extends javax.swing.JPanel {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                progressHandle = ProgressHandleFactory.createHandle(null);
+                progressHandle = ProgressHandle.createHandle(null);
                 progressComponent = ProgressHandleFactory.createProgressComponent(progressHandle);
                 progressContainerPanel.add(progressComponent, BorderLayout.CENTER);
                 progressHandle.start();

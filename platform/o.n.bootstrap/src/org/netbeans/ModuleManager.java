@@ -29,7 +29,6 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.net.URL;
@@ -500,16 +499,6 @@ public final class ModuleManager extends Modules {
         }
     }
 
-    /** Only for use with Javeleon modules. */
-    public void replaceJaveleonModule(Module module, Module newModule) {
-        assert newModule instanceof JaveleonModule;
-        modules.remove(module);
-        modulesByName.remove(module.getCodeNameBase());
-        modules.add(newModule);
-        modulesByName.put(newModule.getCodeNameBase(), newModule);
-        invalidateClassLoader();
-    }
-
     private static void checkMissingModules(
         Set<Module> requested, List<Module> reallyEnabled
     ) throws InvalidException {
@@ -754,7 +743,7 @@ public final class ModuleManager extends Modules {
             ProxyClassLoader priviledged = null;
             NetigsoLoader osgi = null;
             if (!name.startsWith("java.")) { // NOI18N
-                Class<?>[] stack = TopSecurityManager.getStack();
+                List<Class<?>> stack = Util.getStack();
                 for (Class<?> c: stack) {
                     ClassLoader l = c.getClassLoader();
                     if (l == this) {
@@ -1282,10 +1271,10 @@ public final class ModuleManager extends Modules {
      * from other objects, that can't be compatibly passed 'willEnable' info.
      */
     static class EnableContext {
-        final List<Module> willEnable;
+        final Set<Module> willEnable;
 
         public EnableContext(List<Module> willEnable) {
-            this.willEnable = willEnable;
+            this.willEnable = new HashSet<>(willEnable);
         }
     }
     
@@ -1976,44 +1965,6 @@ public final class ModuleManager extends Modules {
         return true;
     }
 
-    /** Only for use from Javeleon code. */
-    public List<Module> simulateJaveleonReload(Module moduleToReload) throws IllegalArgumentException {
-        Set<Module> transitiveDependents = new HashSet<Module>(20);
-        addToJaveleonDisableList(transitiveDependents, moduleToReload);
-        Map<Module,List<Module>> deps = Util.moduleDependencies(transitiveDependents, modulesByName, getProvidersOf());
-        try {
-            LinkedList<Module> orderedForEnabling = new LinkedList<Module>();
-            for (Module m : Utilities.topologicalSort(transitiveDependents, deps)) {
-                if (m != moduleToReload) {
-                    orderedForEnabling.addFirst(m);
-                }
-            }
-            return orderedForEnabling;
-        } catch (TopologicalSortException ex) {
-            return new ArrayList<Module>(transitiveDependents);
-        }
-    }
-    private void addToJaveleonDisableList(Set<Module> willDisable, Module m) {
-        if (willDisable.contains(m)) {
-            return;
-        }
-        willDisable.add(m);
-        for (Module other : modules) {
-            if (! other.isEnabled() || willDisable.contains(other)) {
-                continue;
-            }
-            Dependency[] depenencies = other.getDependenciesArray();
-            for (int i = 0; i < depenencies.length; i++) {
-                Dependency dep = depenencies[i];
-                if (dep.getType() == Dependency.TYPE_MODULE) {
-                    if (Util.parseCodeName(dep.getName())[0].equals(m.getCodeNameBase())) {
-                        addToJaveleonDisableList(willDisable, other);
-                        break;
-                    }
-                }
-            }
-        }
-    }
 
     /** Simulate what would happen if a set of modules were to be disabled.
      * None of the listed modules may be autoload modules, nor eager, nor currently disabled, nor fixed.
@@ -2455,7 +2406,7 @@ public final class ModuleManager extends Modules {
             Util.err.warning("Cyclic module dependencies, will not shut down cleanly: " + deps); // NOI18N
             return new TaskFuture(true, Task.EMPTY);
         }
-        if (!TopSecurityManager.officialExit && !installer.closing(sortedModules)) {
+        if (!NbExit.isExiting() && !installer.closing(sortedModules)) {
             return new TaskFuture(false, Task.EMPTY);
         }
         if (midHook != null) {
@@ -2594,9 +2545,9 @@ public final class ModuleManager extends Modules {
                 os.writeUTF(m.getCodeNameBase());
                 
                 ByteArrayOutputStream data = new ByteArrayOutputStream();
-                ObjectOutputStream dos = new ObjectOutputStream(data);
-                m.writeData(dos);
-                dos.close();
+                try (DataOutputStream dos = new DataOutputStream(data)) {
+                    m.writeData(dos);
+                }
                 
                 byte[] arr = data.toByteArray();
                 os.writeInt(arr.length);

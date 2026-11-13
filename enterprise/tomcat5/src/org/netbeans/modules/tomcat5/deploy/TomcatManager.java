@@ -249,7 +249,7 @@ public class TomcatManager implements DeploymentManager {
             }
         }
         if (checkResponse) {
-            return Utils.pingTomcat(getServerPort(), timeout, getServerHeader(), getPlainUri()); // is tomcat responding?
+            return Utils.pingTomcat(getServerPort(), timeout, getServerHeader(), getPlainUri(), tp.getUsername(), tp.getPassword()); // is tomcat responding?
         } else {
             return false; // cannot resolve the state
         }
@@ -520,11 +520,11 @@ public class TomcatManager implements DeploymentManager {
     }
 
     public boolean isJpa31() {
-        return false;
+        return isTomEE10();
     }
     
     public boolean isJpa32() {
-        return isTomEE10();
+        return false;
     }
 
     public boolean isJpa22() {

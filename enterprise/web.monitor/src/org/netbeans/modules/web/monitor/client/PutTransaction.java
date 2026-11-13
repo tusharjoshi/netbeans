@@ -26,11 +26,11 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URLDecoder;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import javax.swing.SwingUtilities;
 
 import org.openide.filesystems.FileAlreadyLockedException;
@@ -47,8 +47,6 @@ public class PutTransaction extends HttpServlet {
 
     private static FileObject currDir = null;
     private static boolean debug = false;
-     
-    private ServletConfig servletConfig = null;
 
     public void doPost(HttpServletRequest req, HttpServletResponse res) 
 	throws ServletException, IOException {
@@ -174,8 +172,6 @@ public class PutTransaction extends HttpServlet {
      *
      */
     public void init(ServletConfig servletConfig) { 
-
-	this.servletConfig = servletConfig;
 	if(debug) log("init");  //NOI18N
     }
     

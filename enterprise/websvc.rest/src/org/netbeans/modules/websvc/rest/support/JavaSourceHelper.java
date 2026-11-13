@@ -599,7 +599,8 @@ public class JavaSourceHelper {
         return maker.Class(modifiersTree, className,
                 Collections.<TypeParameterTree>emptyList(),
                 createIdentifierTree(copy, classToExtend),
-                Collections.<Tree>emptyList(), Collections.<Tree>emptyList());
+                Collections.<Tree>emptyList(), Collections.<Tree>emptyList(),
+                Collections.<Tree>emptyList());
     }
 
      public static ClassTree createInnerClass(WorkingCopy copy, 
@@ -986,7 +987,7 @@ public class JavaSourceHelper {
 
                     if (element != null) {
                         elementTree = trees.getTree(element);
-                        long pos = trees.getSourcePositions().getStartPosition(tree, elementTree);
+                        long pos = trees.getSourcePositions().getStartPosition(elementTree);
                         position[0] = tree.getLineMap().getLineNumber(pos) - 1;
                         position[1] = tree.getLineMap().getColumnNumber(pos) - 1;
                     }
